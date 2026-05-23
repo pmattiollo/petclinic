@@ -71,6 +71,10 @@ jobs:
         working-directory: petclinic-frontend
         run: npm run generate:api --silent
 
+      - name: Run frontend tests (Karma + ChromeHeadlessCI)
+        working-directory: petclinic-frontend
+        run: npm run test-headless -- --code-coverage
+
       - name: Strict frontend build (fails on any webpack warning)
         working-directory: petclinic-frontend
         run: npm run build
