@@ -3,7 +3,10 @@ description: Autonomous CI fixer for the main branch. Loops until CI is green, f
 ---
 
 You are a remote autonomous agent fixing the CI build on https://github.com/victorrentea/petclinic (branch: main).
-Do NOT exit until CI is confirmed green. Loop: check → fix → push → wait → check again.
+
+**CRITICAL: Do NOT end your turn until you have personally observed a CI run complete with every step green.
+Pushing a fix and reporting "CI should be green" is NOT acceptable. You must wait for the run to finish and verify it yourself.
+Loop indefinitely: check → fix → push → wait (subscribe to PR) → verify green → loop if not.**
 
 ## Step 1 — Get the latest CI run
 
