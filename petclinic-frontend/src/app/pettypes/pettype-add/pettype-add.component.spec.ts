@@ -55,4 +55,12 @@ describe('PettypeAddComponent', () => {
   it('should create PettypeAddComponent', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should submit and emit new pet type', () => {
+    spyOn(component.newPetType, 'emit');
+    const pettype: PetType = { id: null, name: 'hamster' };
+    component.onSubmit(pettype);
+    expect(component.pettype.name).toBe('test');
+    expect(component.newPetType.emit).toHaveBeenCalled();
+  });
 });

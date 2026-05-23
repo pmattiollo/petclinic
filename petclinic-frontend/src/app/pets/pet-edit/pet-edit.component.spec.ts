@@ -11,14 +11,19 @@ import {PetTypeService} from '../../pettypes/pettype.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ActivatedRouteStub, RouterStub} from '../../testing/router-stubs';
 import {Pet} from '../pet';
+import {Owner} from '../../owners/owner';
 import {Observable, of} from 'rxjs';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import {MatMomentDateModule} from '@angular/material-moment-adapter';
 import {PetType} from '../../pettypes/pettype';
 import Spy = jasmine.Spy;
 
-class OwnerServiceStub {
+const testOwner2: Owner = { id: 1, firstName: 'George', lastName: 'Franklin', address: '110 W. Liberty St.', city: 'Madison', telephone: '6085551023', pets: [] };
 
+class OwnerServiceStub {
+  getOwnerById(): Observable<any> {
+    return of(testOwner2);
+  }
 }
 
 class PetServiceStub {
@@ -88,5 +93,23 @@ describe('PetEditComponent', () => {
 
   it('should create PetEditComponent', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should submit pet and navigate to owner detail', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.currentOwner = testOwner2;
+    component.currentType = { id: 1, name: 'cat' };
+    const pet: Pet = { id: 1, name: 'Leo', birthDate: '2020-01-15', type: { id: 1, name: 'cat' }, ownerId: 1, owner: testOwner2, visits: [] };
+    component.onSubmit(pet);
+    expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
+  });
+
+  it('should navigate to owner detail via gotoOwnerDetail', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.currentOwner = testOwner2;
+    component.gotoOwnerDetail();
+    expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
   });
 });

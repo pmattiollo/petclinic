@@ -14,6 +14,9 @@ class PetTypeServiceStub {
   getPetTypeById(typeId: string): Observable<PetType> {
     return of();
   }
+  updatePetType(typeId: string, pettype: PetType): Observable<PetType> {
+    return of(pettype);
+  }
 }
 
 
@@ -55,5 +58,20 @@ describe('PettypeEditComponent', () => {
 
   it('should create PettypeEditComponent', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should submit and navigate back', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    const pettype: PetType = { id: 1, name: 'updated' };
+    component.onSubmit(pettype);
+    expect(router.navigate).toHaveBeenCalledWith(['/pettypes']);
+  });
+
+  it('should navigate back via onBack', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.onBack();
+    expect(router.navigate).toHaveBeenCalledWith(['/pettypes']);
   });
 });

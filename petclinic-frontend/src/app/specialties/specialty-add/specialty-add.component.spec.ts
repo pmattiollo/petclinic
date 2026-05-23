@@ -71,4 +71,12 @@ describe('SpecialtyAddComponent', () => {
   it('should create SpecialtyAddComponent', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should submit and emit new specialty', () => {
+    spyOn(component.newSpeciality, 'emit');
+    const specialty: Specialty = { id: null, name: 'surgery' };
+    component.onSubmit(specialty);
+    expect(component.addedSuccess).toBeTrue();
+    expect(component.newSpeciality.emit).toHaveBeenCalled();
+  });
 });

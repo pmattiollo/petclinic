@@ -15,6 +15,9 @@ class SpecialityServiceStub {
   getSpecialtyById(specId: string): Observable<Specialty> {
     return of();
   }
+  updateSpecialty(specId: string, specialty: Specialty): Observable<Specialty> {
+    return of(specialty);
+  }
 }
 
 describe('SpecialtyEditComponent', () => {
@@ -55,5 +58,20 @@ describe('SpecialtyEditComponent', () => {
 
   it('should create SpecialtyEditComponent', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should submit and navigate back', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    const specialty: Specialty = { id: 1, name: 'updated' };
+    component.onSubmit(specialty);
+    expect(router.navigate).toHaveBeenCalledWith(['/specialties']);
+  });
+
+  it('should navigate back via onBack', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.onBack();
+    expect(router.navigate).toHaveBeenCalledWith(['/specialties']);
   });
 });

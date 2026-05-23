@@ -72,4 +72,33 @@ describe('SpecialtyListComponent', () => {
     expect(spy.calls.any()).toBe(true, 'deleteSpecialty called');
   });
 
+  it('should toggle isInsert on showAddSpecialtyComponent', () => {
+    expect(component.isInsert).toBeFalse();
+    component.showAddSpecialtyComponent();
+    expect(component.isInsert).toBeTrue();
+    component.showAddSpecialtyComponent();
+    expect(component.isInsert).toBeFalse();
+  });
+
+  it('should add specialty and toggle isInsert on onNewSpecialty', () => {
+    const newSpecialty: Specialty = { id: 2, name: 'dentistry' };
+    const initialLength = component.specialties.length;
+    component.onNewSpecialty(newSpecialty);
+    expect(component.specialties.length).toBe(initialLength + 1);
+    expect(component.isInsert).toBeTrue();
+  });
+
+  it('should navigate to edit specialty', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.showEditSpecialtyComponent(testSpecialties[0]);
+    expect(router.navigate).toHaveBeenCalledWith(['/specialties', '1', 'edit']);
+  });
+
+  it('should navigate to home', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.gotoHome();
+    expect(router.navigate).toHaveBeenCalledWith(['/welcome']);
+  });
 });

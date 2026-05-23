@@ -70,4 +70,34 @@ describe('PettypeListComponent', () => {
     component.deletePettype(component.pettypes[0]);
     expect(spy.calls.any()).toBe(true, 'deletePetType called');
   });
+
+  it('should toggle isInsert on showAddPettypeComponent', () => {
+    expect(component.isInsert).toBeFalse();
+    component.showAddPettypeComponent();
+    expect(component.isInsert).toBeTrue();
+    component.showAddPettypeComponent();
+    expect(component.isInsert).toBeFalse();
+  });
+
+  it('should add pettype and toggle isInsert on onNewPettype', () => {
+    const newPettype: PetType = { id: 2, name: 'hamster' };
+    const initialLength = component.pettypes.length;
+    component.onNewPettype(newPettype);
+    expect(component.pettypes.length).toBe(initialLength + 1);
+    expect(component.isInsert).toBeTrue();
+  });
+
+  it('should navigate to edit pet type', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.showEditPettypeComponent(testPettypes[0]);
+    expect(router.navigate).toHaveBeenCalledWith(['/pettypes', '1', 'edit']);
+  });
+
+  it('should navigate to home', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.gotoHome();
+    expect(router.navigate).toHaveBeenCalledWith(['/welcome']);
+  });
 });

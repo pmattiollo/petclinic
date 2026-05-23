@@ -22,6 +22,9 @@ class OwnserServiceStub {
   getOwnerById(): Observable<Owner> {
     return of({ id: 1, firstName: 'James' } as Owner);
   }
+  updateOwner(ownerId: any, owner: Owner): Observable<Owner> {
+    return of(owner);
+  }
 }
 
 describe('OwnerEditComponent', () => {
@@ -75,4 +78,9 @@ describe('OwnerEditComponent', () => {
     expect(component.onSubmit).toHaveBeenCalled();
   }));
 
+  it('should submit owner and navigate to owner detail', () => {
+    const owner: Owner = { id: 42, firstName: 'Updated', lastName: 'Name', address: '1 St', city: 'City', telephone: '1234567890', pets: [] };
+    component.onSubmit(owner);
+    expect(router.navigate).toHaveBeenCalledWith(['/owners', 42]);
+  });
 });

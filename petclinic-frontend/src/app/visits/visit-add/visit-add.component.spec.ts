@@ -15,6 +15,7 @@ import {MatMomentDateModule} from '@angular/material-moment-adapter';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import Spy = jasmine.Spy;
 import {OwnerService} from '../../owners/owner.service';
+import {Owner} from '../../owners/owner';
 
 class PetServiceStub {
   addPet(pet: Pet): Observable<Pet> {
@@ -25,10 +26,18 @@ class PetServiceStub {
   }
 }
 
+const visitOwner: Owner = { id: 1, firstName: 'George', lastName: 'Franklin', address: '110 W. Liberty St.', city: 'Madison', telephone: '6085551023', pets: [] };
+
 class OwnerServiceStub {
+  getOwnerById(): Observable<Owner> {
+    return of(visitOwner);
+  }
 }
 
 class VisitServiceStub {
+  addVisit(visit: any): Observable<any> {
+    return of(visit);
+  }
 }
 
 describe('VisitAddComponent', () => {
@@ -85,5 +94,25 @@ describe('VisitAddComponent', () => {
 
   it('should create VisitAddComponent', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should submit visit and navigate to owner detail', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.currentOwner = visitOwner;
+    component.currentPet = testPet;
+    const visit: any = { id: null, date: '2023-05-01', description: 'checkup', pet: testPet };
+    component.onSubmit(visit);
+    expect(visit.id).toBeNull();
+    expect(component.addedSuccess).toBeTrue();
+    expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
+  });
+
+  it('should navigate to owner detail via gotoOwnerDetail', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.currentOwner = visitOwner;
+    component.gotoOwnerDetail();
+    expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
   });
 });

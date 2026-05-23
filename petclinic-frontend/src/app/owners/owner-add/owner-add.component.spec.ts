@@ -83,4 +83,10 @@ describe('OwnerAddComponent', () => {
     expect(component.onSubmit).toHaveBeenCalled();
   }));
 
+  it('should submit owner and navigate to owners list', () => {
+    const owner: Owner = { id: 1, firstName: 'John', lastName: 'Doe', address: '1 Main St', city: 'Springfield', telephone: '1234567890', pets: [] };
+    component.onSubmit(owner);
+    expect(owner.id).toBeNull();
+    expect(router.navigate).toHaveBeenCalledWith(['/owners']);
+  });
 });

@@ -18,15 +18,20 @@ import {Owner} from '../../owners/owner';
 import {PetType} from '../../pettypes/pettype';
 import Spy = jasmine.Spy;
 
+const testOwner: Owner = { id: 1, firstName: 'George', lastName: 'Franklin', address: '110 W. Liberty St.', city: 'Madison', telephone: '6085551023', pets: [] };
+
 class OwnerServiceStub {
   getOwnerById(): Observable<Owner> {
-    return of();
+    return of(testOwner);
   }
 }
 
 class PetServiceStub {
   getPetById(petId: string): Observable<Pet> {
     return of();
+  }
+  addPet(pet: Pet): Observable<Pet> {
+    return of(pet);
   }
 }
 
@@ -88,5 +93,24 @@ describe('PetAddComponent', () => {
 
   it('should create PetAddComponent', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should submit pet and navigate to owner detail', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.currentOwner = testOwner;
+    const pet: Pet = { id: null, name: 'Basil', birthDate: '2020-01-15', type: { id: 1, name: 'cat' }, ownerId: 1, owner: testOwner, visits: [] };
+    component.onSubmit(pet);
+    expect(pet.id).toBeNull();
+    expect(component.addedSuccess).toBeTrue();
+    expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
+  });
+
+  it('should navigate to owner detail via gotoOwnerDetail', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.currentOwner = testOwner;
+    component.gotoOwnerDetail();
+    expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
   });
 });

@@ -17,13 +17,21 @@ import Spy = jasmine.Spy;
 import {OwnerService} from '../../owners/owner.service';
 import {PetService} from '../../pets/pet.service';
 
+const visitEditOwner = { id: 1, firstName: 'George', lastName: 'Franklin', address: '110 W. Liberty St.', city: 'Madison', telephone: '6085551023', pets: [] };
+
 class VisitServiceStub {
   getVisitById(visitId: string): Observable<Visit> {
     return of();
   }
+  updateVisit(visitId: string, visit: Visit): Observable<Visit> {
+    return of(visit);
+  }
 }
 
 class OwnerServiceStub {
+  getOwnerById(): Observable<any> {
+    return of(visitEditOwner);
+  }
 }
 
 class PetServiceStub {
@@ -92,5 +100,23 @@ describe('VisitEditComponent', () => {
 
   it('should create VisitEditComponent', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should submit visit and navigate to owner detail', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.currentOwner = visitEditOwner as any;
+    component.currentPet = testPet;
+    const visit: Visit = { id: 1, date: '2023-05-01', description: 'updated', pet: testPet };
+    component.onSubmit(visit);
+    expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
+  });
+
+  it('should navigate to owner detail via gotoOwnerDetail', () => {
+    const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
+    spyOn(router, 'navigate');
+    component.currentOwner = visitEditOwner as any;
+    component.gotoOwnerDetail();
+    expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
   });
 });
