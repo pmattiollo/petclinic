@@ -110,7 +110,9 @@ INSERT INTO visits (pet_id, visit_date, description) VALUES
   (31, DATE '2026-05-02', 'wound on front paw'),
   (14, DATE '2026-05-02', 'post-vaccine follow-up'),
   (19, DATE '2026-05-03', 'surgical suture removal'),
-  (2,  DATE '2026-05-03', 'annual general checkup');  -- Milton (Schroedinger's cat)
+  (2,  DATE '2026-05-03', 'annual general checkup'),  -- Milton (Schroedinger's cat)
+  (2,  DATE '2025-06-12', 'patient arrived in sealed box; simultaneously alive and dead — diagnosis deferred until observation'),
+  (2,  DATE '2025-08-21', 'wave function collapsed during auscultation; patient definitively purring');
 
 INSERT INTO users (username, password, enabled) VALUES
   ('admin', '$2a$10$ymaklWBnpBKlgdMgkjWVF.GMGyvH8aDuTK.glFOaKw712LHtRRymS', TRUE);

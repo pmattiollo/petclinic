@@ -35,20 +35,15 @@ public class VisitMcpTools {
 
     public record VisitView(int id, int petId, String petName, LocalDate date, String description) {}
 
-    public record VisitConfirmation(boolean confirmed) {}
+    public record VisitPhoneInput(String phone) {}
 
     @McpTool(
         name = "list_visits",
         description = "List veterinary visits for every pet of the authenticated owner."
     )
-    @Transactional(readOnly = true)
     public List<VisitView> listVisits() {
-        return listVisitsFor(McpSecurity.currentOwnerId());
-    }
-
-    @Transactional(readOnly = true)
-    List<VisitView> listVisitsFor(int ownerId) {
-        Owner owner = ownerRepository.findById(ownerId)
+        int ownerId = McpSecurity.currentOwnerId();
+        Owner owner = ownerRepository.findByIdFetchingPets(ownerId)
             .orElseThrow(() -> new IllegalArgumentException("Owner not found: " + ownerId));
         List<VisitView> result = new ArrayList<>();
         for (Pet pet : owner.getPets()) {
@@ -68,40 +63,79 @@ public class VisitMcpTools {
     public String createVisit(
             McpSyncRequestContext context,
             @McpToolParam(description = "Pet ID (must belong to the authenticated owner)", required = true) int petId,
-            @McpToolParam(description = "Visit date (yyyy-MM-dd); defaults to today if omitted", required = false) String date,
+            @McpToolParam(description = "Visit date (yyyy-MM-dd); must be today or in the future", required = true) String date,
             @McpToolParam(description = "Visit description (reason, diagnosis, notes...)", required = true) String description) {
-        return createVisitFor(McpSecurity.currentOwnerId(), context, petId, date, description);
-    }
-
-    @Transactional
-    String createVisitFor(int ownerId, McpSyncRequestContext context, int petId, String date, String description) {
+        int ownerId = McpSecurity.currentOwnerId();
         Pet pet = petRepository.findById(petId)
             .orElseThrow(() -> new IllegalArgumentException("Pet not found: " + petId));
         if (pet.getOwner() == null || pet.getOwner().getId() != ownerId) {
             throw new IllegalArgumentException("Pet " + petId + " does not belong to owner " + ownerId);
         }
-        LocalDate visitDate;
-        if (date == null || date.isBlank()) {
-            visitDate = LocalDate.now();
-        } else {
-            visitDate = LocalDate.parse(date);
-        }
+        LocalDate visitDate = LocalDate.parse(date);
+        requireFutureDate(visitDate);
 
-        if (context != null && context.elicitEnabled()) {
-            String prompt = "Create visit for pet '" + pet.getName() + "' on " + visitDate
-                + " — \"" + description + "\"? Set confirmed=true to proceed.";
-            StructuredElicitResult<VisitConfirmation> elicit =
-                context.elicit(e -> e.message(prompt), VisitConfirmation.class);
-            if (elicit.action() != ElicitResult.Action.ACCEPT || !elicit.structuredContent().confirmed()) {
-                return "Visit creation cancelled by user.";
-            }
+        if (context == null || !context.elicitEnabled()) {
+            throw new IllegalStateException(
+                "create_visit requires an MCP client that supports elicitation (owner must confirm).");
         }
+        String prompt = "Create visit for pet '" + pet.getName() + "' on " + visitDate
+            + " — \"" + description + "\". No phone number on file for you — please provide one to receive reminders.";
+        StructuredElicitResult<VisitPhoneInput> elicit =
+            context.elicit(e -> e.message(prompt), VisitPhoneInput.class);
+        if (elicit.action() != ElicitResult.Action.ACCEPT) {
+            return "Visit creation cancelled by user.";
+        }
+        VisitPhoneInput input = elicit.structuredContent();
+        if (input == null || input.phone() == null || input.phone().isBlank()) {
+            throw new IllegalArgumentException("Phone number is required to schedule a visit.");
+        }
+        Owner owner = pet.getOwner();
+        owner.setTelephone(input.phone().trim());
+        ownerRepository.save(owner);
 
         Visit v = new Visit();
         v.setPet(pet);
         v.setDate(visitDate);
         v.setDescription(description);
         Visit saved = visitRepository.save(v);
-        return "Created visit id=" + saved.getId() + " for pet '" + pet.getName() + "' on " + visitDate;
+        return "Created visit id=" + saved.getId() + " for pet '" + pet.getName() + "' on " + visitDate
+            + "; reminders will be sent to " + owner.getTelephone();
+    }
+
+    @McpTool(
+        name = "cancel_visit",
+        description = "Cancel an upcoming vet visit for one of the authenticated owner's pets. "
+            + "Only visits dated strictly in the future can be cancelled.",
+        annotations = @McpTool.McpAnnotations(destructiveHint = true)
+    )
+    @Transactional
+    public String cancelVisit(
+            @McpToolParam(description = "Visit date (yyyy-MM-dd); must be in the future", required = true) String date) {
+        LocalDate visitDate = LocalDate.parse(date);
+        requireFutureDate(visitDate);
+
+        int ownerId = McpSecurity.currentOwnerId();
+        Owner owner = ownerRepository.findByIdFetchingPets(ownerId)
+            .orElseThrow(() -> new IllegalArgumentException("Owner not found: " + ownerId));
+
+        int cancelled = 0;
+        for (Pet pet : owner.getPets()) {
+            for (Visit v : visitRepository.findByPetId(pet.getId())) {
+                if (v.getDate().equals(visitDate)) {
+                    visitRepository.delete(v);
+                    cancelled++;
+                }
+            }
+        }
+        if (cancelled == 0) {
+            return "No upcoming visits found on " + visitDate;
+        }
+        return "Cancelled " + cancelled + " visit(s) on " + visitDate;
+    }
+
+    private static void requireFutureDate(LocalDate d) {
+        if (d.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Visit date must be today or in the future: " + d);
+        }
     }
 }

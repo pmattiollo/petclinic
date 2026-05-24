@@ -1,10 +1,15 @@
 package petclinic.mcp;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import victor.training.petclinic.model.Owner;
@@ -23,22 +28,28 @@ class OwnerMcpResourceTest {
     @Autowired OwnerRepository ownerRepository;
     @Autowired PetRepository petRepository;
 
+    @AfterEach
+    void clearAuth() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void renders_profile_with_pets_for_authenticated_owner() {
-        Owner ron = new Owner();
-        ron.setFirstName("Ronald");
-        ron.setLastName("Weasley_TST");
-        ron.setAddress("The Burrow");
-        ron.setCity("Ottery St Catchpole");
-        ron.setTelephone("0119544321");
-        Pet pet = new Pet();
-        pet.setName("Scabbers");
-        pet.setBirthDate(LocalDate.of(2018, 6, 1));
-        pet.setType(petRepository.findPetTypes().get(0));
+        Pet pet = new Pet()
+            .setName("Scabbers")
+            .setBirthDate(LocalDate.of(2018, 6, 1))
+            .setType(petRepository.findPetTypes().get(0));
+        Owner ron = new Owner()
+            .setFirstName("Ronald")
+            .setLastName("Weasley_TST")
+            .setAddress("The Burrow")
+            .setCity("Ottery St Catchpole")
+            .setTelephone("0119544321");
         ron.addPet(pet);
         ownerRepository.save(ron);
+        authenticateAs(ron.getId());
 
-        String profile = ownerMcpResource.profileFor(ron.getId());
+        String profile = ownerMcpResource.me();
 
         assertThat(profile)
             .contains("Ronald Weasley_TST")
@@ -48,7 +59,17 @@ class OwnerMcpResourceTest {
 
     @Test
     void unknown_id_throws() {
-        assertThatThrownBy(() -> ownerMcpResource.profileFor(999_999))
+        authenticateAs(999_999);
+
+        assertThatThrownBy(() -> ownerMcpResource.me())
             .isInstanceOf(IllegalStateException.class);
+    }
+
+    private static void authenticateAs(int ownerId) {
+        var auth = new UsernamePasswordAuthenticationToken(
+            String.valueOf(ownerId),
+            null,
+            List.of(new SimpleGrantedAuthority("ROLE_MCP")));
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

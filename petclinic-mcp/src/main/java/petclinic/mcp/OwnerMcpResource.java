@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.springaicommunity.mcp.annotation.McpResource;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import victor.training.petclinic.model.Owner;
 import victor.training.petclinic.model.Pet;
@@ -26,12 +25,8 @@ public class OwnerMcpResource {
         description = "The authenticated owner's profile: name, address, phone, and pets."
     )
     public String me() {
-        return profileFor(McpSecurity.currentOwnerId());
-    }
-
-    @Transactional(readOnly = true)
-    String profileFor(int ownerId) {
-        Owner owner = ownerRepository.findById(ownerId)
+        int ownerId = McpSecurity.currentOwnerId();
+        Owner owner = ownerRepository.findByIdFetchingPets(ownerId)
             .orElseThrow(() -> new IllegalStateException("No owner with id=" + ownerId));
 
         List<Pet> pets = owner.getPets();

@@ -3,9 +3,13 @@ package petclinic.mcp;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import victor.training.petclinic.model.Owner;
@@ -27,32 +31,46 @@ class ListVisitsToolTest {
     @Autowired PetRepository petRepository;
     @Autowired VisitRepository visitRepository;
 
+    @AfterEach
+    void clearAuth() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
-    void lists_visits_of_a_given_owner() {
-        Owner owner = new Owner();
-        owner.setFirstName("Tdd");
-        owner.setLastName("Tester");
-        owner.setAddress("1 Test Way");
-        owner.setCity("Testville");
-        owner.setTelephone("0000000000");
+    void lists_visits_of_authenticated_owner() {
         PetType firstType = petRepository.findPetTypes().get(0);
-        Pet pet = new Pet();
-        pet.setName("Rex");
-        pet.setBirthDate(LocalDate.of(2020, 1, 1));
-        pet.setType(firstType);
+        Pet pet = new Pet()
+            .setName("Rex")
+            .setBirthDate(LocalDate.of(2020, 1, 1))
+            .setType(firstType);
+        Owner owner = new Owner()
+            .setFirstName("Tdd")
+            .setLastName("Tester")
+            .setAddress("1 Test Way")
+            .setCity("Testville")
+            .setTelephone("0000000000");
         owner.addPet(pet);
         ownerRepository.save(owner);
 
-        Visit visit = new Visit();
-        visit.setPet(pet);
-        visit.setDate(LocalDate.of(2026, 5, 24));
-        visit.setDescription("Annual checkup");
-        visitRepository.save(visit);
+        visitRepository.save(new Visit()
+            .setPet(pet)
+            .setDate(LocalDate.of(2026, 5, 24))
+            .setDescription("Annual checkup"));
 
-        List<VisitMcpTools.VisitView> visits = visitTools.listVisitsFor(owner.getId());
+        authenticateAs(owner.getId());
+
+        List<VisitMcpTools.VisitView> visits = visitTools.listVisits();
 
         assertThat(visits)
             .extracting(VisitMcpTools.VisitView::description)
             .contains("Annual checkup");
+    }
+
+    private static void authenticateAs(int ownerId) {
+        var auth = new UsernamePasswordAuthenticationToken(
+            String.valueOf(ownerId),
+            null,
+            List.of(new SimpleGrantedAuthority("ROLE_MCP")));
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }
