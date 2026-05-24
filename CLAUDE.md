@@ -20,7 +20,8 @@ Each script is foreground; run them in separate terminals.
 ./start-database.sh        # embedded Postgres on localhost:5432
 ./start-backend.sh         # Spring Boot on localhost:8080
 ./start-frontend.sh        # Angular dev server on localhost:4200
-./start-observability.sh   # optional: observability stack
+./start-mcp.sh             # optional: Spring AI MCP server on localhost:8090
+./start-observability.sh   # optional: Grafana LGTM (Ctrl+C tears it down)
 ```
 
 ### Backend (petclinic-backend/)

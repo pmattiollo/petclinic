@@ -8,6 +8,14 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
+cleanup() {
+  echo ""
+  echo "🛑 Shutting down Grafana LGTM..."
+  docker compose down
+  echo "✅ Stopped (data persisted in volume 'lgtm-data')"
+}
+trap cleanup EXIT
+
 echo "🚀 Starting Grafana LGTM (metrics, logs, traces)..."
 docker compose up -d lgtm
 
@@ -15,9 +23,10 @@ echo "⏳ Waiting for Grafana to be ready..."
 for i in {1..60}; do
   if curl -fsS http://localhost:3300/api/health >/dev/null 2>&1; then
     echo "✅ Grafana ready at http://localhost:3300 (admin/admin)"
-    exit 0
+    break
   fi
   sleep 1
 done
-echo "⚠️  Grafana did not become ready in 60s — check 'docker compose logs lgtm'" >&2
-exit 1
+
+echo "📜 Tailing logs — press Ctrl+C to stop and tear everything down."
+docker compose logs -f lgtm

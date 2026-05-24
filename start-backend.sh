@@ -28,14 +28,18 @@ fi
 
 OTEL_JVM_ARGS=""
 if [[ -f "$AGENT_JAR" ]]; then
-  export OTEL_SERVICE_NAME=petclinic-backend
-  export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-  export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-  export OTEL_LOGS_EXPORTER=otlp
-  export OTEL_METRICS_EXPORTER=otlp
-  export OTEL_TRACES_EXPORTER=otlp
-  export OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
-  OTEL_JVM_ARGS="-javaagent:$AGENT_JAR"
+  if (echo > /dev/tcp/localhost/4318) 2>/dev/null; then
+    export OTEL_SERVICE_NAME=petclinic-backend
+    export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+    export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+    export OTEL_LOGS_EXPORTER=otlp
+    export OTEL_METRICS_EXPORTER=otlp
+    export OTEL_TRACES_EXPORTER=otlp
+    export OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
+    OTEL_JVM_ARGS="-javaagent:$AGENT_JAR"
+  else
+    echo "ℹ️  OTel collector not running on :4318 — telemetry disabled. Run ./start-observability.sh to enable."
+  fi
 fi
 
 echo "🚀 Starting Petclinic Backend (Spring Boot)..."
