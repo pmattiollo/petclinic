@@ -18,13 +18,13 @@ INSERT INTO types (name) VALUES
 
 -- Owners and pets drawn from European literature, film, and science.
 INSERT INTO owners (first_name, last_name, address, city, telephone) VALUES
+  ('Harry',     'Potter',       '4 Privet Drive',            'Little Whinging',  '0119084455'),
   ('Erwin',     'Schroedinger', 'Boltzmanngasse 5',          'Vienna',           '0131914920'),
+  ('Tom',       'Riddle',       'Malfoy Manor',              'Wiltshire',        '0119844321'),
   ('Ronald',    'Weasley',      'The Burrow',                'Ottery St Catchpole','0119544321'),
   ('Roger',     'Radcliff',     '27 Outer Circle',           'London',           '0442074860707'),
   ('Newt',      'Scamander',    'Diagon Alley',              'London',           '0442079460001'),
-  ('Tom',       'Riddle',       'Malfoy Manor',              'Wiltshire',        '0119844321'),
   ('Alice',     'Liddell',      'Christ Church',             'Oxford',           '0441865276150'),
-  ('Harry',     'Potter',       '4 Privet Drive',            'Little Whinging',  '0119084455'),
   ('Henry',     'Baskerville',  'Baskerville Hall',          'Dartmoor',         '0441626832093'),
   ('John',      'Dolittle',     'Oxenthorpe Road',           'Puddleby',         '0441803712345'),
   ('George',    'Darling',      '14 Kensington Gardens',     'London',           '0442079372121'),
@@ -32,25 +32,25 @@ INSERT INTO owners (first_name, last_name, address, city, telephone) VALUES
   ('Hercule',   'Poirot',       'Whitehaven Mansions',       'London',           '0442079241221');
 
 INSERT INTO pets (name, birth_date, type_id, owner_id) VALUES
-  ('Milton',          DATE '2020-09-07', 1, 1),  -- Schroedinger's cat
-  ('Scabbers',        DATE '2019-08-06', 6, 2),  -- Ron Weasley's rat
-  ('Pongo',           DATE '2018-04-17', 2, 3),  -- 101 Dalmatians
-  ('Perdita',         DATE '2018-03-07', 2, 3),
-  ('Pickett',         DATE '2020-11-30', 3, 4),  -- Scamander's bowtruckle
-  ('Nagini',          DATE '2017-01-20', 4, 5),  -- Voldemort's snake
-  ('Dinah',           DATE '2019-09-04', 1, 6),  -- Alice's cats
-  ('Cheshire',        DATE '2019-09-04', 1, 6),
-  ('Hedwig',          DATE '2018-08-06', 5, 7),  -- Harry's snowy owl
+  ('Hedwig',          DATE '2018-08-06', 5, 1),  -- Harry's snowy owl
+  ('Milton',          DATE '2020-09-07', 1, 2),  -- Schroedinger's cat
+  ('Nagini',          DATE '2017-01-20', 4, 3),  -- Voldemort's snake
+  ('Scabbers',        DATE '2019-08-06', 6, 4),  -- Ron Weasley's rat
+  ('Pongo',           DATE '2018-04-17', 2, 5),  -- 101 Dalmatians
+  ('Perdita',         DATE '2018-03-07', 2, 5),
+  ('Pickett',         DATE '2020-11-30', 3, 6),  -- Scamander's bowtruckle
+  ('Dinah',           DATE '2019-09-04', 1, 7),  -- Alice's cats
+  ('Cheshire',        DATE '2019-09-04', 1, 7),
   ('Baskerville',     DATE '2017-02-24', 2, 8),  -- the Hound of the Baskervilles
   ('Polynesia',       DATE '2016-03-09', 5, 9),  -- Dolittle's parrot
   ('Nana',            DATE '2018-06-24', 2, 10), -- Peter Pan's St. Bernard
   ('Liza',            DATE '2019-06-08', 1, 10);
 
 INSERT INTO visits (pet_id, visit_date, description) VALUES
-  (7, DATE '2024-03-04', 'rabies shot'),
-  (8, DATE '2024-03-04', 'rabies shot'),
-  (8, DATE '2023-06-04', 'neutered'),
-  (7, DATE '2022-09-04', 'spayed');
+  (8, DATE '2024-03-04', 'rabies shot'),   -- Dinah
+  (9, DATE '2024-03-04', 'rabies shot'),   -- Cheshire
+  (9, DATE '2023-06-04', 'neutered'),
+  (8, DATE '2022-09-04', 'spayed');
 
 INSERT INTO owners (first_name, last_name, address, city, telephone) VALUES
   ('Sam',       'Carraclough',  'Greenall Bridge',           'Yorkshire',        '0441943876543'),
@@ -110,7 +110,7 @@ INSERT INTO visits (pet_id, visit_date, description) VALUES
   (31, DATE '2026-05-02', 'wound on front paw'),
   (14, DATE '2026-05-02', 'post-vaccine follow-up'),
   (19, DATE '2026-05-03', 'surgical suture removal'),
-  (1,  DATE '2026-05-03', 'annual general checkup');
+  (2,  DATE '2026-05-03', 'annual general checkup');  -- Milton (Schroedinger's cat)
 
 INSERT INTO users (username, password, enabled) VALUES
   ('admin', '$2a$10$ymaklWBnpBKlgdMgkjWVF.GMGyvH8aDuTK.glFOaKw712LHtRRymS', TRUE);
