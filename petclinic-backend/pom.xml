@@ -205,6 +205,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- 'exec' classifier so the plain library jar stays usable as a Maven dep (petclinic-mcp depends on it). -->
+                    <classifier>exec</classifier>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
