@@ -24,6 +24,15 @@
         "GRAFANA_USERNAME": "admin",
         "GRAFANA_PASSWORD": "admin"
       }
+      },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--output-dir", "/tmp/playwright",
+        "--save-session",
+        "--save-trace"
+      ]
     }
   }
 }

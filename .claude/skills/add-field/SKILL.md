@@ -1,3 +1,8 @@
+---
+name: add-field
+description: Add a new field to an existing domain entity, propagating the change across all layers (OpenAPI spec, JPA entity, MapStruct mapper, DB schema). Explicit invocation only — user must type /add-field.
+---
+
 # Add Field to Entity
 
 Add a new field to an existing domain entity, propagating the change across all layers.
@@ -21,7 +26,7 @@ Follow these steps **in order**, using TDD — write a failing test first, confi
 
 ### 3. Regenerate code
 ```sh
-cd petclinic-backend && ./mvnw clean install -DskipTests
+cd petclinic-backend && mvn clean install -DskipTests
 ```
 This regenerates the DTOs in `target/generated-sources/`.
 
@@ -39,7 +44,7 @@ This regenerates the DTOs in `target/generated-sources/`.
 
 ### 7. Run the failing test again — it should now **pass**
 ```sh
-cd petclinic-backend && ./mvnw test -Dtest=EntityNameTest
+cd petclinic-backend && mvn test -Dtest=EntityNameTest
 ```
 
 ## Constraints
@@ -47,4 +52,3 @@ cd petclinic-backend && ./mvnw test -Dtest=EntityNameTest
 - Use Lombok where applicable
 - Line length ≤ 120 chars
 - Follow existing naming conventions in the entity
-
