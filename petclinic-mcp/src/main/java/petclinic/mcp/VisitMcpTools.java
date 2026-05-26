@@ -39,7 +39,8 @@ public class VisitMcpTools {
 
     @McpTool(
         name = "list_visits",
-        description = "List veterinary visits for every pet of the authenticated owner."
+        description = "List veterinary visits for every pet of the authenticated owner.",
+        annotations = @McpTool.McpAnnotations(readOnlyHint = true, openWorldHint = false)
     )
     public List<VisitView> listVisits() {
         int ownerId = McpSecurity.currentOwnerId();
