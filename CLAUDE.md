@@ -116,7 +116,7 @@ OpenAPI docs: http://localhost:8080/swagger-ui.html
 - Builder chains: one property per line, unless only 2 properties total
 
 ### CI Monitoring
-After `git push`: run `gh run list --branch <branch> --limit 1` to get the run ID, then `gh run watch <run-id> --exit-status` in background. On failure, investigate with `gh run view <run-id> --log-failed` and fix if related to current task.
+After `git push`: run `gh run watch --exit-status $(gh run list --limit 1 --json databaseId -q '.[0].databaseId')` in background. On failure, investigate with `gh run view --log-failed` and fix if related to current task.
 
 ## Task Modifiers
 - Always use TDD: write a failing test first, confirm it fails, then implement — no production code without a prior failing test
