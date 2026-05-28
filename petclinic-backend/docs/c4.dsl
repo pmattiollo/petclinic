@@ -12,6 +12,7 @@ workspace "PetClinic" "Veterinary practice management system" {
                 repositoryLayer = component "Repository Layer" "[repository] Spring Data JPA repositories" "Spring Data" "pkg:repository"
                 mapperLayer = component "Mapper Layer" "[mapper] MapStruct mappers" "MapStruct" "pkg:mapper"
                 security = component "Security" "[security] Spring Security configuration" "Spring Security" "pkg:security"
+                mcp = component "MCP" "[mcp] Spring AI MCP server (SSE) — tools and resources for pet owners" "Spring AI" "pkg:mcp"
             }
             database = container "Database" "Stores all data" "PostgreSQL"
         }
@@ -29,6 +30,8 @@ workspace "PetClinic" "Veterinary practice management system" {
         mapperLayer -> restLayer "uses"
         mapperLayer -> domainModel "uses"
         repositoryLayer -> domainModel "uses"
+        mcp -> domainModel "uses"
+        mcp -> repositoryLayer "uses"
     }
 
     views {

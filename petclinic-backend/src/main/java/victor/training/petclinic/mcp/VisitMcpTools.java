@@ -1,4 +1,4 @@
-package petclinic.mcp;
+package victor.training.petclinic.mcp;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

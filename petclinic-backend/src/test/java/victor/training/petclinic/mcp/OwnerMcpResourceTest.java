@@ -1,4 +1,4 @@
-package petclinic.mcp;
+package victor.training.petclinic.mcp;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,22 +14,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import victor.training.petclinic.model.Owner;
 import victor.training.petclinic.model.Pet;
-import victor.training.petclinic.model.PetType;
-import victor.training.petclinic.model.Visit;
 import victor.training.petclinic.repository.OwnerRepository;
 import victor.training.petclinic.repository.PetRepository;
-import victor.training.petclinic.repository.VisitRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-class ListVisitsToolTest {
+class OwnerMcpResourceTest {
 
-    @Autowired VisitMcpTools visitTools;
+    @Autowired OwnerMcpResource ownerMcpResource;
     @Autowired OwnerRepository ownerRepository;
     @Autowired PetRepository petRepository;
-    @Autowired VisitRepository visitRepository;
 
     @AfterEach
     void clearAuth() {
@@ -37,33 +34,35 @@ class ListVisitsToolTest {
     }
 
     @Test
-    void lists_visits_of_authenticated_owner() {
-        PetType firstType = petRepository.findPetTypes().get(0);
+    void renders_profile_with_pets_for_authenticated_owner() {
         Pet pet = new Pet()
-            .setName("Rex")
-            .setBirthDate(LocalDate.of(2020, 1, 1))
-            .setType(firstType);
-        Owner owner = new Owner()
-            .setFirstName("Tdd")
-            .setLastName("Tester")
-            .setAddress("1 Test Way")
-            .setCity("Testville")
-            .setTelephone("0000000000");
-        owner.addPet(pet);
-        ownerRepository.save(owner);
+            .setName("Scabbers")
+            .setBirthDate(LocalDate.of(2018, 6, 1))
+            .setType(petRepository.findPetTypes().get(0));
+        Owner ron = new Owner()
+            .setFirstName("Ronald")
+            .setLastName("Weasley_TST")
+            .setAddress("The Burrow")
+            .setCity("Ottery St Catchpole")
+            .setTelephone("0119544321");
+        ron.addPet(pet);
+        ownerRepository.save(ron);
+        authenticateAs(ron.getId());
 
-        visitRepository.save(new Visit()
-            .setPet(pet)
-            .setDate(LocalDate.of(2026, 5, 24))
-            .setDescription("Annual checkup"));
+        String profile = ownerMcpResource.me();
 
-        authenticateAs(owner.getId());
+        assertThat(profile)
+            .contains("Ronald Weasley_TST")
+            .contains("The Burrow")
+            .contains("Scabbers");
+    }
 
-        List<VisitMcpTools.VisitView> visits = visitTools.listVisits();
+    @Test
+    void unknown_id_throws() {
+        authenticateAs(999_999);
 
-        assertThat(visits)
-            .extracting(VisitMcpTools.VisitView::description)
-            .contains("Annual checkup");
+        assertThatThrownBy(() -> ownerMcpResource.me())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     private static void authenticateAs(int ownerId) {

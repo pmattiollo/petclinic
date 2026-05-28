@@ -10,6 +10,7 @@ caption All lines are ArchUnit-tested to be reflected in code.
 [Mapper] <<..mapper>>
 [REST] <<..rest>>
 [Security] <<..security>>
+[MCP] <<..mcp>>
 
 [Repository] --> [Model]
 [Mapper] --> [Model]
@@ -18,5 +19,7 @@ caption All lines are ArchUnit-tested to be reflected in code.
 [REST] --> [Repository]
 [REST] --> [Mapper]
 [REST] --> [DTO]
+[MCP] --> [Model]
+[MCP] --> [Repository]
 
 @enduml

@@ -1,4 +1,4 @@
-package petclinic.mcp;
+package victor.training.petclinic.mcp;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -35,9 +37,13 @@ public class McpSecurity {
         return Integer.parseInt(SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
+    // Scoped to MCP endpoints only so the backend's existing chain still owns /api/**.
+    // @Order ensures this chain is consulted before the backend's catch-all chain.
     @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     SecurityFilterChain mcpApiKeyChain(HttpSecurity http, McpProperties props) throws Exception {
         return http
+            .securityMatcher("/sse", "/sse/**", "/mcp/**")
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
