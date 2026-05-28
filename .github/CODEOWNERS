@@ -15,7 +15,7 @@
 
 # Architecture
 /petclinic-backend/docs/packages.puml @victorrentea/elders
-/petclinic-backend/docs/c4.dsl @victorrentea/elders
+/petclinic-backend/docs/c4model.dsl @victorrentea/elders
 
 # Dependencies
 **/pom.xml                       @victorrentea/elders

@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class C3ArchTest {
 
     private static final String BASE_PKG = "victor.training.petclinic";
-    private static final Path DSL_FILE   = Paths.get("docs/c4.dsl");
+    private static final Path DSL_FILE   = Paths.get("docs/c4model.dsl");
     private static final Path VIEWS_DIR  = Paths.get("docs/generated/c4views");
     private static final String BACKEND_CONTAINER = "Backend";
 
