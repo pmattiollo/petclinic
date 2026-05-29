@@ -7,26 +7,21 @@
     "ask": [
       "Edit(.claude/settings.json)",
       "Write(.claude/settings.json)",
+      "Edit(.claude/settings.local.json)",
+      "Write(.claude/settings.local.json)",
       "Edit(.githooks/*)",
       "Write(.githooks/*)",
       "Bash(git add .githooks*)",
-      "Edit(openapi.yaml)",
-      "Write(openapi.yaml)",
-      "Edit(petclinic-backend/docs/*)",
       "Edit(.github/workflows/*)",
       "Write(.github/workflows/*)",
       "Edit(petclinic-backend/src/test/java/victor/training/petclinic/guardrail/*)",
       "Write(petclinic-backend/src/test/java/victor/training/petclinic/guardrail/*)",
-      "Edit(petclinic-backend/.coverage-baseline)",
-      "Write(petclinic-backend/.coverage-baseline)",
       "Edit(.github/CODEOWNERS)",
       "Write(.github/CODEOWNERS)",
-      "Edit(.claude/settings.local.json)",
-      "Write(.claude/settings.local.json)",
       "Edit(**/pom.xml)",
       "Write(**/pom.xml)",
-      "Edit(petclinic-frontend/package.json)",
-      "Write(petclinic-frontend/package.json)"
+      "Edit(**/package.json)",
+      "Write(**/package.json)"
     ]
   },
   "skillOverrides": {

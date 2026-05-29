@@ -35,11 +35,11 @@ MVN_OUT=$(mktemp)
 trap 'rm -f "$MVN_OUT"' EXIT
 TESTS=(
   OpenApiExtractorTest
-  DomainModelExtractorTest
   PackagesArchTest
+  C3ArchTest
+  DomainModelExtractorTest
   DbSchemaExtractorTest
   JpaMatchesDBSchemaTest
-  C3ArchTest
 )
 TESTS_CSV=$(IFS=,; echo "${TESTS[*]}")
 echo "[pre-push] Running guardrail tests (this may take ~20s)…"
@@ -66,7 +66,7 @@ fi
 # ── Spectral lint of the freshly regenerated openapi.yaml ──────────────────
 if command -v npm >/dev/null 2>&1 && [ -d "$ROOT/petclinic-frontend/node_modules/@stoplight/spectral-cli" ]; then
   SPECTRAL_OUT=$(mktemp)
-  trap 'rm -f "$MVN_OUT" "$SPECTRAL_OUT"' EXIT
+  trap 'rm -f "$MVN_OUT" "$SPECTRAL_OUT" "${BUILD_OUT:-}"' EXIT
   if ! npm --prefix "$ROOT/petclinic-frontend" run lint:openapi --silent >"$SPECTRAL_OUT" 2>&1; then
     cat "$SPECTRAL_OUT"
     echo "[pre-push] ❌ Spectral found errors in openapi.yaml — push blocked."
@@ -74,6 +74,30 @@ if command -v npm >/dev/null 2>&1 && [ -d "$ROOT/petclinic-frontend/node_modules
   fi
 else
   echo "[pre-push] ⚠️  Spectral CLI missing — skipping OpenAPI lint."
+  echo "[pre-push]    Install with: cd petclinic-frontend && npm install"
+fi
+
+# ── Frontend chain: openapi.yaml → api-types.ts → ng build ─────────────────
+# Regenerates api-types.ts from the freshly-extracted openapi.yaml, then ng build.
+# Any field add/rename on the Java side surfaces here as a TS error against stale
+# frontend usages of the old type — push blocked.
+if command -v npm >/dev/null 2>&1 && [ -d "$ROOT/petclinic-frontend/node_modules" ]; then
+  BUILD_OUT=$(mktemp)
+  trap 'rm -f "$MVN_OUT" "$SPECTRAL_OUT" "$BUILD_OUT"' EXIT
+  echo "[pre-push] Running npm run build (regenerates api-types.ts, then ng build)…"
+  if ! npm --prefix "$ROOT/petclinic-frontend" run build --silent >"$BUILD_OUT" 2>&1; then
+    tail -200 "$BUILD_OUT"
+    echo "[pre-push] ❌ Frontend build failed against regenerated api-types.ts — push blocked."
+    exit 1
+  fi
+  # Drift: api-types.ts in HEAD must match what generate:api just produced.
+  if ! git diff --quiet HEAD -- "$ROOT/petclinic-frontend/src/app/generated/api-types.ts"; then
+    git diff --stat HEAD -- "$ROOT/petclinic-frontend/src/app/generated/api-types.ts"
+    echo "[pre-push] ❌ api-types.ts drifted from committed state — commit the regenerated file and push again."
+    exit 1
+  fi
+else
+  echo "[pre-push] ⚠️  npm or petclinic-frontend/node_modules missing — skipping api-types regen + ng build."
   echo "[pre-push]    Install with: cd petclinic-frontend && npm install"
 fi
 
