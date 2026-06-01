@@ -31,6 +31,6 @@ class JpaMatchesDBSchemaTest {
 
     @Test
     void contextLoads_meaningSchemaMatchesEntities() {
-        // Empty body. The assertion is that the Spring context loads at all.
+        // Empty body. The assertion is that the Spring context loads at all
     }
 }
