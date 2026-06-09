@@ -70,7 +70,7 @@ public class PetClinicMcp {
 
     public record VisitView(int id, int petId, String petName, LocalDate date, LocalTime time, String description) {}
 
-    public record VisitPhoneInput(String phone) {}
+    public record AmbulanceAddressInput(String address) {}
 
     @McpTool(
         name = "list_visits",
@@ -94,12 +94,11 @@ public class PetClinicMcp {
 
     @McpTool(
         name = "create_visit",
-        description = "Create a new vet visit for one of the authenticated owner's pets. "
-            + "Asks the user (via elicitation) to confirm before writing."
+        description = "Create a new vet visit for one of the authenticated owner's pets "
+            + "(date/time, pet, description). Books the visit directly — no confirmation prompt."
     )
     @Transactional
     public String createVisit(
-            McpSyncRequestContext context,
             @McpToolParam(description = "Pet ID (must belong to the authenticated owner)", required = true) int petId,
             @McpToolParam(description = "Visit date (yyyy-MM-dd); must be today or in the future", required = true) LocalDate visitDate,
             @McpToolParam(description = "Exact local time of the appointment (HH:mm), e.g. 08:00", required = true) LocalTime visitTime,
@@ -115,38 +114,6 @@ public class PetClinicMcp {
             throw new IllegalArgumentException("Visit time must be in the future: " + visitDate + " " + visitTime);
         }
 
-        if (context == null || !context.elicitEnabled()) {
-            throw new IllegalStateException(
-                "create_visit requires an MCP client that supports elicitation (owner must confirm).");
-        }
-        Owner owner = pet.getOwner();
-        String existingPhone = owner.getTelephone();
-        boolean hasPhone = existingPhone != null && !existingPhone.isBlank();
-
-        String prompt;
-        if (hasPhone) {
-            // Already have a number: ask only to CONFIRM it (pre-filled), or override with a new one.
-            prompt = "Confirm the visit for pet '" + pet.getName() + "' on " + visitDate + " at " + visitTime
-                + ". Reminders go to " + existingPhone + " — accept to keep it, or enter a different number.";
-        } else {
-            prompt = "Create visit for pet '" + pet.getName() + "' on " + visitDate + " at " + visitTime
-                + ". No phone number on file — please provide one to receive reminders.";
-        }
-        StructuredElicitResult<VisitPhoneInput> elicit =
-            context.elicit(e -> e.message(prompt), VisitPhoneInput.class);
-        if (elicit.action() != ElicitResult.Action.ACCEPT) {
-            return "Visit creation cancelled by user.";
-        }
-        VisitPhoneInput input = elicit.structuredContent();
-        String phone = input == null ? null : input.phone();
-        if (phone != null && !phone.isBlank()) {
-            owner.setTelephone(phone.trim());   // a new or changed number
-            ownerRepository.save(owner);
-        } else if (!hasPhone) {
-            throw new IllegalArgumentException("Phone number is required to schedule a visit.");
-        }
-        // else: blank answer but a number is already on file — keep it as-is.
-
         Visit v = new Visit();
         v.setDate(visitDate);
         v.setTime(visitTime);
@@ -154,7 +121,35 @@ public class PetClinicMcp {
         pet.addVisit(v);   // maintain both sides of the Pet<->Visit association
         Visit saved = visitRepository.save(v);
         return "Created visit id=" + saved.getId() + " for pet '" + pet.getName() + "' on " + visitDate
-            + " at " + visitTime + "; reminders will be sent to " + owner.getTelephone();
+            + " at " + visitTime;
+    }
+
+    @McpTool(
+        name = "call_vet_ambulance",
+        description = "Dispatch a veterinary ambulance to drive (by car) to a given address for an "
+            + "emergency. ELICITS the address from the user and asks them to confirm the dispatch request."
+    )
+    public String callVetAmbulance(McpSyncRequestContext context) {
+        if (context == null || !context.elicitEnabled()) {
+            throw new IllegalStateException(
+                "call_vet_ambulance requires an MCP client that supports elicitation (owner must confirm).");
+        }
+        // CONFIRMATION-style elicitation: phrase it so ACCEPT reads as "Request" (dispatch),
+        // not "Cancel". Same server-side context.elicit(...) API used elsewhere; the structured
+        // payload carries the required address the vet ambulance should drive to.
+        String prompt = "Request a vet ambulance to drive to your address? "
+            + "Enter the address to dispatch to, then confirm to Request the ambulance.";
+        StructuredElicitResult<AmbulanceAddressInput> elicit =
+            context.elicit(e -> e.message(prompt), AmbulanceAddressInput.class);
+        if (elicit.action() != ElicitResult.Action.ACCEPT) {
+            return "Vet ambulance was not requested.";
+        }
+        AmbulanceAddressInput input = elicit.structuredContent();
+        String address = input == null ? null : input.address();
+        if (address == null || address.isBlank()) {
+            throw new IllegalArgumentException("An address is required to dispatch the vet ambulance.");
+        }
+        return "Vet ambulance dispatched to " + address.trim();
     }
 
     @McpTool(

@@ -3,7 +3,6 @@ package victor.training.petclinic.mcp;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,10 +16,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springaicommunity.mcp.context.McpSyncRequestContext;
-import org.springaicommunity.mcp.context.StructuredElicitResult;
-import io.modelcontextprotocol.spec.McpSchema.ElicitResult;
-
 import victor.training.petclinic.model.Owner;
 import victor.training.petclinic.model.Pet;
 import victor.training.petclinic.model.PetType;
@@ -30,15 +25,12 @@ import victor.training.petclinic.repository.PetRepository;
 import victor.training.petclinic.repository.VisitRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 // Scenario test for the flow an LLM client drives over MCP when the user says
 // "Mițică (my cat) is sick — book an appointment for tomorrow at 8":
 //   1. read the me://profile resource to discover the caller's pets,
 //   2. parse Mițică's pet id out of the resource text (exactly what the LLM does),
-//   3. call create_visit for tomorrow, confirming the elicitation with a phone number.
+//   3. call create_visit for tomorrow (books directly — no elicitation/confirmation).
 // No LLM/API key needed: the LLM's *reasoning* is not under test here — only that the
 // tool/resource contract supports this flow end-to-end against a real DB.
 @SpringBootTest
@@ -70,9 +62,8 @@ class SickPetScenarioTest {
         // step 2: the LLM extracts the pet id from the resource text
         int petId = extractPetId(profile, "Mițică");
 
-        // step 3: the LLM calls create_visit for tomorrow at 08:00; the owner confirms via elicitation
-        McpSyncRequestContext context = acceptingContext("0744123456");
-        String result = petClinicMcp.createVisit(context, petId, tomorrow, LocalTime.of(8, 0),
+        // step 3: the LLM calls create_visit for tomorrow at 08:00 (books directly, no elicitation)
+        String result = petClinicMcp.createVisit(petId, tomorrow, LocalTime.of(8, 0),
             "Mițică is sick");
 
         assertThat(result).contains("Created visit").contains("Mițică")
@@ -113,16 +104,6 @@ class SickPetScenarioTest {
             .setTelephone("0700000000");
         owner.addPet(cat);
         return ownerRepository.save(owner);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static McpSyncRequestContext acceptingContext(String phone) {
-        McpSyncRequestContext context = mock(McpSyncRequestContext.class);
-        when(context.elicitEnabled()).thenReturn(true);
-        when(context.elicit(any(Consumer.class), any(Class.class)))
-            .thenReturn((StructuredElicitResult) new StructuredElicitResult<>(
-                ElicitResult.Action.ACCEPT, new PetClinicMcp.VisitPhoneInput(phone), null));
-        return context;
     }
 
     private static void authenticateAs(int ownerId) {

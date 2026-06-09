@@ -51,15 +51,12 @@ public class Assistant {
       """;
 
   private final ChatClient ai;
-  private final PendingElicitations elicitations;
 
   Assistant(
       ChatClient.Builder builder,
       VectorStore vectorStore, // interface, so tests can swap pgvector -> SimpleVectorStore
       McpSyncClient petclinicMcpClient,
-      PendingElicitations elicitations,
       LocalTools localTools) {
-    this.elicitations = elicitations;
     this.ai = builder
         .defaultSystem(SYSTEM_PROMPT)
         .defaultTools(localTools) // local tools (clock, email), alongside the remote MCP tools below
@@ -74,21 +71,16 @@ public class Assistant {
   Flux<String> assistant(@RequestParam String message, @AuthenticationPrincipal OwnerJwtPrincipal owner) {
     // owner is never null here: SecurityConfig's anyExchange().authenticated() rule makes the filter
     // chain reject unauthenticated /assistant requests with 401 before this controller is reached.
-    // Flux.using opens a ChatScope (at subscribe) so the MCP elicitation handler — which the SDK runs
-    // on its OWN thread — can recover THIS owner and route the phone prompt to the right browser (see
-    // PendingElicitations). Like defer, it postpones the BLOCKING ChatClient.stream() (which resolves
-    // MCP tools via listTools()) to subscription time, so it runs on boundedElastic where blocking is
-    // allowed; without that you get "block()/blockFirst()/blockLast() are blocking".
-    return Flux.using(
-            () -> elicitations.beginChat(owner.name()),
-            scope -> ai.prompt()
-                .system("The owner's username is \"%s\". Today is %s.".formatted(owner.name(), LocalDate.now()))
-                .user(message)
-                .toolContext(Map.of(LocalTools.OWNER_EMAIL, owner.email())) // owner email for the email tool
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, owner.name())) // this owner's history
-                .stream()
-                .content(),
-            PendingElicitations.ChatScope::close)
+    // Flux.defer postpones the BLOCKING ChatClient.stream() (which eagerly resolves MCP tools via a
+    // blocking listTools()) to subscription time, so it runs on boundedElastic where blocking is
+    // allowed; without it you get "block()/blockFirst()/blockLast() are blocking".
+    return Flux.defer(() -> ai.prompt()
+            .system("The owner's username is \"%s\". Today is %s.".formatted(owner.name(), LocalDate.now()))
+            .user(message)
+            .toolContext(Map.of(LocalTools.OWNER_EMAIL, owner.email())) // owner email for the email tool
+            .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, owner.name())) // this owner's history
+            .stream()
+            .content())
         .subscribeOn(Schedulers.boundedElastic());
   }
 

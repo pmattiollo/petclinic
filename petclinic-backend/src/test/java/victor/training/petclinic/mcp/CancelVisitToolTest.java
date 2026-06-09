@@ -85,15 +85,18 @@ class CancelVisitToolTest {
     }
 
     @Test
-    void create_throws_when_context_is_null() {
+    void create_books_visit_directly_without_elicitation() {
         Owner owner = ownerWithPet();
         Pet pet = owner.getPets().get(0);
         authenticateAs(owner.getId());
 
-        assertThatThrownBy(() -> petClinicMcp.createVisit(null, pet.getId(),
-                LocalDate.now().plusDays(7), LocalTime.of(10, 30), "Test visit"))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("elicitation");
+        String result = petClinicMcp.createVisit(pet.getId(),
+            LocalDate.now().plusDays(7), LocalTime.of(10, 30), "Test visit");
+
+        assertThat(result).contains("Created visit").contains("Whiskers");
+        assertThat(visitRepository.findByPetId(pet.getId()))
+            .extracting(Visit::getDescription)
+            .contains("Test visit");
     }
 
     @Test
@@ -103,7 +106,7 @@ class CancelVisitToolTest {
         Pet petOfOwner2 = owner2.getPets().get(0);
         authenticateAs(owner1.getId());
 
-        assertThatThrownBy(() -> petClinicMcp.createVisit(null, petOfOwner2.getId(),
+        assertThatThrownBy(() -> petClinicMcp.createVisit(petOfOwner2.getId(),
                 LocalDate.now().plusDays(7), LocalTime.of(10, 30), "Attempt"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("does not belong to owner");
@@ -114,7 +117,7 @@ class CancelVisitToolTest {
         Owner owner = ownerWithPet();
         authenticateAs(owner.getId());
 
-        assertThatThrownBy(() -> petClinicMcp.createVisit(null, 999_999,
+        assertThatThrownBy(() -> petClinicMcp.createVisit(999_999,
                 LocalDate.now().plusDays(7), LocalTime.of(10, 30), "Visit"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Pet not found");
@@ -126,7 +129,7 @@ class CancelVisitToolTest {
         Pet pet = owner.getPets().get(0);
         authenticateAs(owner.getId());
 
-        assertThatThrownBy(() -> petClinicMcp.createVisit(null, pet.getId(), LocalDate.of(2020, 1, 1), LocalTime.of(10, 30), "Old visit"))
+        assertThatThrownBy(() -> petClinicMcp.createVisit(pet.getId(), LocalDate.of(2020, 1, 1), LocalTime.of(10, 30), "Old visit"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("must be today or in the future");
     }
