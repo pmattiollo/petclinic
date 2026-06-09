@@ -125,34 +125,6 @@ public class PetClinicMcp {
     }
 
     @McpTool(
-        name = "call_vet_ambulance",
-        description = "Dispatch a veterinary ambulance to drive (by car) to a given address for an "
-            + "emergency. ELICITS the address from the user and asks them to confirm the dispatch request."
-    )
-    public String callVetAmbulance(McpSyncRequestContext context) {
-        if (context == null || !context.elicitEnabled()) {
-            throw new IllegalStateException(
-                "call_vet_ambulance requires an MCP client that supports elicitation (owner must confirm).");
-        }
-        // CONFIRMATION-style elicitation: phrase it so ACCEPT reads as "Request" (dispatch),
-        // not "Cancel". Same server-side context.elicit(...) API used elsewhere; the structured
-        // payload carries the required address the vet ambulance should drive to.
-        String prompt = "Request a vet ambulance to drive to your address? "
-            + "Enter the address to dispatch to, then confirm to Request the ambulance.";
-        StructuredElicitResult<AmbulanceAddressInput> elicit =
-            context.elicit(e -> e.message(prompt), AmbulanceAddressInput.class);
-        if (elicit.action() != ElicitResult.Action.ACCEPT) {
-            return "Vet ambulance was not requested.";
-        }
-        AmbulanceAddressInput input = elicit.structuredContent();
-        String address = input == null ? null : input.address();
-        if (address == null || address.isBlank()) {
-            throw new IllegalArgumentException("An address is required to dispatch the vet ambulance.");
-        }
-        return "Vet ambulance dispatched to " + address.trim();
-    }
-
-    @McpTool(
         name = "cancel_visit",
         description = "Cancel an upcoming vet visit for one of the authenticated owner's pets. "
             + "Only visits dated strictly in the future can be cancelled.",
@@ -188,5 +160,33 @@ public class PetClinicMcp {
         if (d.isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Visit date must be today or in the future: " + d);
         }
+    }
+
+    @McpTool(
+        name = "call_vet_ambulance",
+        description = "Dispatch a veterinary ambulance to drive (by car) to a given address for an "
+            + "emergency. ELICITS the address from the user and asks them to confirm the dispatch request."
+    )
+    public String callVetAmbulance(McpSyncRequestContext context) {
+        if (context == null || !context.elicitEnabled()) {
+            throw new IllegalStateException(
+                "call_vet_ambulance requires an MCP client that supports elicitation (owner must confirm).");
+        }
+        // CONFIRMATION-style elicitation: phrase it so ACCEPT reads as "Request" (dispatch),
+        // not "Cancel". Same server-side context.elicit(...) API used elsewhere; the structured
+        // payload carries the required address the vet ambulance should drive to.
+        String prompt = "Request a vet ambulance to drive to your address? "
+            + "Enter the address to dispatch to, then confirm to Request the ambulance.";
+        StructuredElicitResult<AmbulanceAddressInput> elicit =
+            context.elicit(e -> e.message(prompt), AmbulanceAddressInput.class);
+        if (elicit.action() != ElicitResult.Action.ACCEPT) {
+            return "Vet ambulance was not requested.";
+        }
+        AmbulanceAddressInput input = elicit.structuredContent();
+        String address = input == null ? null : input.address();
+        if (address == null || address.isBlank()) {
+            throw new IllegalArgumentException("An address is required to dispatch the vet ambulance.");
+        }
+        return "Vet ambulance dispatched to " + address.trim();
     }
 }
