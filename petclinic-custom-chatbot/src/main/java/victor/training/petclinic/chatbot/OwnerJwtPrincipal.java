@@ -8,7 +8,8 @@ import com.nimbusds.jwt.JWTParser;
 /**
  * The authenticated pet owner — the custom principal we put into Spring Security's context. Built
  * from the Bearer JWT the web page sends: we parse out the {@code name} / {@code email} claims, but
- * deliberately do NOT validate the signature (demo only).
+ * deliberately do NOT validate the signature (demo only). Returns {@code null} when there is no
+ * usable token, so {@link SecurityConfig} leaves the request unauthenticated (-> 401).
  *
  * <p>Deliberately NOT a {@link java.security.Principal}: if it were, WebFlux's generic Principal
  * argument resolver would inject the whole {@code Authentication} into a {@code @AuthenticationPrincipal}
@@ -16,12 +17,10 @@ import com.nimbusds.jwt.JWTParser;
  */
 record OwnerJwtPrincipal(String name, String email) {
 
-  static final OwnerJwtPrincipal ANONYMOUS = new OwnerJwtPrincipal("", "");
-
-  /** Parse the {@code Authorization: Bearer <jwt>} header into a principal; ANONYMOUS if absent/bad. */
+  /** Parse the {@code Authorization: Bearer <jwt>} header into a principal; {@code null} if absent/bad. */
   static OwnerJwtPrincipal fromBearerHeader(String authorizationHeader) {
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      return ANONYMOUS;
+      return null;
     }
     return fromJwt(authorizationHeader.substring("Bearer ".length()).trim());
   }
@@ -32,11 +31,11 @@ record OwnerJwtPrincipal(String name, String email) {
       String name = claims.getStringClaim("name");
       String email = claims.getStringClaim("email");
       if (name == null && email == null) {
-        return ANONYMOUS;
+        return null;
       }
       return new OwnerJwtPrincipal(orEmpty(name), orEmpty(email));
     } catch (ParseException | RuntimeException e) {
-      return ANONYMOUS;
+      return null;
     }
   }
 

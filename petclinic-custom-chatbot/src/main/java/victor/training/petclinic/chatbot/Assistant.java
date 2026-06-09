@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.Map;
 
 import io.modelcontextprotocol.client.McpSyncClient;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
@@ -12,18 +11,14 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
-import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-@Slf4j
 @RestController
 public class Assistant {
 
@@ -56,22 +51,16 @@ public class Assistant {
       """;
 
   private final ChatClient ai;
-  private final McpSyncClient mcp;
-  private final SyncMcpToolCallbackProvider mcpTools;
-  private volatile boolean mcpReady;
 
   Assistant(
       ChatClient.Builder builder,
       VectorStore vectorStore, // interface, so tests can swap pgvector -> SimpleVectorStore
       McpSyncClient petclinicMcpClient,
       LocalTools localTools) {
-    this.mcp = petclinicMcpClient;
-    // Remote MCP tools are resolved per request (see mcpToolCallbacks), NOT wired at startup — so
-    // the chatbot boots even when the backend is down and picks the tools up once it's reachable.
-    this.mcpTools = SyncMcpToolCallbackProvider.builder().mcpClients(petclinicMcpClient).build();
     this.ai = builder
         .defaultSystem(SYSTEM_PROMPT)
-        .defaultTools(localTools) // local tools (clock, email); remote MCP tools added per request
+        .defaultTools(localTools) // local tools (clock, email), alongside the remote MCP tools below
+        .defaultToolCallbacks(SyncMcpToolCallbackProvider.builder().mcpClients(petclinicMcpClient).build())
         .defaultAdvisors(
             chatMemoryAdvisor(),
             QuestionAnswerAdvisor.builder(vectorStore).build()) // RAG over the specialty knowledge
@@ -80,37 +69,17 @@ public class Assistant {
 
   @GetMapping(value = "/assistant", produces = "text/markdown")
   Flux<String> assistant(@RequestParam String message, @AuthenticationPrincipal OwnerJwtPrincipal owner) {
-    if (owner == null) { // no/invalid Bearer token -> SecurityConfig left the request unauthenticated
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "A valid Bearer token is required.");
-    }
-    // The AI + MCP calls are blocking, so build and run the whole pipeline off the Netty event loop.
-    return Flux.defer(() -> ai.prompt()
-            .system("The owner's username is \"%s\". Today is %s.".formatted(owner.name(), LocalDate.now()))
-            .user(message)
-            .toolContext(Map.of(LocalTools.OWNER_EMAIL, owner.email())) // owner email for the email tool
-            .toolCallbacks(mcpToolCallbacks())                          // remote petclinic MCP tools
-            .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, owner.name())) // this owner's history
-            .stream()
-            .content())
+    // owner is never null here: SecurityConfig's anyExchange().authenticated() rule makes the filter
+    // chain reject unauthenticated /assistant requests with 401 before this controller is reached.
+    return ai.prompt()
+        .system("The owner's username is \"%s\". Today is %s.".formatted(owner.name(), LocalDate.now()))
+        .user(message)
+        .toolContext(Map.of(LocalTools.OWNER_EMAIL, owner.email())) // owner email for the email tool
+        .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, owner.name())) // this owner's history
+        .stream()
+        .content()
+        // MCP tool calls use a blocking (sync) client, so run the streaming off the Netty event loop.
         .subscribeOn(Schedulers.boundedElastic());
-  }
-
-  /**
-   * Connects to the petclinic MCP server on first use and retries on every later request until it's
-   * up. While it's unreachable, the assistant still answers — just with the local tools only.
-   */
-  private ToolCallback[] mcpToolCallbacks() {
-    try {
-      if (!mcpReady) {
-        mcp.initialize();
-        mcpReady = true;
-      }
-      return mcpTools.getToolCallbacks();
-    } catch (RuntimeException e) {
-      mcpReady = false; // retry on the next request once the backend comes back
-      log.warn("Petclinic MCP server unreachable — answering with local tools only ({})", e.toString());
-      return new ToolCallback[0];
-    }
   }
 
   /**

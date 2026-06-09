@@ -46,12 +46,17 @@ public class ChatbotApp {
         .build();
     // create_visit asks the client for a phone via MCP ELICITATION. Single-turn REST has no
     // human at the keyboard, so we auto-ACCEPT a configured demo phone here.
-    // NOTE: we deliberately do NOT initialize() here. Initializing at startup hard-couples the
-    // chatbot's boot to the backend being up (and a 20s handshake timeout if it isn't). Instead
-    // Assistant connects lazily on the first chat request and retries until the backend is up.
-    return McpClient.sync(transport)
+    var client = McpClient.sync(transport)
         .elicitation(req -> new ElicitResult(ElicitResult.Action.ACCEPT, Map.of("phone", phone)))
         .capabilities(ClientCapabilities.builder().elicitation().build())
         .build();
+    // Fail fast: the chatbot is useless without its tools, so refuse to start if the backend is down.
+    try {
+      client.initialize();
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "The petclinic MCP server at " + url + " is unreachable — start the backend first.", e);
+    }
+    return client;
   }
 }

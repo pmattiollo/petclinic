@@ -55,7 +55,7 @@ class SecurityConfig {
     return exchange -> {
       String header = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
       OwnerJwtPrincipal owner = OwnerJwtPrincipal.fromBearerHeader(header);
-      if (owner == OwnerJwtPrincipal.ANONYMOUS) {
+      if (owner == null) {
         return Mono.empty(); // stays unauthenticated -> /assistant gets 401; static page still loads
       }
       Authentication auth = new UsernamePasswordAuthenticationToken(owner, null, List.of());

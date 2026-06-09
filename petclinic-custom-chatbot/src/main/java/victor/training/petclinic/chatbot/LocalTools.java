@@ -43,7 +43,7 @@ class LocalTools {
       return "No authenticated owner email available — cannot send.";
     }
     // Demo only — no real email is sent; we just pretend and log it.
-    log.info("📧 (demo) sent email to {} — subject: \"{}\"", to, subject);
+    log.info("📧 (demo) sent email to {} — subject: \"{}\" — body: \"{}\"", to, subject, body);
     return "Email sent to " + to;
   }
 }

@@ -22,9 +22,9 @@ class OwnerJwtPrincipalTest {
   }
 
   @Test
-  void returns_anonymous_when_header_is_missing_or_malformed() {
-    assertThat(OwnerJwtPrincipal.fromBearerHeader(null)).isEqualTo(OwnerJwtPrincipal.ANONYMOUS);
-    assertThat(OwnerJwtPrincipal.fromBearerHeader("Basic abc")).isEqualTo(OwnerJwtPrincipal.ANONYMOUS);
-    assertThat(OwnerJwtPrincipal.fromBearerHeader("Bearer not-a-jwt")).isEqualTo(OwnerJwtPrincipal.ANONYMOUS);
+  void returns_null_when_header_is_missing_or_malformed() {
+    assertThat(OwnerJwtPrincipal.fromBearerHeader(null)).isNull();
+    assertThat(OwnerJwtPrincipal.fromBearerHeader("Basic abc")).isNull();
+    assertThat(OwnerJwtPrincipal.fromBearerHeader("Bearer not-a-jwt")).isNull();
   }
 }
