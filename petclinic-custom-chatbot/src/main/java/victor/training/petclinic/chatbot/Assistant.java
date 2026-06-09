@@ -24,7 +24,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
 @RestController
-public class AssistantController {
+public class Assistant {
 
   static final String SYSTEM_PROMPT = """
       You are the PetClinic triage assistant for a veterinary clinic.
@@ -43,26 +43,28 @@ public class AssistantController {
       - Read the owner's profile and pets from the `me://petclinic-owner-profile` resource.
       - ALWAYS confirm WHICH pet the visit is for before booking. If the owner has more than
         one pet, ask which one — never guess.
+      - To resolve relative times like "now", "in 1 hour" or "tomorrow", call the
+        current-date-time tool for the exact current time — never guess what time it is now.
       - Then call the `create_visit` tool for that pet with a FUTURE date and time and a
         description that summarizes the symptom and the chosen specialty.
-      - Today's date is supplied to you by the system — use it to pick a valid future date,
-        and ask the owner for their preferred day/time rather than silently defaulting.
       - After booking, confirm with the returned visit id and email the owner a short
         confirmation using the send-email tool (it always goes to the logged-in owner).
 
-      Be concise. When unsure, ask rather than assume. Use the earlier conversation as context.
+      Keep your answers concise and helpful. When unsure, ask rather than assume, and use the
+      earlier conversation as context.
       """;
 
   private final ChatClient ai;
 
-  AssistantController(
+  Assistant(
       ChatClient.Builder builder,
       VectorStore vectorStore, // interface, so tests can swap pgvector -> SimpleVectorStore
       McpSyncClient petclinicMcpClient,
-      EmailTool emailTool) {
+      EmailTool emailTool,
+      ClockTool clockTool) {
     this.ai = builder
         .defaultSystem(SYSTEM_PROMPT)
-        .defaultTools(emailTool) // local tool, alongside the remote MCP tools below
+        .defaultTools(emailTool, clockTool) // local tools, alongside the remote MCP tools below
         .defaultToolCallbacks(SyncMcpToolCallbackProvider.builder().mcpClients(petclinicMcpClient).build())
         .defaultAdvisors(
             // Per-conversation memory: history is keyed by conversationId (set to the username

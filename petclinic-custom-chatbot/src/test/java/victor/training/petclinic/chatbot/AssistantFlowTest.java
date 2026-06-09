@@ -68,6 +68,15 @@ class AssistantFlowTest {
     assertThat(answer.toLowerCase()).contains("pixel");
   }
 
+  @Test
+  void books_a_visit_relative_to_now_using_the_clock_tool() {
+    String user = "clock-demo";
+    ask(user, "My dog Leo is limping and won't put weight on his leg.");
+    // "one hour from now" only resolves to a valid FUTURE time if the assistant asks the clock tool.
+    String r = ask(user, "Yes, book a radiology visit for Leo one hour from now.");
+    assertThat(r.toLowerCase()).containsAnyOf("scheduled", "booked", "created");
+  }
+
   /** Calls the streaming markdown endpoint and joins all chunks into one String. */
   private String ask(String username, String q) {
     WebClient webClient = WebClient.create("http://localhost:" + port);

@@ -11,7 +11,8 @@
 <!-- top controls: name -->
 <div class="top-controls">
     <label for="assistantUser">Name</label>
-    <input type="text" id="assistantUser" placeholder="Name" value="george" style="width:120px; padding:6px;" />
+    <input type="text" id="assistantUser" placeholder="Name" value="george" readonly style="width:160px; padding:6px;" />
+    <span id="assistantEmail" class="muted" style="margin-left:8px; color:#6b7280;"></span>
 </div>
 
 <!-- message history -->
@@ -49,6 +50,14 @@
         // Demo "access token" the page presents to the assistant on every request. Its email claim
         // is what the local EmailTool sends to. In a real app this would come from your login/OAuth flow.
         var DEMO_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6Ikdlb3JnZSBGcmFua2xpbiIsImVtYWlsIjoiZ2VvcmdlLmZyYW5rbGluQHBldGNsaW5pYy5leGFtcGxlIiwiaWF0IjoxNzQ5MTY4MDAwLCJleHAiOjE4MTIyNDAwMDB9.Xk7mN3qR2vL8pY4sA6dW1eH0fT9bC5jOuQzEiWs';
+
+        // The user is fixed by the access token (read-only) — extract its claims (sub / name / email).
+        try {
+            var jwtClaims = JSON.parse(atob(DEMO_JWT.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            if (jwtClaims.name) userInput.value = jwtClaims.name;
+            var emailEl = document.getElementById('assistantEmail');
+            if (emailEl && jwtClaims.email) emailEl.innerText = '<' + jwtClaims.email + '>';
+        } catch (e) { /* keep the default */ }
 
         function scrollHistoryToBottom() {
             if (!historyEl) return;

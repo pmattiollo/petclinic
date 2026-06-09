@@ -1,4 +1,5 @@
 /* extracted styles for assistant page */
+.prompt::before { content: "Send: "; }
 /* light mode defaults */
 :root {
     --bg: #ffffff;
