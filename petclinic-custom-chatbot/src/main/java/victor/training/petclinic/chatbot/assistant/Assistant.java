@@ -15,6 +15,7 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -102,6 +103,7 @@ public class Assistant {
   private final MessageWindowChatMemory chatMemory; // kept as a field so /history DELETE can clear it
   private final JudgeGuard judgeGuard; // the semantic "judge LLM" input gate (see JudgeGuard)
 
+  @Autowired // disambiguate from the test-seam constructor below (two ctors -> Spring needs the marker)
   Assistant(
       ChatClient.Builder builder,
       VectorStore vectorStore, // interface, so tests can swap pgvector -> SimpleVectorStore
