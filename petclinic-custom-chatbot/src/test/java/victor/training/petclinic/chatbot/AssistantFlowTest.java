@@ -120,8 +120,9 @@ class AssistantFlowTest {
   /** A JWT with a throw-away (never-verified) signature — the app only reads the payload claims. */
   private static String demoJwt(String username) {
     String header = base64Url("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
+    // sub=1 (George) is the OWNER the backend books for — the chatbot propagates this token to the MCP.
     String payload = base64Url(
-        "{\"name\":\"" + username + "\",\"email\":\"" + username + "@petclinic.example\"}");
+        "{\"sub\":\"1\",\"name\":\"" + username + "\",\"email\":\"" + username + "@petclinic.example\"}");
     return header + "." + payload + ".c2ln"; // dummy base64url signature, not validated
   }
 

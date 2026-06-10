@@ -6,6 +6,7 @@ import java.util.Base64;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -28,7 +29,11 @@ import jakarta.servlet.http.HttpServletResponse;
 @Configuration
 public class McpSecurity {
 
-    /** Owner id of the caller, extracted from the JWT subject claim. */
+    /** Static SERVICE key — a trusted chatbot must present it (header {@code X-API-Key}) on every call. */
+    @Value("${petclinic.mcp.api-key}")
+    private String apiKey;
+
+    /** Owner id of the caller, extracted from the per-request JWT subject claim. */
     public static int currentOwnerId() {
         return Integer.parseInt(SecurityContextHolder.getContext().getAuthentication().getName());
     }
@@ -43,28 +48,44 @@ public class McpSecurity {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-            .addFilterBefore(new JwtBearerFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new McpAuthFilter(apiKey), UsernamePasswordAuthenticationFilter.class)
             .httpBasic(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
             .build();
     }
 
-    private static class JwtBearerFilter extends OncePerRequestFilter {
+    /**
+     * Two-part auth: (1) a static SERVICE API key gates the transport — every /mcp request (incl. the
+     * SSE handshake) must carry it; (2) the per-request USER identity is the {@code sub} of the Bearer
+     * JWT a tool call carries (the chatbot propagates the end-user's browser token). The handshake has
+     * no Bearer, so it runs as the "mcp-service" identity; owner-scoped tools read {@link #currentOwnerId}.
+     */
+    private static class McpAuthFilter extends OncePerRequestFilter {
+
+        private final String apiKey;
+
+        McpAuthFilter(String apiKey) {
+            this.apiKey = apiKey;
+        }
 
         @Override
         protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
-            String header = req.getHeader("Authorization");
-            if (header != null && header.startsWith("Bearer ")) {
-                String subject = extractSubject(header.substring(7));
-                if (subject != null) {
-                    var auth = new UsernamePasswordAuthenticationToken(
-                        subject,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_MCP")));
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                }
+            if (!apiKey.equals(req.getHeader("X-API-Key"))) {
+                res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid MCP API key");
+                return;
             }
+            String header = req.getHeader("Authorization");
+            String subject = null;
+            if (header != null && header.startsWith("Bearer ")) {
+                subject = extractSubject(header.substring(7));
+            }
+            Object principal = subject != null ? subject : "mcp-service";
+            var auth = new UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_MCP")));
+            SecurityContextHolder.getContext().setAuthentication(auth);
             chain.doFilter(req, res);
         }
 

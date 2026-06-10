@@ -15,7 +15,7 @@ import com.nimbusds.jwt.JWTParser;
  * argument resolver would inject the whole {@code Authentication} into a {@code @AuthenticationPrincipal}
  * parameter of this type, causing an argument-type-mismatch 500.
  */
-record OwnerJwtPrincipal(String name, String email) {
+record OwnerJwtPrincipal(String name, String email, String token) {
 
   /** Parse the {@code Authorization: Bearer <jwt>} header into a principal; {@code null} if absent/bad. */
   static OwnerJwtPrincipal fromBearerHeader(String authorizationHeader) {
@@ -33,7 +33,8 @@ record OwnerJwtPrincipal(String name, String email) {
       if (name == null && email == null) {
         return null;
       }
-      return new OwnerJwtPrincipal(orEmpty(name), orEmpty(email));
+      // keep the raw token so the controller can propagate it to the MCP server for THIS user's calls
+      return new OwnerJwtPrincipal(orEmpty(name), orEmpty(email), token);
     } catch (ParseException | RuntimeException e) {
       return null;
     }

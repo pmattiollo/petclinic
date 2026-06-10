@@ -4,7 +4,7 @@
       "type": "sse",
       "url": "http://localhost:8080/mcp",
       "headers": {
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZSI6Ikdlb3JnZSBGcmFua2xpbiIsImVtYWlsIjoiZ2VvcmdlLmZyYW5rbGluQHBldGNsaW5pYy5leGFtcGxlIiwiaWF0IjoxNzQ5MTY4MDAwLCJleHAiOjE4MTIyNDAwMDB9.Xk7mN3qR2vL8pY4sA6dW1eH0fT9bC5jOuQzEiWs"
+        "X-API-Key": "pc-mcp-7f3a9c2e1b8d4056"
       }
     }
   }

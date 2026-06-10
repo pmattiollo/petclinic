@@ -3,6 +3,7 @@ package victor.training.petclinic.mcp;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
@@ -11,8 +12,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// Covers the JWT Bearer filter wired by McpSecurity: /mcp and /mcp/** require a valid Bearer token.
-// Without these, Sonar new-code coverage tanks because the filter chain bean only runs against real HTTP.
+// Covers the service-key gate wired by McpSecurity: every /mcp request must carry a valid X-API-Key.
+// (The per-user identity — the JWT sub — is layered on top, but the API key is what gates the transport.)
 @SpringBootTest
 @AutoConfigureEmbeddedDatabase(provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY)
 @AutoConfigureMockMvc
@@ -25,27 +26,28 @@ class McpHttpSecurityTest {
 
     @Autowired MockMvc mockMvc;
 
+    @Value("${petclinic.mcp.api-key}") String apiKey;
+
     @Test
-    void mcpStream_withoutToken_isForbidden() throws Exception {
+    void mcp_withoutApiKey_isUnauthorized() throws Exception {
         mockMvc.perform(get("/mcp"))
-            .andExpect(status().isForbidden());
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void mcp_withMalformedToken_isForbidden() throws Exception {
-        mockMvc.perform(post("/mcp").header("Authorization", "Bearer not.a.real.jwt"))
-            .andExpect(status().isForbidden());
+    void mcp_withWrongApiKey_isUnauthorized() throws Exception {
+        mockMvc.perform(get("/mcp").header("X-API-Key", "not-the-key"))
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void mcp_withValidJwt_passesFilter() throws Exception {
-        // Any non-403 status proves the JWT filter authenticated the caller; the MCP endpoint's
-        // own response shape (e.g., 400 for empty body) is not the point here.
-        mockMvc.perform(post("/mcp").header("Authorization", "Bearer " + VALID_JWT))
+    void mcp_withApiKey_passesTheServiceGate() throws Exception {
+        // The API key authenticates the calling service; any non-401 proves it passed the gate (the
+        // MCP endpoint's own response shape — e.g. 400 for an empty body — is not the point here).
+        mockMvc.perform(post("/mcp").header("X-API-Key", apiKey).header("Authorization", "Bearer " + VALID_JWT))
             .andExpect(result -> {
-                int status = result.getResponse().getStatus();
-                if (status == 403) {
-                    throw new AssertionError("Expected JWT auth to pass, got 403");
+                if (result.getResponse().getStatus() == 401) {
+                    throw new AssertionError("Expected the API key to pass the service gate, got 401");
                 }
             });
     }
