@@ -107,7 +107,6 @@ export interface components {
       /** Format: int32 */
       id?: number;
       name?: string;
-      preConsultationRecommendations?: string;
     };
     OwnerDto: {
       /**
@@ -254,7 +253,7 @@ export interface components {
     };
     SpecialtyDto: {
       /**
-       * @description Symptoms this specialty handles; matched against the patient's described symptom.
+       * @description The section that identifies this specialty (symptoms); vectorized into the chatbot RAG.
        * @example limping, broken bone, swollen leg, can't bear weight
        */
       description?: string;
@@ -269,11 +268,6 @@ export interface components {
        * @example radiology
        */
       name: string;
-      /**
-       * @description What the owner should do for the pet until the visit.
-       * @example Keep the pet calm and restrict movement; avoid food in case sedation is needed.
-       */
-      preConsultationRecommendations?: string;
     };
     UserDto: {
       /**

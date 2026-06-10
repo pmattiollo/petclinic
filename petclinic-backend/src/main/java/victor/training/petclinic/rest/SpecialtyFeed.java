@@ -21,7 +21,7 @@ public class SpecialtyFeed {
     private final SpecialtyRepository specialtyRepository;
 
     /** Lean projection — exactly what a RAG/sync client needs, decoupled from {@link SpecialtyDto}. */
-    public record Item(Integer id, String name, String description, String preConsultationRecommendations) {}
+    public record Item(Integer id, String name, String description) {}
 
     @Cacheable("specialtyFeed")
     public List<Item> load() {
@@ -41,6 +41,6 @@ public class SpecialtyFeed {
     }
 
     private Item toItem(Specialty s) {
-        return new Item(s.getId(), s.getName(), s.getDescription(), s.getPreConsultationRecommendations());
+        return new Item(s.getId(), s.getName(), s.getDescription());
     }
 }

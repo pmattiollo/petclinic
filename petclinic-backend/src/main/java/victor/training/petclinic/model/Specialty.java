@@ -16,10 +16,7 @@ public class Specialty {
 
     private String name;
 
-    /** Symptoms this specialty handles. Matched (vectorized) against the patient's description. */
+    /** The section that identifies this specialty (symptoms); vectorized into the chatbot RAG. */
     private String description;
-
-    /** What the owner should do until the visit. Shown as guidance, never vectorized. */
-    private String preConsultationRecommendations;
 
 }

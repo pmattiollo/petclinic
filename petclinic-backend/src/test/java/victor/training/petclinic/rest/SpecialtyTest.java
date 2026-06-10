@@ -173,23 +173,6 @@ public class SpecialtyTest {
     }
 
     @Test
-    void update_persistsRecommendations() throws Exception {
-        SpecialtyDto existing = callGet(specialtyId);
-        existing.setDescription("limping, swollen leg");
-        existing.setPreConsultationRecommendations("Keep the pet calm and restrict movement.");
-
-        mockMvc.perform(put("/api/specialties/" + specialtyId)
-                .content(mapper.writeValueAsString(existing))
-                .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is2xxSuccessful());
-
-        SpecialtyDto updated = callGet(specialtyId);
-        assertThat(updated.getDescription()).isEqualTo("limping, swollen leg");
-        assertThat(updated.getPreConsultationRecommendations())
-            .isEqualTo("Keep the pet calm and restrict movement.");
-    }
-
-    @Test
     void feed_returnsAllSpecialtiesWithEtag() throws Exception {
         String etag = mockMvc.perform(get("/api/specialties/feed"))
             .andExpect(status().isOk())

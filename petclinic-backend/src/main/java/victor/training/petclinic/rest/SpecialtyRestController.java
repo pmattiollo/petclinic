@@ -50,7 +50,6 @@ public class SpecialtyRestController {
         Specialty currentSpecialty = specialtyRepository.findById(specialtyId).orElseThrow();
         currentSpecialty.setName(specialtyDto.getName());
         currentSpecialty.setDescription(specialtyDto.getDescription());
-        currentSpecialty.setPreConsultationRecommendations(specialtyDto.getPreConsultationRecommendations());
         specialtyRepository.save(currentSpecialty);
         specialtyFeed.invalidate();
     }
