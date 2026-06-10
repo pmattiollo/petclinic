@@ -101,7 +101,7 @@ public class Assistant {
   private final ChatHistory chatHistory;
   private final ChatModel chatModel; // the single active model bean (OpenAI by default, Ollama in `local`)
   private final MessageWindowChatMemory chatMemory; // kept as a field so /history DELETE can clear it
-  private final JudgeGuard judgeGuard; // the semantic "judge LLM" input gate (see JudgeGuard)
+  private final JudgeGuard judgeGuard; // the semantic "judge LLM" input + output gates (see JudgeGuard)
 
   @Autowired // disambiguate from the test-seam constructor below (two ctors -> Spring needs the marker)
   Assistant(
@@ -150,9 +150,7 @@ public class Assistant {
   String assistant(@RequestParam String message, @AuthenticationPrincipal OwnerJwtPrincipal owner) {
     String conversationId = owner.name();
     chatHistory.append(conversationId, "user", message); // record the user turn in the FULL transcript
-    // Judge LLM layer: one cheap, SEPARATE classifier call that semantically vets the inbound message
-    // BEFORE the main model — catching paraphrased jailbreaks/off-topic asks the SafeGuardAdvisor
-    // substring filter (still active as defense-in-depth) misses. Input-gating only; UNSAFE short-circuits.
+    // Judge INPUT gate: vet the inbound message before the main model; UNSAFE short-circuits.
     if (!judgeGuard.isAllowed(message)) {
       chatHistory.append(conversationId, "assistant", REFUSAL_MESSAGE);
       return REFUSAL_MESSAGE;
@@ -164,6 +162,10 @@ public class Assistant {
         .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId)) // this owner's history
         .call()
         .content();
+    // Judge OUTPUT gate: review the produced reply against the request; replace slop/off-topic drift.
+    if (!judgeGuard.isReplyAllowed(message, reply)) {
+      reply = REFUSAL_MESSAGE;
+    }
     chatHistory.append(conversationId, "assistant", reply.trim());
     return reply;
   }

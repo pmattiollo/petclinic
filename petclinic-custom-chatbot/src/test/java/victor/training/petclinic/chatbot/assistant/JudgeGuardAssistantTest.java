@@ -18,9 +18,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * Deterministic (no OpenAI) test proving the {@link JudgeGuard} "judge LLM" layer is wired into
- * {@code /assistant} as an INPUT gate: an UNSAFE verdict short-circuits with {@link
- * Assistant#REFUSAL_MESSAGE} and the main {@link ChatClient} is NEVER called; a SAFE verdict lets
- * the request proceed to the main model. The judge and the main chat client are both mocked.
+ * {@code /assistant} as both an INPUT and an OUTPUT gate. INPUT: an UNSAFE message short-circuits
+ * with {@link Assistant#REFUSAL_MESSAGE} and the main {@link ChatClient} is NEVER called. OUTPUT:
+ * a safe message reaches the model, but an UNSAFE reply verdict replaces the content with the
+ * refusal. A safe-in / safe-out request passes through untouched. Both judges and the main chat
+ * client are mocked.
  */
 class JudgeGuardAssistantTest {
 
@@ -53,14 +55,31 @@ class JudgeGuardAssistantTest {
   }
 
   @Test
-  void safe_message_passes_the_judge_and_reaches_the_main_model() {
+  void safe_message_and_safe_reply_pass_both_gates_and_reach_the_owner() {
     when(judgeGuard.isAllowed(any())).thenReturn(true);
+    when(judgeGuard.isReplyAllowed(any(), any())).thenReturn(true);
     stubMainChatClientReply("Sounds like your dog needs radiology — shall I book a visit?");
 
     String reply = assistant.assistant("My dog Leo is limping", george);
 
     assertThat(reply).contains("radiology");
     verify(judgeGuard).isAllowed("My dog Leo is limping");
+  }
+
+  @Test
+  void safe_message_but_unsafe_reply_is_replaced_with_the_refusal() {
+    when(judgeGuard.isAllowed(any())).thenReturn(true);
+    when(judgeGuard.isReplyAllowed(any(), any())).thenReturn(false);
+    stubMainChatClientReply("Here is a Python script that scrapes a website...");
+
+    String reply = assistant.assistant("My dog Leo is limping", george);
+
+    assertThat(reply).isEqualTo(Assistant.REFUSAL_MESSAGE);
+    // the OUTPUT-gate refusal (not the model's drift) is what lands in the transcript
+    assertThat(chatHistory.transcript("george"))
+        .extracting(ChatHistory.Entry::text)
+        .contains(Assistant.REFUSAL_MESSAGE)
+        .doesNotContain("Here is a Python script that scrapes a website...");
   }
 
   /** Stubs the main chat client's fluent chain so the controller's terminal call returns content. */
