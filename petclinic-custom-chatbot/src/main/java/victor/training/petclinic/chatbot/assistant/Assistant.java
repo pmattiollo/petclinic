@@ -154,8 +154,8 @@ public class Assistant {
     // BEFORE the main model — catching paraphrased jailbreaks/off-topic asks the SafeGuardAdvisor
     // substring filter (still active as defense-in-depth) misses. Input-gating only; UNSAFE short-circuits.
     if (!judgeGuard.isAllowed(message)) {
-      chatHistory.append(conversationId, "assistant", REFUSAL_MESSAGE); // record the refusal as the reply
-      return REFUSAL_MESSAGE; // do NOT call the main chatClient
+      chatHistory.append(conversationId, "assistant", REFUSAL_MESSAGE);
+      return REFUSAL_MESSAGE;
     }
     String reply = chatClient.prompt()
         .system("The owner's username is \"%s\". Today is %s.".formatted(owner.name(), LocalDate.now()))
@@ -164,9 +164,7 @@ public class Assistant {
         .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId)) // this owner's history
         .call()
         .content();
-    chatHistory.append(conversationId, "assistant", reply.trim()); // record the assistant reply
-    // The MCP tool calls above ran on THIS request thread, so RemoteToolsConfig.injectAuthHeaders read
-    // the owner from the SecurityContext to propagate the per-user Bearer to the backend — no plumbing.
+    chatHistory.append(conversationId, "assistant", reply.trim());
     return reply;
   }
 
