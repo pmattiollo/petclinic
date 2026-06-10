@@ -11,11 +11,11 @@ import com.nimbusds.jwt.JWTParser;
  * deliberately do NOT validate the signature (demo only). Returns {@code null} when there is no
  * usable token, so {@link SecurityConfig} leaves the request unauthenticated (-> 401).
  *
- * <p>Deliberately NOT a {@link java.security.Principal}: if it were, WebFlux's generic Principal
+ * <p>Deliberately NOT a {@link java.security.Principal}: if it were, Spring's generic Principal
  * argument resolver would inject the whole {@code Authentication} into a {@code @AuthenticationPrincipal}
  * parameter of this type, causing an argument-type-mismatch 500.
  */
-record OwnerJwtPrincipal(String name, String email, String token) {
+record OwnerJwtPrincipal(String sub, String name, String email, String token) {
 
   /** Parse the {@code Authorization: Bearer <jwt>} header into a principal; {@code null} if absent/bad. */
   static OwnerJwtPrincipal fromBearerHeader(String authorizationHeader) {
@@ -28,13 +28,14 @@ record OwnerJwtPrincipal(String name, String email, String token) {
   static OwnerJwtPrincipal fromJwt(String token) {
     try {
       JWTClaimsSet claims = JWTParser.parse(token).getJWTClaimsSet();
+      String sub = claims.getSubject(); // the owner id — what the backend resolves the owner from
       String name = claims.getStringClaim("name");
       String email = claims.getStringClaim("email");
       if (name == null && email == null) {
         return null;
       }
-      // keep the raw token so the controller can propagate it to the MCP server for THIS user's calls
-      return new OwnerJwtPrincipal(orEmpty(name), orEmpty(email), token);
+      // keep the raw token so RemoteToolsConfig can propagate it to the MCP server for THIS user's calls
+      return new OwnerJwtPrincipal(orEmpty(sub), orEmpty(name), orEmpty(email), token);
     } catch (ParseException | RuntimeException e) {
       return null;
     }

@@ -9,22 +9,23 @@ import io.modelcontextprotocol.client.transport.customizer.McpSyncHttpClientRequ
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * Wires the MCP <b>client</b> that calls the remote petclinic MCP server (the backend) for its tools.
  * One shared connection, authenticated service-to-service by a static API key; the per-USER identity
- * (the browser JWT) is propagated per request (see {@link BearerTokenContext}).
+ * (the browser JWT) is read from the Spring SecurityContext per request (see {@link #injectAuthHeaders}).
  *
  * <p><b>Why a per-request customizer and not {@code customizeRequest}.</b> mcp-core 0.18.2's
  * {@code HttpClientSseClientTransport.Builder.customizeRequest(Consumer)} applies its consumer exactly
  * ONCE, at build/connect time, mutating a single shared {@code HttpRequest.Builder}
  * ({@code requestCustomizer.accept(requestBuilder)} in the builder). At that moment no chat turn is in
- * flight, so {@link BearerTokenContext#get()} is null and NO {@code Authorization} header is ever
- * attached to outgoing tool-call POSTs — the backend then sees only the service principal. The correct
- * per-request hook is {@code httpRequestCustomizer(McpSyncHttpClientRequestCustomizer)}, whose
- * {@code customize(...)} the transport invokes for EVERY POST (in {@code sendHttpPost}), letting us
- * read the user's token at request time. We put BOTH headers here so the static key still rides every
- * request, including the startup handshake.
+ * flight, so there is no authenticated user and NO {@code Authorization} header is ever attached to
+ * outgoing tool-call POSTs — the backend then sees only the service principal. The correct per-request
+ * hook is {@code httpRequestCustomizer(McpSyncHttpClientRequestCustomizer)}, whose {@code customize(...)}
+ * the transport invokes for EVERY POST (in {@code sendHttpPost}) on the request's own thread, letting us
+ * read the user from the SecurityContext at request time. We put BOTH headers here so the static key
+ * still rides every request, including the startup handshake.
  */
 @Configuration
 class RemoteToolsConfig {
@@ -58,16 +59,20 @@ class RemoteToolsConfig {
    * <ul>
    *   <li><b>X-API-Key</b> — static SERVICE credential authenticating THIS chatbot to the MCP server;
    *       sent on every request, including the startup handshake.</li>
-   *   <li><b>Authorization: Bearer</b> — the in-flight USER's JWT, read from {@link BearerTokenContext}
+   *   <li><b>Authorization: Bearer</b> — the in-flight USER's JWT, read from the Spring SecurityContext
    *       AT request time so the backend resolves the right owner from its {@code sub}. Absent (header
    *       skipped) when no chat turn is in flight, e.g. the startup handshake.</li>
    * </ul>
    */
   static void injectAuthHeaders(HttpRequest.Builder builder, String apiKey) {
     builder.header("X-API-Key", apiKey);
-    String userToken = BearerTokenContext.get();
-    if (userToken != null) {
-      builder.header("Authorization", "Bearer " + userToken);
+    // The blocking tool-call POST runs on the request's own (virtual) thread, where Spring Security's
+    // ThreadLocal context is still populated — so read the in-flight user straight from it. Per-thread,
+    // so concurrent chats never clobber each other. Absent on the startup handshake / SSE setup (no user
+    // → no Authorization header, only the service key), which is exactly right for those service calls.
+    var auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth != null && auth.getPrincipal() instanceof OwnerJwtPrincipal owner) {
+      builder.header("Authorization", "Bearer " + owner.token());
     }
   }
 }

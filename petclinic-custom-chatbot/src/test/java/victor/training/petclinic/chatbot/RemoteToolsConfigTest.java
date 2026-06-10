@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,15 +16,16 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Unit test for the PER-REQUEST header injection that propagates the static service key AND the
  * in-flight user's Bearer JWT to each MCP tool-call POST. It exercises the exact customizer the
  * transport invokes on every request ({@code McpSyncHttpClientRequestCustomizer.customize}), proving
- * the token is read AT request time (not frozen at connect time, when it is still null).
+ * the token is read AT request time from the {@link SecurityContextHolder} — populated on the request
+ * thread, absent (no header) for connect-time/SSE service calls.
  */
 class RemoteToolsConfigTest {
 
   private static final String API_KEY = "pc-mcp-test-key";
 
   @AfterEach
-  void clearToken() {
-    BearerTokenContext.clear();
+  void clearContext() {
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -33,9 +36,8 @@ class RemoteToolsConfigTest {
   }
 
   @Test
-  void propagates_the_in_flight_user_bearer_token_read_at_request_time() {
-    // Connect-time state is null; the token is published only once the chat turn is running.
-    BearerTokenContext.set("user-jwt-123");
+  void propagates_the_in_flight_users_bearer_read_from_the_security_context() {
+    authenticate(new OwnerJwtPrincipal("1", "George Franklin", "george@petclinic.example", "user-jwt-123"));
 
     HttpRequest request = customize();
 
@@ -43,11 +45,16 @@ class RemoteToolsConfigTest {
   }
 
   @Test
-  void omits_the_authorization_header_when_no_user_token_is_present() {
-    // e.g. the startup handshake — no user in flight.
+  void omits_the_authorization_header_when_no_user_is_authenticated() {
+    // e.g. the startup handshake / SSE setup — no user in flight, only the service key rides along.
     HttpRequest request = customize();
 
     assertThat(header(request, "Authorization")).isEmpty();
+  }
+
+  private static void authenticate(OwnerJwtPrincipal owner) {
+    SecurityContextHolder.getContext().setAuthentication(
+        new UsernamePasswordAuthenticationToken(owner, null, List.of()));
   }
 
   /** Runs the production per-request customizer against a real builder and returns the built request. */

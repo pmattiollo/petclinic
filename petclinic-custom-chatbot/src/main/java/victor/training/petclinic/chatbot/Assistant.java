@@ -134,22 +134,17 @@ public class Assistant {
   String assistant(@RequestParam String message, @AuthenticationPrincipal OwnerJwtPrincipal owner) {
     String conversationId = owner.name();
     chatHistory.append(conversationId, "user", message); // record the user turn in the FULL transcript
-    // MVC + virtual threads: the whole turn runs on ONE thread, so this owner's token in the plain
-    // ThreadLocal is visible to the MCP client's customizeRequest when a (blocking) tool call fires.
-    BearerTokenContext.set(owner.token());
-    try {
-      String reply = chatClient.prompt()
-          .system("The owner's username is \"%s\". Today is %s.".formatted(owner.name(), LocalDate.now()))
-          .user(message)
-          .toolContext(Map.of(LocalTools.OWNER_EMAIL, owner.email())) // owner email for the email tool
-          .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId)) // this owner's history
-          .call()
-          .content();
-      chatHistory.append(conversationId, "assistant", reply.trim());
-      return reply;
-    } finally {
-      BearerTokenContext.clear();
-    }
+    String reply = chatClient.prompt()
+        .system("The owner's username is \"%s\". Today is %s.".formatted(owner.name(), LocalDate.now()))
+        .user(message)
+        .toolContext(Map.of(LocalTools.OWNER_EMAIL, owner.email())) // owner email for the email tool
+        .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId)) // this owner's history
+        .call()
+        .content();
+    chatHistory.append(conversationId, "assistant", reply.trim()); // record the assistant reply
+    // The MCP tool calls above ran on THIS request thread, so RemoteToolsConfig.injectAuthHeaders read
+    // the owner from the SecurityContext to propagate the per-user Bearer to the backend — no plumbing.
+    return reply;
   }
 
   /**
