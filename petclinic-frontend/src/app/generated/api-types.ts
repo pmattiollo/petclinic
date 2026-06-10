@@ -67,6 +67,9 @@ export interface paths {
     get: operations["listSpecialties"];
     post: operations["addSpecialty"];
   };
+  "/api/specialties/feed": {
+    get: operations["feed"];
+  };
   "/api/specialties/{specialtyId}": {
     get: operations["getSpecialty"];
     put: operations["updateSpecialty"];
@@ -99,6 +102,13 @@ export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
+    Item: {
+      description?: string;
+      /** Format: int32 */
+      id?: number;
+      name?: string;
+      preConsultationRecommendations?: string;
+    };
     OwnerDto: {
       /**
        * @description The postal address of the pet owner.
@@ -244,8 +254,8 @@ export interface components {
     };
     SpecialtyDto: {
       /**
-       * @description Free-text knowledge used by the chatbot to decide if this specialty fits a symptom.
-       * @example Symptoms: limping... Guidance: keep the pet calm...
+       * @description Symptoms this specialty handles; matched against the patient's described symptom.
+       * @example limping, broken bone, swollen leg, can't bear weight
        */
       description?: string;
       /**
@@ -259,6 +269,11 @@ export interface components {
        * @example radiology
        */
       name: string;
+      /**
+       * @description What the owner should do for the pet until the visit.
+       * @example Keep the pet calm and restrict movement; avoid food in case sedation is needed.
+       */
+      preConsultationRecommendations?: string;
     };
     UserDto: {
       /**
@@ -1215,6 +1230,39 @@ export interface operations {
       /** @description OK */
       200: {
         content: never;
+      };
+      /** @description Bad Request */
+      400: {
+        content: {
+          "*/*": components["schemas"]["ProblemDetail"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: {
+          "*/*": string;
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        content: {
+          "*/*": components["schemas"]["ProblemDetail"];
+        };
+      };
+    };
+  };
+  feed: {
+    parameters: {
+      header?: {
+        "If-None-Match"?: string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "*/*": components["schemas"]["Item"][];
+        };
       };
       /** @description Bad Request */
       400: {

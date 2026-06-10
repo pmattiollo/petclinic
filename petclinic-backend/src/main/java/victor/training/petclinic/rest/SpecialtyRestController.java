@@ -21,6 +21,7 @@ import java.util.List;
 public class SpecialtyRestController {
     private final SpecialtyRepository specialtyRepository;
     private final SpecialtyMapper specialtyMapper;
+    private final SpecialtyFeed specialtyFeed; // invalidated on every mutation so the polling feed stays fresh
 
     @GetMapping("/specialties")
     public List<SpecialtyDto> listSpecialties() {
@@ -38,6 +39,7 @@ public class SpecialtyRestController {
     public ResponseEntity<Void> addSpecialty(@RequestBody @Validated SpecialtyDto specialtyDto) {
         Specialty specialty = specialtyMapper.toSpecialty(specialtyDto);
         specialtyRepository.save(specialty);
+        specialtyFeed.invalidate();
         return ResponseEntity.created(UriComponentsBuilder.fromPath("/api/specialties/{id}")
                         .buildAndExpand(specialty.getId()).toUri())
                 .build();
@@ -48,7 +50,9 @@ public class SpecialtyRestController {
         Specialty currentSpecialty = specialtyRepository.findById(specialtyId).orElseThrow();
         currentSpecialty.setName(specialtyDto.getName());
         currentSpecialty.setDescription(specialtyDto.getDescription());
+        currentSpecialty.setPreConsultationRecommendations(specialtyDto.getPreConsultationRecommendations());
         specialtyRepository.save(currentSpecialty);
+        specialtyFeed.invalidate();
     }
 
     @Transactional
@@ -56,5 +60,6 @@ public class SpecialtyRestController {
     public void deleteSpecialty(@PathVariable int specialtyId) {
         Specialty specialty = specialtyRepository.findById(specialtyId).orElseThrow();
         specialtyRepository.delete(specialty);
+        specialtyFeed.invalidate();
     }
 }

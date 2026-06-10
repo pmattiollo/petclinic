@@ -16,7 +16,10 @@ public class Specialty {
 
     private String name;
 
-    /** Free-text knowledge used by the chatbot RAG to decide if this specialty fits a symptom. */
+    /** Symptoms this specialty handles. Matched (vectorized) against the patient's description. */
     private String description;
+
+    /** What the owner should do until the visit. Shown as guidance, never vectorized. */
+    private String preConsultationRecommendations;
 
 }

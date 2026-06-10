@@ -17,7 +17,12 @@ public class SpecialtyDto {
     private String name;
 
     @Size(max = 4000)
-    @Schema(example = "Symptoms: limping... Guidance: keep the pet calm...",
-        description = "Free-text knowledge used by the chatbot to decide if this specialty fits a symptom.")
+    @Schema(example = "limping, broken bone, swollen leg, can't bear weight",
+        description = "Symptoms this specialty handles; matched against the patient's described symptom.")
     private String description;
+
+    @Size(max = 4000)
+    @Schema(example = "Keep the pet calm and restrict movement; avoid food in case sedation is needed.",
+        description = "What the owner should do for the pet until the visit.")
+    private String preConsultationRecommendations;
 }
