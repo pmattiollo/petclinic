@@ -47,6 +47,7 @@ public class SpecialtyRestController {
     public void updateSpecialty(@PathVariable int specialtyId, @RequestBody @Validated SpecialtyDto specialtyDto) {
         Specialty currentSpecialty = specialtyRepository.findById(specialtyId).orElseThrow();
         currentSpecialty.setName(specialtyDto.getName());
+        currentSpecialty.setDescription(specialtyDto.getDescription());
         specialtyRepository.save(currentSpecialty);
     }
 

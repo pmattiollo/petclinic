@@ -16,4 +16,7 @@ public class Specialty {
 
     private String name;
 
+    /** Free-text knowledge used by the chatbot RAG to decide if this specialty fits a symptom. */
+    private String description;
+
 }

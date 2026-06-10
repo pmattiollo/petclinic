@@ -1649,6 +1649,13 @@ components:
     SpecialtyDto:
       type: object
       properties:
+        description:
+          type: string
+          description: Free-text knowledge used by the chatbot to decide if this specialty
+            fits a symptom.
+          example: "Symptoms: limping... Guidance: keep the pet calm..."
+          maxLength: 4000
+          minLength: 0
         id:
           type: integer
           format: int32

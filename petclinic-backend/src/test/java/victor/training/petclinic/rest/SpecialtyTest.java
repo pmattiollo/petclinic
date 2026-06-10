@@ -125,6 +125,20 @@ public class SpecialtyTest {
     }
 
     @Test
+    void update_persistsDescription() throws Exception {
+        SpecialtyDto existing = callGet(specialtyId);
+        existing.setDescription("Symptoms: limping. Guidance: keep the pet calm.");
+
+        mockMvc.perform(put("/api/specialties/" + specialtyId)
+                .content(mapper.writeValueAsString(existing))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().is2xxSuccessful());
+
+        SpecialtyDto updated = callGet(specialtyId);
+        assertThat(updated.getDescription()).isEqualTo("Symptoms: limping. Guidance: keep the pet calm.");
+    }
+
+    @Test
     void update_invalid() throws Exception {
         SpecialtyDto existing = callGet(specialtyId);
         existing.setName(null); // invalid - null name

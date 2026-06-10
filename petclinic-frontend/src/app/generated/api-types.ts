@@ -244,6 +244,11 @@ export interface components {
     };
     SpecialtyDto: {
       /**
+       * @description Free-text knowledge used by the chatbot to decide if this specialty fits a symptom.
+       * @example Symptoms: limping... Guidance: keep the pet calm...
+       */
+      description?: string;
+      /**
        * Format: int32
        * @description The ID of the specialty.
        * @example 1
