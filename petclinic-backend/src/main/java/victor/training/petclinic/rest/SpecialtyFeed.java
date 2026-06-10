@@ -20,7 +20,7 @@ import java.util.List;
 public class SpecialtyFeed {
     private final SpecialtyRepository specialtyRepository;
 
-    /** Lean projection — exactly what a RAG/sync client needs, decoupled from {@link SpecialtyDto}. */
+    /** Lean projection — exactly what a RAG/sync client needs, decoupled from {@code SpecialtyDto}. */
     public record Item(Integer id, String name, String description) {}
 
     @Cacheable("specialtyFeed")
