@@ -77,3 +77,4 @@ __pycache__/
 
 # Custom-chatbot on-disk RAG embedding cache (avoids re-embedding on restart) — match anywhere it lands
 rag-vector-store.json
+/petclinic-custom-chatbot/rag-vector-store.json.meta.json
