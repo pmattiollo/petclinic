@@ -115,7 +115,8 @@ OpenAPI docs: http://localhost:8080/swagger-ui.html
 - Builder chains: one property per line, unless only 2 properties total
 
 ## Task Modifiers
-- Always write code using red-green TDD: write a failing test first, confirm it fails, then implement — no production code without a prior failing test
+- Write non-trivial code using TDD.
+- Keep comments concise, prefer explanatory variable/method names.
 - Auto-push after commit if git username is `victorrentea` and repo is `github.com/victorrentea/*`
 - Keep explanations concise
 - Challenge ambiguous/wrong prompts
