@@ -67,12 +67,12 @@ jobs:
         working-directory: petclinic-backend
         run: mvn -B -ntp -DskipTests -Dmaven.javadoc.failOnError=true javadoc:javadoc
 
-      # Custom-chatbot module: compile it and run its tests. The OpenAI integration tests
+      # Chatbot module: compile it and run its tests. The OpenAI integration tests
       # (AssistantFlowTest) are @EnabledIfEnvironmentVariable(OPENAI_API_KEY) and SKIP here
       # because we deliberately do NOT provide the key on CI — those tests cost money and are
       # run locally only. This step just guards the module against compile drift.
-      - name: Compile custom-chatbot module (OpenAI tests skip without the key)
-        run: mvn -B -ntp -f petclinic-custom-chatbot/pom.xml test
+      - name: Compile chatbot module (OpenAI tests skip without the key)
+        run: mvn -B -ntp -f petclinic-chatbot/pom.xml test
 
       - name: Regenerate TS types from openapi.yaml
         working-directory: petclinic-frontend
