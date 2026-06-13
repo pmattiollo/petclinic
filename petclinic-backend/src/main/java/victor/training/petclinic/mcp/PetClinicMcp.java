@@ -45,7 +45,7 @@ public class PetClinicMcp {
         description = "Fetch the authenticated owner's profile — name, address, phone and the list of "
             + "pets. Takes NO arguments: the owner is resolved from the per-request identity header the "
             + "calling application attaches (not from anything the model supplies), so it cannot be spoofed.",
-        annotations = @McpAnnotations(readOnlyHint = true, openWorldHint = false)
+        annotations = @McpAnnotations(readOnlyHint = true, destructiveHint = false, openWorldHint = false)
     )
     @Transactional(readOnly = true)
     public String getOwnerProfile() {
@@ -84,7 +84,7 @@ public class PetClinicMcp {
     @McpTool(
         name = "list_visits",
         description = "List veterinary visits for every pet of the authenticated owner.",
-        annotations = @McpAnnotations(readOnlyHint = true, openWorldHint = false)
+        annotations = @McpAnnotations(readOnlyHint = true, destructiveHint = false, openWorldHint = false)
     )
     @Transactional(readOnly = true)
     public List<VisitView> listVisits() {
@@ -104,7 +104,8 @@ public class PetClinicMcp {
     @McpTool(
         name = "create_visit",
         description = "Create a new vet visit for one of the authenticated owner's pets "
-            + "(date/time, pet, description). Books the visit directly — no confirmation prompt."
+            + "(date/time, pet, description). Books the visit directly — no confirmation prompt.",
+        annotations = @McpAnnotations(destructiveHint = true)
     )
     @Transactional
     public String createVisit(
@@ -191,7 +192,8 @@ public class PetClinicMcp {
     @McpTool(
         name = "call_vet_ambulance",
         description = "Dispatch a veterinary ambulance to drive (by car) to a given address for an "
-            + "emergency. ELICITS the address from the user and asks them to confirm the dispatch request."
+            + "emergency. ELICITS the address from the user and asks them to confirm the dispatch request.",
+        annotations = @McpAnnotations(destructiveHint = false)
     )
     public String callVetAmbulance(McpSyncRequestContext context) {
         if (context == null || !context.elicitEnabled()) {

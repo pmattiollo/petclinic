@@ -12,7 +12,7 @@
     </parent>
 
     <groupId>victor.training.petclinic</groupId>
-    <artifactId>petclinic-custom-chatbot</artifactId>
+    <artifactId>petclinic-chatbot</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
 

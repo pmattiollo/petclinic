@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CHATBOT_DIR="$SCRIPT_DIR/petclinic-custom-chatbot"
+CHATBOT_DIR="$SCRIPT_DIR/petclinic-chatbot"
 
 if [[ ! -d "$CHATBOT_DIR" ]]; then
   echo "Chatbot directory not found: $CHATBOT_DIR" >&2
@@ -20,7 +20,7 @@ if [[ -z "${OPENAI_API_KEY:-}" ]]; then
   exit 1
 fi
 
-echo "🤖 Starting PetClinic Custom Chatbot (Spring AI)..."
+echo "🤖 Starting PetClinic Chatbot (Spring AI)..."
 echo "Chatbot will be available at: http://localhost:8082/"
 echo "Requires the backend MCP server (./start-backend.sh) running on :8080."
 echo "RAG embeddings are cached on disk (rag-vector-store.json) — delete it to rebuild."

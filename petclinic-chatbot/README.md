@@ -1,4 +1,4 @@
-# PetClinic Custom Chatbot (Spring AI)
+# PetClinic Chatbot (Spring AI)
 
 A teaching module that builds a **triage assistant** with [Spring AI](https://docs.spring.io/spring-ai/reference/).
 
@@ -27,7 +27,7 @@ Responses are **streamed** to the browser as markdown. Uses **OpenAI only** — 
    ```
 3. **Start the chatbot** — from the repo root, with your OpenAI key:
    ```sh
-   OPENAI_API_KEY=sk-… mvn -f petclinic-custom-chatbot/pom.xml spring-boot:run
+   OPENAI_API_KEY=sk-… mvn -f petclinic-chatbot/pom.xml spring-boot:run
    ```
    App starts on **:8082**.
 4. **Try it** — open <http://localhost:8082> and click an example prompt, or curl the streaming endpoint directly:

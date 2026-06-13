@@ -1,5 +1,5 @@
 -- Specialty descriptions become the single source of truth for the chatbot RAG
--- (previously hard-coded in petclinic-custom-chatbot/.../specialty-knowledge.md).
+-- (previously hard-coded in petclinic-chatbot/.../specialty-knowledge.md).
 ALTER TABLE specialties ADD COLUMN description TEXT;
 
 UPDATE specialties SET description =

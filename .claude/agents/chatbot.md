@@ -1,5 +1,5 @@
 ---
-name: petclinic-chatbot
+name: chatbot
 description: >
   PetClinic customer-support assistant for an authenticated pet owner. Use to help the
   owner view their profile and pets, list/book/cancel vet visits, and request a vet

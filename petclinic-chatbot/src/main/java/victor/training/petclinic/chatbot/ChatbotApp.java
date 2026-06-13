@@ -21,7 +21,7 @@ public class ChatbotApp {
 
   @EventListener
   void started(WebServerInitializedEvent event) {
-    System.out.println("✅ started petclinic-custom-chatbot on port " + event.getWebServer().getPort());
+    System.out.println("✅ started petclinic-chatbot on port " + event.getWebServer().getPort());
   }
 
   @Bean

@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-// The custom chatbot is a separate static page + streaming API on its own port (default 8082).
+// The chatbot is a separate static page + streaming API on its own port (default 8082).
 // It must be running (./start-backend.sh + the chatbot app, with OPENAI_API_KEY on the server).
 const CHATBOT_URL = process.env.CHATBOT_URL || 'http://localhost:8082';
 
-test.describe('PetClinic Assistant (custom chatbot)', () => {
+test.describe('PetClinic Assistant (chatbot)', () => {
   test('shows the signed-in owner from the JWT as read-only text (no editable name field)', async ({ page }) => {
     await page.goto(CHATBOT_URL);
 
