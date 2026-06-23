@@ -1,5 +1,5 @@
 ---
-name: code-reviewer
+name: review-boss
 description: >
   Multi-dimensional code-review orchestrator (runs on Opus). Fans the current diff
   out to three single-focused reviewer subagents — reuse, simplification, efficiency —

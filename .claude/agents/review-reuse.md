@@ -2,7 +2,7 @@
 name: review-reuse
 description: >
   Single-focused code reviewer for REUSE / duplication only. Spawned by the
-  code-reviewer orchestrator. Flags code that reinvents something the codebase
+  review-boss orchestrator. Flags code that reinvents something the codebase
   (or stdlib/framework) already provides.
 tools: Bash, Read, Grep
 model: sonnet

@@ -1,7 +1,7 @@
 ---
 name: review-simplification
 description: >
-  Single-focused code reviewer for SIMPLIFICATION only. Spawned by the code-reviewer
+  Single-focused code reviewer for SIMPLIFICATION only. Spawned by the review-boss
   orchestrator. Flags unnecessary complexity the diff adds and names the simpler form.
 tools: Bash, Read, Grep
 model: sonnet
