@@ -31,11 +31,14 @@ run_url=$(gh run view "$id" --json url --jq '.url' 2>/dev/null)
 [ -n "$run_url" ] || run_url="(run id $id)"
 echo "Watching CI run $id for $short — $run_url"
 
-# A genuine red build is ONLY one of these authoritative conclusions. Anything
-# else (notably an empty conclusion from a transient gh error) must NOT read red.
+# A genuine red build is ONLY one of these authoritative conclusions. `cancelled`
+# is deliberately EXCLUDED: cancellations are almost always a newer push
+# superseding this run (concurrency cancel) or a manual cancel — not a build
+# failure, so they must not trigger auto-repair. Anything else (notably an empty
+# conclusion from a transient gh error) must NOT read red either.
 is_failure_conclusion() {
   case "$1" in
-    failure|cancelled|timed_out|action_required|startup_failure) return 0 ;;
+    failure|timed_out|action_required|startup_failure) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -74,6 +77,13 @@ fi
 if is_failure_conclusion "$conclusion"; then
   echo "CI FAILED ($conclusion) for $short — $run_url"
   exit 1
+fi
+
+# Cancelled is its own outcome — usually a newer push superseded this run. Report
+# it, but do NOT exit non-zero: a supersede-cancel is not a build to repair.
+if [ "$conclusion" = "cancelled" ]; then
+  echo "CI run was cancelled for $short (usually superseded by a newer push) — NOT treating as a failure. $run_url"
+  exit 0
 fi
 
 # Indeterminate: empty/unknown conclusion or run never reached "completed" within
