@@ -25,9 +25,9 @@ Each script is foreground; run them in separate terminals.
 
 ### Backend (petclinic-backend/)
 ```sh
-./mvnw spring-boot:run              # Run backend
-./mvnw test                         # Run tests
-./mvnw clean install                # Build + regenerate MapStruct mappers
+mvn spring-boot:run              # Run backend
+mvn test                         # Run tests
+mvn clean install                # Build + regenerate MapStruct mappers
 ```
 
 ### Frontend (petclinic-frontend/)
@@ -41,7 +41,7 @@ npm run e2e                         # Protractor e2e tests
 
 ### Testing a Single Test (Backend)
 ```sh
-./mvnw test -Dtest=ClassName#methodName
+mvn test -Dtest=ClassName#methodName
 ```
 
 ## Architecture
@@ -56,7 +56,7 @@ npm run e2e                         # Protractor e2e tests
 
 **Generated Code:**
 - MapStruct mapper implementations → `target/generated-sources/annotations/`
-- Regenerate via `./mvnw clean install`
+- Regenerate via `mvn clean install`
 
 **Data Flow:**
 Request → REST Controller → Repository / Mapper → JPA Entity
