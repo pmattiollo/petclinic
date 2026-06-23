@@ -1,10 +1,10 @@
 ---
-name: code-review
-description: Review the current diff via the review-boss agent, auto-apply the safe quality cleanups, then tell the human which areas to review first. Explicit invocation only — user types /code-review.
+name: multi-review
+description: Review the current diff via the review-boss agent, auto-apply the safe quality cleanups, then tell the human which areas to review first. Explicit invocation only — user types /multi-review.
 disable-model-invocation: true
 ---
 
-# /code-review — review, fix, hand off
+# /multi-review — review, fix, hand off
 
 Run a quality review of the **current uncommitted changes**, apply the low-risk
 fixes yourself, and end by pointing the human at what still needs their eyes.
