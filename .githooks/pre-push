@@ -4,6 +4,12 @@ set -e
 ROOT="$(git rev-parse --show-toplevel)"
 REMOTE="$1"
 
+# Git exports GIT_DIR (absolute, the worktree's gitdir) into hooks. Once we `cd` into a
+# subdir below, git would infer the work-tree as that subdir and reject repo-root pathspecs
+# with "openapi.yaml is outside repository" — breaking this hook in any git worktree. Drop the
+# inherited git env so every git call auto-discovers the real work-tree (normal AND worktrees).
+unset GIT_DIR GIT_WORK_TREE
+
 ZERO=0000000000000000000000000000000000000000
 
 # ── Path gating: skip unless pushed commits touch backend / OpenAPI / schema ─
