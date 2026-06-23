@@ -18,14 +18,27 @@ set -uo pipefail
 SHA="${1:?usage: watch-ci.sh <sha>}"
 short="${SHA:0:7}"
 
-# GitHub lags a few seconds registering the run after a push — poll up to ~2min.
+# Resolve the run id for this commit. `gh run list --commit` is the obvious way
+# but is unreliable here (sometimes returns nothing for a run that demonstrably
+# exists — only findable via --branch), so we also scan recent runs and match the
+# head SHA. GitHub lags a few seconds registering the run after a push, so poll up
+# to ~2min.
 id=""
 for _ in $(seq 1 24); do
   id=$(gh run list --commit "$SHA" --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null)
   [ -n "$id" ] && break
+  # Fallback: match the SHA (short or full) against recent runs across branches.
+  id=$(gh run list --limit 40 --json databaseId,headSha \
+        --jq "[.[] | select(.headSha | startswith(\"$SHA\"))][0].databaseId" 2>/dev/null)
+  [ -n "$id" ] && break
   sleep 5
 done
-[ -z "$id" ] && { echo "No CI run found for $short after ~2min"; exit 1; }
+if [ -z "$id" ]; then
+  # Couldn't FIND a run — a discovery problem, NOT a build failure. Never emit the
+  # "red -> repair" signal for a run we can't even see; treat it as indeterminate.
+  echo "⚠️ No CI run found for $short after ~2min (discovery failure, not a red build) — NOT treating as a failure."
+  exit 0
+fi
 
 run_url=$(gh run view "$id" --json url --jq '.url' 2>/dev/null)
 [ -n "$run_url" ] || run_url="(run id $id)"
