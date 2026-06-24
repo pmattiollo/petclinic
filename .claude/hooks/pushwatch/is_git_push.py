@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""pushwatch — decide whether a Claude Code Bash-tool command is an actual
+"""is_git_push — decide whether a Claude Code Bash-tool command is an actual
 `git push`, and in which working directory it runs.
 
 The bash command is tokenized with the stdlib ``shlex`` module (posix mode,

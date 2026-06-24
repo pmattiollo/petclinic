@@ -8,7 +8,7 @@
 # `gh run watch --exit-status` as a background Bash task; the harness re-invokes
 # the agent with the result when that task exits.
 #
-# The Bash command is tokenized by the `pushwatch` Python helper (stdlib
+# The Bash command is tokenized by the `is_git_push.py` Python helper (stdlib
 # shlex, punctuation-aware) rather than a regex — so quoting, comments,
 # `cd` chains, and `git -C <dir>` are interpreted correctly. The helper reports
 # whether the command is an actual `git push` and the working directory it runs in.
@@ -22,7 +22,7 @@ printf '%s' "$INPUT" | grep -q 'git push' || exit 0
 
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PW_DIR="$HOOK_DIR/pushwatch"
-HELPER="$PW_DIR/pushwatch.py"
+HELPER="$PW_DIR/is_git_push.py"
 
 # Parse with the Python helper (stdlib shlex — no build step, no binary).
 command -v python3 >/dev/null 2>&1 || exit 0
