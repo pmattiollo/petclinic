@@ -10,7 +10,7 @@
 /openapi.yaml                    @victorrentea/elders
 
 # Persistence
-/DB.sql                          @victorrentea/elders
+/petclinic-backend/DB.sql        @victorrentea/elders
 /petclinic-backend/src/main/resources/db/migration/ @victorrentea/elders
 
 # Domain Model
