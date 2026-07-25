@@ -79,7 +79,7 @@ Tell an agent running in this repo:
 
 - **⭐BE+FE feature** – Improve the owner search ([Issue #24](https://github.com/victorrentea/petclinic/issues/24)), then optionally review the code
 - **Fix UI layout** – align the labels and values in the [owner details screen](http://localhost:4200/petclinic/owners/1) via Playwright screenshots.
-- **Fix BE+FE bug** – Fix missing visit date validation ([Issue #40](https://github.com/victorrentea/petclinic/issues/40)): reproduce it in a browser, write a failing Playwright e2e test, then fix the bug so the test passes
+- **Fix BE+FE bug** – Fix missing visit date validation ([Issue #40](https://github.com/victorrentea/petclinic/issues/40)): reproduce it in a browser, write a failing Playwright e2e test, then fix the bug so the test passes; record the test run before and after the fix, then concatenate both into one video and open it.
 - **Exploratory QA** — download the [Playwright test agents](https://playwright.dev/docs/test-agents) and explore the app to write 10 significant automated .feature e2e tests.
 - **Regenerate the [user manual](user-manual/manual.md)** — `/regen-user-manual`
 - **Grafana dashboard** — create a dashboard of what to monitor, then open it (start Grafana's Docker if needed).
