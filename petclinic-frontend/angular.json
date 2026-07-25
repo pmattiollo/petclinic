@@ -70,7 +70,8 @@
           "builder": "@angular-builders/custom-webpack:dev-server",
           "options": {
             "browserTarget": "petclinic-angular:build",
-            "proxyConfig": "proxy.conf.js"
+            "proxyConfig": "proxy.conf.js",
+            "host": "127.0.0.1"
           },
           "configurations": {
             "production": {

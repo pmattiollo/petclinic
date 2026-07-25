@@ -15,6 +15,9 @@ export default defineConfig({
   ],
   use: {
     // 127.0.0.1 (not "localhost") to avoid Node IPv6 (::1) resolution surprises.
+    // Requires the dev server to actually listen on IPv4: angular.json pins
+    // serve.options.host to 127.0.0.1, since ng's default ("localhost") resolves
+    // to ::1 on macOS and would bind IPv6-only — refusing every request here.
     baseURL: process.env.BASE_URL || 'http://127.0.0.1:4200',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
