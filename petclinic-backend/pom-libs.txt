@@ -41,7 +41,7 @@ petclinic-chatbot:
 petclinic-database:
   io.zonky.test.postgres:embedded-postgres-binaries-darwin-arm64v8
 
-petclinic-refactor-recipes:
+refactoring-legacy:
   org.junit.jupiter:junit-jupiter
   org.openrewrite:rewrite-java
   org.openrewrite:rewrite-java-21
