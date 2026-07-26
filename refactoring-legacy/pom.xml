@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>victor.training.agentic</groupId>
-    <artifactId>petclinic-refactor-recipes</artifactId>
+    <artifactId>refactoring-legacy</artifactId>
     <version>1.0</version>
 
-    <name>PetClinic Refactor Recipes</name>
+    <name>Refactoring Legacy</name>
     <description>
         OpenRewrite recipes that reproduce, programmatically, refactorings we do by hand in this repo.
         Two flavours:
