@@ -104,3 +104,6 @@ petclinic-database/src/main/java/ro/victorrentea/petclinic/db/NetworkLatencyProx
 petclinic-database/src/main/java/ro/victorrentea/petclinic/db/NetworkLatencyProxy.java	ro.victorrentea.petclinic.db.NetworkLatencyProxy$ProxyConnection	1	2
 petclinic-database/src/main/java/ro/victorrentea/petclinic/db/NetworkLatencyProxy.java	ro.victorrentea.petclinic.db.NetworkLatencyProxy$CopyDataTask	4	2
 petclinic-database/src/main/java/ro/victorrentea/petclinic/db/PostgresLauncher.java	ro.victorrentea.petclinic.db.PostgresLauncher	5	4
+refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java	victor.training.petclinic.rewrite.InlineSingleUseLocalVariable	22	9
+refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java	victor.training.petclinic.rewrite.InlineSingleUseLocalVariable$ReplaceIdentifier	1	2
+refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/ListGetFirst.java	victor.training.petclinic.rewrite.ListGetFirst	1	2
