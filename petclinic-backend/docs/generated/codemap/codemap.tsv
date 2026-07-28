@@ -9,10 +9,10 @@ petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/OwnerDto.java
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/SpecialtyDto.java	780	23	5	0	217.39	0.00	0.000	0	0.00	4	0	1
 petclinic-database/src/main/java/ro/victorrentea/petclinic/db/PostgresLauncher.java	3100	79	5	0	63.29	0.00	0.000	5	63.29	0	1	1
 petclinic-backend/src/main/java/victor/training/petclinic/mcp/McpSecurity.java	4895	108	4	0	37.04	0.00	0.000	6	55.56	1	0	1
+petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java	3507	80	4	0	50.00	0.00	0.000	1	12.50	0	6	1
 petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java	3468	82	4	0	48.78	0.00	0.000	0	0.00	0	6	1
 petclinic-backend/src/main/java/victor/training/petclinic/PetClinicApplication.java	1060	30	3	0	100.00	0.00	0.000	0	0.00	0	0	1
 petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java	3662	92	3	0	32.61	0.00	0.000	2	21.74	0	8	1
-petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java	3542	81	3	0	37.04	0.00	0.000	1	12.35	0	6	1
 petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java	2255	60	3	0	50.00	0.00	0.000	0	0.00	0	5	1
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/OwnerFieldsDto.java	1041	36	3	0	83.33	0.00	0.000	0	0.00	2	0	1
 petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ExceptionControllerAdvice.java	4195	85	3	0	35.29	0.00	0.000	0	0.00	0	2	1
@@ -41,6 +41,8 @@ petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VisitFieldsDt
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetTypeFieldsDto.java	333	12	2	0	166.67	0.00	0.000	0	0.00	2	0	1
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VisitDto.java	1621	44	2	0	45.45	0.00	0.000	0	0.00	3	0	1
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/UserDto.java	876	31	2	0	64.52	0.00	0.000	0	0.00	2	1	1
+refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/ListGetFirst.java	1740	39	1	0	25.64	0.00	0.000	1	25.64	0	1	1
+refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java	11149	248	1	0	4.03	0.00	0.000	23	92.74	1	0	1
 petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/JudgeGuard.java	6168	124	1	0	8.06	0.00	0.000	3	24.19	1	0	1
 petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/SecurityConfig.java	3921	75	1	0	13.33	0.00	0.000	1	13.33	1	1	1
 petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/OwnerJwtPrincipal.java	2411	62	1	0	16.13	0.00	0.000	8	129.03	3	2	1

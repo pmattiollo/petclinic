@@ -84,3 +84,5 @@ petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/PetTria
 petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/TriageController.java	0	1	2
 petclinic-database/src/main/java/ro/victorrentea/petclinic/db/NetworkLatencyProxy.java	11	3	8
 petclinic-database/src/main/java/ro/victorrentea/petclinic/db/PostgresLauncher.java	5	1	4
+refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java	23	2	11
+refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/ListGetFirst.java	1	1	2
