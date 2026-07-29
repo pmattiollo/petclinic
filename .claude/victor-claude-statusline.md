@@ -21,22 +21,24 @@ what that line means **and** the engineering lessons baked into the script.
 
 ## Example
 
-Actively working, current turn already billing (the ellipsis is **animated**:
-it grows `․` → `‥` → `…` once per second while the turn is billing):
+Actively working, current turn already billing (the flower is **animated**: it
+blooms `·` → `✢` → `✳` → `✻` → `✽` and closes again, one frame per second, the
+same spinner Claude Code draws in front of "Working…"):
 
 ```
-Opus 4.8/xhigh 50K/1M | 98%↗ left • 4:47h | $0.48… current • $25 💸
+Opus 4.8/xhigh 50K/1M | 98%↗ left • 4:47h | $0.5✻ • $25 | ai@master
 ```
 
-Idle, waiting on you (note the ticking "N ago" clock and no `current` label):
+Idle, waiting on you (note the ticking "N ago" clock and no flower):
 
 ```
-Opus 4.8/xhigh 50K/1M | 98% left • 4:47h | $0.11 3m ago • $25 💸
+Opus 4.8/xhigh 50K/1M | 98% left • 4:47h | $0.1 3m ago • $25 | ai@master
 ```
 
-Three `|`-separated segments: **model/context**, **5h quota + burn-rate**,
-**spend**. A fourth `| 🌿 <name>` segment appears only inside a linked git
-worktree. There is **no leading emoji** on the model segment.
+Four `|`-separated segments: **model/context**, **5h quota + burn-rate**,
+**spend**, **location** (`folder@branch`, folder in teal, prefixed `🌿 ` only
+inside a linked git worktree). There is **no leading emoji** on the model
+segment.
 
 ---
 
@@ -97,17 +99,19 @@ against `98%` quota that's `r ≈ 1.02` → on par (no arrow).
 
 ---
 
-## 3. Spend — `$0.48… current • $25 💸`
+## 3. Spend — `$0.5✻ • $25`
 
 The spend segment shows **cost only** (no token counts). Two parts: the
-**current/last turn**, then the **session total** (`💸`).
+**current/last turn**, then the **session total**.
 
 | Piece | Meaning |
 |-------|---------|
-| `$0.48…` | cost of the **current turn**, with an **animated** ellipsis (`․` → `‥` → `…`, one frame per second) while it's still adding up |
-| `current` | label shown only while working *and* the turn has already billed |
-| *(or)* `$0.11 3m ago` | when idle: the **last** turn's cost + a ticking "N ago" clock, **no** label |
-| `$25 💸` | session total, **integer-truncated** (`int($)`), authoritative |
+| `$0.5✻` | cost of the **current turn** (one decimal), with the **animated flower** butted straight onto it while it's still adding up |
+| *(or)* `$0.1 3m ago` | when idle: the **last** turn's cost + a ticking "N ago" clock, **no** flower |
+| `$25` | session total, **integer-truncated** (`int($)`), authoritative |
+
+Turn cost is rounded to **one decimal**: at this granularity the second decimal
+was noise you never acted on, and dropping it keeps the segment narrow.
 
 > **Token counts are no longer displayed.** The transcript is still parsed and
 > deduped by `requestId` (see below), but that machinery now feeds only
@@ -127,21 +131,31 @@ The spend segment shows **cost only** (no token counts). Two parts: the
   when the latest user prompt first appeared; the turn cost is
   `current_total − snapshot`.
 
-### The `current` vs `N ago` label switch
+### The flower vs `N ago` switch
 
-The label is driven by whether the **current turn has actually billed yet**
-(`turn_cost > 0`), *not* merely by "am I working":
+Which one you see is driven by whether the **current turn has actually billed
+yet** (`turn_cost > 0`), *not* merely by "am I working":
 
-- **working AND turn has cost** → live figure with an animated ellipsis +
-  `current` (e.g. `$0.48… current`) — it's still adding up. The ellipsis cycles
-  through the single-cell dot-leader glyphs `․` `‥` `…` (U+2024/2025/2026),
-  keyed off `now % 3`, so it grows one dot per second without shifting the
-  line's width; `refreshInterval: 1` is what advances the frame, so the
-  animation adds zero extra work per render.
+- **working AND turn has cost** → live figure with the animated flower butted
+  straight onto it, no space (e.g. `$0.5✻`) — it's still adding up. There is
+  **no `current` word**: a glyph that visibly moves already says "in progress",
+  and it says it in one cell instead of eight. The frames are Claude Code's own
+  spinner — `·` `✢` `✳` `✻` `✽` (U+00B7, U+2722, U+2733, U+273B, U+273D) —
+  ping-ponged over an 8-step cycle keyed off `now % 8`, so the flower blooms and
+  closes in sync with the "Working…" spinner above the prompt. Every glyph is
+  single-cell, so the line never shifts width; `refreshInterval: 1` is what
+  advances the frame, so the animation adds zero extra work per render.
+
+  **Dropped on purpose: `∗` (U+2217).** Claude Code's spinner includes it, but
+  it is a *math operator* while the rest are *Dingbats* — the font centres it on
+  the math axis, so it sags below the baseline the others sit on and that one
+  frame of the bloom visibly twitches. Five frames that hold still beat six that
+  don't. A useful reminder that "same-looking glyph" ≠ "same vertical metrics":
+  mixing Unicode blocks in an animation is how you get a wobble.
 - **otherwise** (idle, *or* you just hit Enter and no cost has come back yet) →
-  the **previous** turn's figure with a ticking `N ago` and **no** label. The
-  "ago" already says it's the last turn. So hitting Enter does **not** flip to
-  `current`; it stays on `$X.XX <age> ago` until real cost data arrives.
+  the **previous** turn's figure with a ticking `N ago` and **no** flower. The
+  "ago" already says it's the last turn. So hitting Enter does **not** start the
+  flower; it stays on `$X.X <age> ago` until real cost data arrives.
 
 To avoid **flashing `$0.00`** the instant a new prompt lands, the just-finished
 turn's cost is snapshotted as "previous turn" **before** the baseline rolls
@@ -176,7 +190,7 @@ total, and doing it cheaply enough to re-render every second. Highlights:
   "previous turn" **before** rolling the baseline forward — so the gap before the
   new turn's usage lands shows the old number instead of **flashing $0.00**.
 - The displayed-cost switch keys off `turn_cost > 0`, not "am I working", so
-  pressing Enter keeps showing `$X.XX <age> ago` (never a bare `current` with no
+  pressing Enter keeps showing `$X.X <age> ago` (never a bare flower with no
   number) until this turn's first cost actually lands.
 
 ### Token counting that doesn't over-count (still parsed, no longer shown)
@@ -218,12 +232,14 @@ priority order:
   re-send of your next message expensive enough to be worth flagging.
 
 ### Cheap shell/rendering touches
-- **Free animation off the refresh clock:** the "billing" ellipsis animates
-  (`․` → `‥` → `…`) by deriving its frame from `now % 3` — a wall-clock value
-  the script already fetches — and letting `refreshInterval: 1` advance it.
-  No timers, no background process, zero extra work per render. The three
-  dot-leader glyphs (U+2024/2025/2026) are each a **single cell**, so the line
-  never shifts width mid-animation.
+- **Free animation off the refresh clock:** the "billing" flower animates
+  (`·` `✢` `✳` `✻` `✽`, ping-ponged) by deriving its frame from `now % 8` — a
+  wall-clock value the script already fetches — and letting `refreshInterval: 1`
+  advance it. No timers, no background process, zero extra work per render. All
+  five glyphs are **single cell** *and* share a baseline (see the `∗` note
+  above), so the line neither shifts width nor wobbles mid-animation. Reusing
+  Claude Code's own spinner glyphs is deliberate: the status line then reads as
+  part of the UI rather than as a bolt-on.
 - ANSI colors are built once from `printf '\033'`; thresholds recolor each field
   (context %, quota left, burn arrow, idle age) inline.
 - The `/effort` suffix is spliced **around** the model's `(context)` label using
@@ -235,8 +251,12 @@ priority order:
   deficit are treated evenly; no arrow when on-track; arrow colored green/orange/red.
 - The whole spend segment is **suppressed** when the session total rounds to
   `$0.00`.
-- The 🌿 worktree name appears **only inside a linked worktree** (git-dir under
-  `.git/worktrees/<name>`), never in the main working tree.
+- **`folder@branch` closes the line**, with the folder painted teal (256-colour
+  80, `#5fd7d7`) to match the border Claude Code draws around the prompt and the
+  session title it writes on that border — so the two read as one frame. A
+  leading `🌿 ` marks a **linked worktree** (git-dir under `.git/worktrees/<name>`);
+  it is *not* a separate segment, because the worktree name and the folder name
+  are the same string and printing it twice was pure noise.
 
 ---
 
@@ -246,12 +266,12 @@ To reproduce this exact status line: save the script below to `~/.claude/statusl
 
 ```sh
 #!/bin/sh
-# Claude Code status line: "Model (ctx% of SIZE) | 5h% left | spend | 🌿 worktree"
+# Claude Code status line: "Model (ctx% of SIZE) | 5h% left | spend | folder@branch"
 #
 # MAINTENANCE RULE: whenever this script changes (format, segments, colors,
 # thresholds, turn-state logic — anything that alters behaviour), update its
 # companion reference in the same change:
-#   ~/workspace/petclinic/.claude/victor-claude-statusline.md   ("Victor Status Bar")
+#   ~/workspace/petclinic/.claude/victor-statusbar.md   ("Victor Status Bar")
 # The two are one unit; a behaviour change not reflected there is a bug in the
 # change, not a follow-up.
 input=$(cat)
@@ -269,12 +289,32 @@ total=$(echo "$input" | jq -r '.context_window.context_window_size // empty')
 five=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
 reset=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 
+# `rate_limits` is NOT a live feed: it caches the headers of *this session's*
+# last API response. A terminal that has been idle keeps showing frozen numbers,
+# which is why two terminals disagree about how much quota is left. Merge with
+# the machine-wide file so every terminal displays the freshest reading any of
+# them has seen. The merged value is shown unmarked: which terminal measured it
+# is bookkeeping, not something worth spending a glyph on.
+merged=$("$HOME/.claude/hooks/quota-state.sh" publish "${five:-}" "${reset:-0}" 2>/dev/null)
+if [ -n "$merged" ]; then
+  m_five=${merged%% *}
+  m_reset=${merged##* }
+  if [ "$m_five" != "-1" ]; then
+    five=$m_five
+    reset=$m_reset
+  fi
+fi
+
 ESC=$(printf '\033')
 RESET="${ESC}[0m"
 ORANGE="${ESC}[38;5;208m"
 RED="${ESC}[31m"
 BLUE="${ESC}[38;5;111m"
 GREEN="${ESC}[38;5;78m"
+# Claude Code paints the prompt box border and the session title on it in teal;
+# 80 (#5fd7d7) is the closest 256-colour match, so the folder name in the status
+# line reads as part of that same frame. Bump to 73/79/116 to taste.
+TEAL="${ESC}[38;5;80m"
 
 if [ -n "$ctx" ]; then
   ctx_pct=$(printf '%.0f' "$ctx")
@@ -368,6 +408,15 @@ if [ -n "$five" ]; then
     body="${RED}${body}${RESET}"
   elif [ "$left" -lt 15 ]; then
     body="${ORANGE}${body}${RESET}"
+  fi
+  # Parked by quota-gate.sh: this terminal is sleeping until the window resets.
+  # Show the wake time so a frozen-looking terminal is legibly frozen on purpose.
+  park="$HOME/.claude/quota-park/$session_id"
+  if [ -n "$session_id" ] && [ -f "$park" ]; then
+    pwake=$(cat "$park" 2>/dev/null)
+    if [ -n "$pwake" ] && [ "$pwake" -gt "$(date +%s)" ] 2>/dev/null; then
+      body="${body} • ${ORANGE}💤$(date -r "$pwake" +%H:%M)${RESET}"
+    fi
   fi
   five_str="${body}"
   out="$out | $five_str"
@@ -576,53 +625,70 @@ if [ -n "$spend_ready" ]; then
   fi
   # Displayed cost + label. The switch is driven by whether the CURRENT turn has
   # actually billed yet (turn_cost>0), NOT merely by "am I working":
-  #   working AND the current turn has cost -> live figure with a one-char
-  #     ellipsis + "current" label ($0.69… current); it's still adding up.
+  #   working AND the current turn has cost -> live figure with the animated
+  #     flower stuck straight onto it ($0.7✻, no space — it reads as one token,
+  #     the way the old ellipsis did); the spinning glyph IS the "this is still
+  #     adding up" signal, so no "current" word is needed next to it.
   #   otherwise (idle, OR you just hit Enter and no cost has come back yet) ->
-  #     the PREVIOUS turn's figure with a ticking "<age> ago" and NO label — the
-  #     "ago" already says it's the last turn. So hitting Enter does NOT flip to
-  #     "current"; it stays on "$X.XX <age> ago" until real cost data arrives.
+  #     the PREVIOUS turn's figure with a ticking "<age> ago" and no flower — the
+  #     "ago" already says it's the last turn. So hitting Enter does NOT start
+  #     the flower; it stays on "$X.X <age> ago" until real cost data arrives.
   if [ "$idle" != "1" ] && [ "$(echo "$turn_cost > 0" | bc -l)" = "1" ]; then
-    # Animated ellipsis: cycle the one-/two-/three-dot leader glyphs (․ ‥ …),
-    # each a single cell so the segment never changes width. The frame comes
-    # from the wall clock ($now, already fetched), and refreshInterval=1 is
-    # what advances it — so the animation is free, no extra work per render.
-    case $((now % 3)) in
-      0) dots="․" ;;
-      1) dots="‥" ;;
-      *) dots="…" ;;
+    # Claude Code's own "Working…" spinner: the asterisk-flower blooming and
+    # closing again (· ✢ ✳ ✻ ✽ then back down), so the status line pulses in
+    # sync with the spinner above the prompt. Every glyph is a single cell, so
+    # the segment never changes width. The frame index comes from the wall clock
+    # ($now, already fetched) and refreshInterval=1 is what advances it — the
+    # animation costs no extra work per render.
+    #
+    # ∗ (U+2217) is deliberately NOT in the cycle even though Claude Code uses
+    # it: it is a MATH OPERATOR, not a Dingbat like the others, so the font
+    # centres it on the math axis and it visibly sags below the baseline next to
+    # ✳/✻/✽ — one frame of the bloom dropping half a pixel-row. Five frames that
+    # sit still beat six that twitch.
+    case $((now % 8)) in
+      0) flower="·" ;;
+      1|7) flower="✢" ;;
+      2|6) flower="✳" ;;
+      3|5) flower="✻" ;;
+      *) flower="✽" ;;
     esac
-    turn_money=$(printf '$%.2f%s' "$turn_cost" "$dots")
-    turn_suffix=" current"
+    turn_money=$(printf '$%.1f%s' "$turn_cost" "$flower")
+    turn_suffix=""
   else
     # idle after a finished turn -> that turn's cost is in turn_cost; just after
     # Enter (turn_cost==0) -> fall back to the previous turn's cost.
     if [ "$(echo "$turn_cost > 0" | bc -l)" = "1" ]; then disp_cost="$turn_cost"; else disp_cost="$prev_turn_cost"; fi
-    turn_money=$(printf '$%.2f' "$disp_cost")
+    turn_money=$(printf '$%.1f' "$disp_cost")
     age_str=""
     [ -n "$age_secs" ] && age_str=$(fmt_age "$age_secs")
     turn_suffix="$age_str"
   fi
   total_money=$(awk -v c="$cost" 'BEGIN{printf "$%d", int(c)}')
-  spend_seg="${turn_money}${turn_suffix} • ${total_money} 💸"
+  spend_seg="${turn_money}${turn_suffix} • ${total_money}"
 fi
 
 if [ -n "$spend_seg" ] && [ "$(printf '%.2f' "$cost")" != "0.00" ]; then
   out="$out | $spend_seg"
 fi
 
-# Optional: git worktree name. Only shown when the current dir is inside a
-# *linked* worktree (git's git-dir lives under .git/worktrees/<name>), not the
-# main working tree.
+# Where am I: "<folder>@<branch>", mirroring the session title Claude Code draws
+# on the prompt's border — the folder is painted in that same teal so the eye
+# links the two. A 🌿 in front means the folder is a *linked* git worktree (git's
+# git-dir lives under .git/worktrees/<name>) rather than the main working tree;
+# the worktree name IS the folder name, so it's one segment, not two.
 dir=$(echo "$input" | jq -r '.workspace.current_dir // .cwd // empty')
 if [ -n "$dir" ] && [ -d "$dir" ]; then
+  folder=$(basename "$dir")
+  branch=$(git -C "$dir" branch --show-current 2>/dev/null)
   gitdir=$(git -C "$dir" rev-parse --absolute-git-dir 2>/dev/null)
   case "$gitdir" in
-    */worktrees/*)
-      wt=$(basename "$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null)")
-      [ -n "$wt" ] && out="$out | 🌿 $wt"
-      ;;
+    */worktrees/*) leaf="🌿 " ;;
+    *) leaf="" ;;
   esac
+  where="${leaf}${TEAL}${folder}${RESET}"
+  [ -n "$branch" ] && where="${where}@${branch}"
+  out="$out | $where"
 fi
 
 echo "$out"
