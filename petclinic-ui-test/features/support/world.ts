@@ -27,6 +27,10 @@ export class PlaywrightWorld extends World {
   ownerId?: number;
   petId?: number;
   visitDescription?: string;
+  visitDate?: string;
+  // HTTP status of the last direct API call made by a scenario that asserts
+  // backend-side validation rather than going through the UI.
+  apiStatus?: number;
   // Set by the owner-search scenario: the last-name part typed into the filter
   // and the owner full names the API returns for it (the expected result set).
   searchPrefix?: string;
