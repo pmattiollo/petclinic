@@ -7,8 +7,15 @@ This file is automatically loaded in any conversation you have with an agent in 
 Full-stack PetClinic application with Angular frontend and Spring Boot backend, managing veterinary clinic operations (owners, pets, vets, visits, specialties).
 
 **Structure:**
-- `petclinic-backend/` - Spring Boot 3.5 REST API (Java 21)
+- `petclinic-backend/` - Spring Boot 3.5 REST API (Java 21); also hosts the Spring AI MCP server at `/mcp`
 - `petclinic-frontend/` - Angular 16 SPA (Angular Material + Bootstrap 3)
+- `petclinic-database/` - embedded Postgres launcher used by `./start-database.sh` and by tests
+- `petclinic-chatbot/` - Spring AI triage assistant (RAG over specialties + books visits via the backend's MCP); needs pgvector from its own `docker-compose.yml`
+- `petclinic-ui-test/` - Playwright/TypeScript e2e tests (Cucumber features), run by `./start-ui-tests.sh`
+- `petclinic-observability/` - OpenTelemetry collector + Grafana stack (`./start-grafana.sh`)
+- `refactoring-legacy/` - self-contained OpenRewrite recipe module, run manually against the backend
+- `user-manual/` - end-user manual (`manual.md`) with generated screenshots
+- `openspec/` - spec-driven change proposals (`changes/`, `specs/`)
 
 ## Common Commands
 
@@ -18,7 +25,9 @@ Each script is foreground; run them in separate terminals.
 ./start-database.sh        # embedded Postgres on localhost:5432
 ./start-backend.sh         # Spring Boot on localhost:8080 (also hosts Spring AI MCP at /mcp)
 ./start-frontend.sh        # Angular dev server on localhost:4200
+./start-chatbot.sh         # Spring AI chatbot on localhost:8082 (needs OPENAI_API_KEY + pgvector)
 ./start-grafana.sh
+./start-ui-tests.sh        # Playwright e2e suite
 ```
 
 The C4 model viewer now lives with the backend docs it serves:
