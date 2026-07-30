@@ -26,34 +26,36 @@ test.describe('Owners Page', () => {
     console.log(`Screenshot saved: ${screenshotPath}`);
   });
 
-  test('shows all owners on initial load', async ({ page }) => {
+  test('shows the first page of owners, sorted by name, on initial load', async ({ page }) => {
     const ownersPage = new OwnersPage(page);
 
-    // Fetch expected owners from API
-    const expectedOwners = await apiClient.fetchOwners();
-    const expectedFullNames = ApiClient.getFullNames(expectedOwners);
+    // The default page size is 10 and the default sort is name ascending - the same order
+    // and page size the API uses when called with no query params.
+    const allOwnersByName = await apiClient.fetchAllOwners();
+    const expectedFirstPage = ApiClient.getDisplayNames(allOwnersByName.slice(0, 10));
 
     // Open the owners page
     await ownersPage.open();
 
     // Wait for the expected number of owners
-    await ownersPage.waitForOwnersCount(expectedFullNames.length);
+    await ownersPage.waitForOwnersCount(expectedFirstPage.length);
 
     // Get actual owner names from the page
     const actualFullNames = await ownersPage.getOwnerFullNames();
 
-    // Assert that all expected owners are displayed
-    expect(ApiClient.sorted(actualFullNames)).toEqual(ApiClient.sorted(expectedFullNames));
+    // The grid must render exactly the first page, in the API's name-ascending order -
+    // NOT just the same set in any order, since the whole point of sorting is the order.
+    expect(actualFullNames).toEqual(expectedFirstPage);
   });
 
   test('filters owners by last name prefix', async ({ page }) => {
-    // Fetch all owners and choose a prefix
-    const allOwners = await apiClient.fetchOwners();
-    const prefix = ApiClient.choosePrefixFrom(allOwners);
+    // Fetch a page of owners and choose a last name to search for
+    const someOwners = await apiClient.fetchOwners();
+    const prefix = ApiClient.choosePrefixFrom(someOwners);
 
-    // Fetch filtered owners from API
+    // Fetch filtered owners from API (walking every page, so the expected set is complete)
     const expectedFilteredOwners = await apiClient.fetchOwnersByPrefix(prefix);
-    const expectedFilteredFullNames = ApiClient.getFullNames(expectedFilteredOwners);
+    const expectedFilteredFullNames = ApiClient.getDisplayNames(expectedFilteredOwners);
 
     // Open the owners page
     const ownersPage = new OwnersPage(page);

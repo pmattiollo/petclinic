@@ -5,22 +5,25 @@ import {PlaywrightWorld} from '../support/world';
 
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:8080/api';
 
-const fullName = (o: {firstName: string; lastName: string}) => `${o.firstName} ${o.lastName}`;
-const lastNameOf = (name: string) => name.trim().split(/\s+/).pop() ?? '';
+// The grid renders the Name column as "Last, First" (see owner-list.component.html).
+const displayName = (o: {firstName: string; lastName: string}) => `${o.lastName}, ${o.firstName}`;
+const lastNameOf = (displayNameText: string) => displayNameText.split(',')[0]?.trim() ?? '';
 
 Given('at least one owner exists', async function (this: PlaywrightWorld) {
-  const {data: owners} = await axios.get(`${API_BASE}/owners`, {timeout: 10_000});
+  const {data: page} = await axios.get(`${API_BASE}/owners`, {timeout: 10_000});
+  const owners = page.content;
   const withLastName = owners.find((o: any) => typeof o.lastName === 'string' && o.lastName.length >= 2);
   if (!withLastName) {
     throw new Error('No owner with a usable last name found; cannot run owner-search scenario');
   }
-  // "One name part": the first two letters of a real owner's last name.
-  this.searchPrefix = withLastName.lastName.slice(0, 2);
-  const {data: matches} = await axios.get(`${API_BASE}/owners`, {
+  // Use the whole last name (not just a couple of letters) so the match stays within the
+  // default page size even against seed data with several similarly-named owners.
+  this.searchPrefix = withLastName.lastName;
+  const {data: matchesPage} = await axios.get(`${API_BASE}/owners`, {
     params: {lastName: this.searchPrefix},
     timeout: 10_000,
   });
-  const expected: string[] = matches.map(fullName).sort();
+  const expected: string[] = matchesPage.content.map(displayName).sort();
   if (expected.length === 0) {
     throw new Error(`API returned no owners for prefix "${this.searchPrefix}"; cannot assert data comes back`);
   }
