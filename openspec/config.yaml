@@ -1,0 +1,51 @@
+schema: spec-driven
+
+context: |
+  Full-stack PetClinic: Spring Boot 3.5 / Java 21 backend, Angular 16 frontend, PostgreSQL
+  with Flyway migrations. See AGENTS.md at the repo root for structure and commands.
+
+  proposal.md is read by the Product Owner and other non-technical stakeholders, out loud,
+  in a meeting. design.md is read by developers. Keep that separation strictly.
+
+rules:
+  proposal:
+    - >-
+      Write for a non-technical Product Owner. The proposal must contain ONLY functional
+      decisions, user-visible behaviour, and questions a business person can answer.
+    - >-
+      Ban all technical vocabulary: no endpoints, HTTP verbs, status codes, JSON, DTOs, SQL,
+      tables, indexes, collations, migrations, class or file names, framework or library names
+      (Spring, Hibernate, Angular, Material, …), query parameters or code identifiers. If a
+      term would need explaining to a PO, it belongs in design.md.
+    - >-
+      Everything technical goes to design.md instead. The proposal may point at it
+      ("how it gets built lives in design.md") but must not summarise it.
+    - >-
+      Describe impact in terms of who notices and what they see, not in terms of which files,
+      classes or tests change. Say "anything reading this list from outside has to be adjusted",
+      not "OwnerRestController and owners.feature break".
+    - >-
+      Justify every deviation from what was requested in plain language, using the real-world
+      reason (e.g. "our addresses start with the house number, so sorting them tells you
+      nothing"), never the implementation reason.
+    - >-
+      End with an "Open Questions for the Product Owner" section listing the decisions that
+      genuinely need a business answer. Purely technical trade-offs are not open questions for
+      the PO - decide them in design.md.
+  design:
+    - >-
+      This is where all technical content lives: API contracts, schema and migrations, indexes,
+      framework choices, file-level impact, and the technical follow-ups deferred out of scope.
+    - Explain WHY a technical option was chosen over the alternatives, not just what was chosen.
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
