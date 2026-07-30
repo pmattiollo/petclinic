@@ -37,6 +37,10 @@ export class ActivatedRouteStub {
   private subject = new BehaviorSubject(this.testParams);
   params = this.subject.asObservable();
 
+  // ActivatedRoute.queryParams is Observable - aliases the same stream as `params` for stubs
+  // that only ever set `testParams`, so existing specs keep working unchanged.
+  queryParams = this.subject.asObservable();
+
   // Test parameters
   // tslint:disable-next-line:variable-name
   private _testParams: {};

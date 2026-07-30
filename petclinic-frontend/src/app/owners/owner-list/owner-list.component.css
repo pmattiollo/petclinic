@@ -1,79 +1,21 @@
-#ownersByLastName
-{
-display:none;
+.owners-table {
+  width: 100%;
+  table-layout: fixed;
 }
 
-#nameGroup {
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	margin-left: 0;
-	margin-right: 0;
-	padding-left: 0;
+.owners-table th.mat-header-cell,
+.owners-table td.mat-cell {
+  padding: 8px;
+  border-top: 1px solid #ddd;
+  text-align: left;
 }
 
-#addressGroup {
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	margin-left: 0;
-	margin-right: 0;
-	padding-left: 0;
+.owners-table tr.mat-header-row,
+.owners-table tr.mat-row {
+  height: auto;
 }
 
-.owner-search-label {
-	margin: 0;
-	text-align: left;
-	min-width: 60px;
+.owners-table .mat-sort-header-container {
+  align-items: center;
 }
 
-.owner-search-input {
-	flex: 1;
-}
-
-.owners-controls {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px;
-	margin-bottom: 16px;
-}
-
-.owners-pagination {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-}
-
-.owners-page-size {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.owners-page-size .form-control {
-	width: auto;
-}
-
-@media (max-width: 576px) {
-	#nameGroup {
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 8px;
-	}
-
-	#addressGroup {
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 8px;
-	}
-
-	.owner-search-input {
-		width: 100%;
-	}
-
-	.owners-controls {
-		flex-direction: column;
-		align-items: flex-start;
-	}
-}
