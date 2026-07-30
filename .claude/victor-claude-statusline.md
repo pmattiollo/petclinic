@@ -26,19 +26,24 @@ blooms `·` → `✢` → `✳` → `✻` → `✽` and closes again, one frame 
 same spinner Claude Code draws in front of "Working…"):
 
 ```
-Opus 4.8/xhigh 50K/1M | 98%↗ left • 4:47h | $0.5✻ • $25 | ai@master
+Opus 4.8/xhigh 50K/1M | ↗98% left / 4:47h | $0.5 ✻ $25 | ai@master | +24% = 70% / 3d5h
 ```
 
 Idle, waiting on you (note the ticking "N ago" clock and no flower):
 
 ```
-Opus 4.8/xhigh 50K/1M | 98% left • 4:47h | $0.1 3m ago • $25 | ai@master
+Opus 4.8/xhigh 50K/1M | 98% left / 4:47h | $0.1 3m ago ∈ $25 | ai@master | +24% = 70% / 3d5h
 ```
 
-Four `|`-separated segments: **model/context**, **5h quota + burn-rate**,
+Five `|`-separated segments: **model/context**, **5h quota + burn-rate**,
 **spend**, **location** (`folder@branch`, folder in teal, prefixed `🌿 ` only
-inside a linked git worktree). There is **no leading emoji** on the model
-segment.
+inside a linked git worktree), **7-day quota**. There is **no leading emoji** on
+the model segment.
+
+**`|` is reserved for segment boundaries — nothing else uses it.** Inside a
+segment, two readings of the same window are joined with `/` (`↗98% left / 4:47h`,
+`+24% = 70% / 3d5h`), which also buys back a couple of columns per join versus
+the `•` it replaced.
 
 ---
 
@@ -59,17 +64,22 @@ segment.
 
 ---
 
-## 2. Quota & burn-rate — `98%↗ left • 4:47h`
+## 2. Quota & burn-rate — `↗98% left / 4:47h`
 
 Tracks the rolling **5-hour** rate-limit window.
 
 | Piece | Meaning | Source |
 |-------|---------|--------|
+| `↗` | burn-rate indicator (see below), colored, **leading** the number | derived |
 | `98%` | quota remaining = `100 − used%` | `.rate_limits.five_hour.used_percentage` |
-| `↗` | burn-rate indicator (see below), colored | derived |
-| `left • 4:47h` | time until the window resets (`H:MMh`, or `Mm` under an hour) | `.rate_limits.five_hour.resets_at` |
+| `left / 4:47h` | time until the window resets (`H:MMh`, or `Mm` under an hour) | `.rate_limits.five_hour.resets_at` |
 
 The `% left` turns **orange < 15%** and **red < 5%**.
+
+**The arrow leads, it doesn't trail.** In a left-to-right line the glance lands
+on the first glyph of a segment, so that slot goes to the part you read *without
+parsing digits* — the trend — and the exact figure follows for when you actually
+care. Same principle drives the weekly segment (§4).
 
 ### Burn-rate indicator
 
@@ -99,19 +109,29 @@ against `98%` quota that's `r ≈ 1.02` → on par (no arrow).
 
 ---
 
-## 3. Spend — `$0.5✻ • $25`
+## 3. Spend — `$0.5 ✻ $25` / `$0.1 3m ago ∈ $25`
 
-The spend segment shows **cost only** (no token counts). Two parts: the
-**current/last turn**, then the **session total**.
+The spend segment shows **cost only** (no token counts). Three parts: the
+**current/last turn**, a **separator that doubles as the turn-state indicator**,
+then the **session total**.
 
 | Piece | Meaning |
 |-------|---------|
-| `$0.5✻` | cost of the **current turn** (one decimal), with the **animated flower** butted straight onto it while it's still adding up |
-| *(or)* `$0.1 3m ago` | when idle: the **last** turn's cost + a ticking "N ago" clock, **no** flower |
+| `$0.5` | cost of the **current turn** (one decimal) |
+| *(or)* `$0.1 3m ago` | when idle: the **last** turn's cost + a ticking "N ago" clock |
+| `✻` | the **animated flower** in the separator slot — this turn is still adding up |
+| *(or)* `∈` | set membership: the turn cost is *one element of* the session total (see below) |
 | `$25` | session total, **integer-truncated** (`int($)`), authoritative |
 
 Turn cost is rounded to **one decimal**: at this granularity the second decimal
 was noise you never acted on, and dropping it keeps the segment narrow.
+
+The idle separator is **`∈`, not a neutral bullet**. The two figures aren't
+siblings — one is *contained in* the other, and a bullet says nothing about that
+while `∈` states it in a single cell. It also makes the pair self-explaining to
+someone reading the bar for the first time: `$0.6 ∈ $3` can only mean "this turn
+is part of that total". (While the turn is live, the animated flower occupies
+that same slot instead — see below.)
 
 > **Token counts are no longer displayed.** The transcript is still parsed and
 > deduped by `requestId` (see below), but that machinery now feeds only
@@ -136,8 +156,10 @@ was noise you never acted on, and dropping it keeps the segment narrow.
 Which one you see is driven by whether the **current turn has actually billed
 yet** (`turn_cost > 0`), *not* merely by "am I working":
 
-- **working AND turn has cost** → live figure with the animated flower butted
-  straight onto it, no space (e.g. `$0.5✻`) — it's still adding up. There is
+- **working AND turn has cost** → live figure, and the flower **takes over the
+  separator slot** (e.g. `$0.5 ✻ $25`) — it's still adding up. That slot is dead
+  space anyway, so the bloom costs no width and nothing shifts when it starts or
+  stops. There is
   **no `current` word**: a glyph that visibly moves already says "in progress",
   and it says it in one cell instead of eight. The frames are Claude Code's own
   spinner — `·` `✢` `✳` `✻` `✽` (U+00B7, U+2722, U+2733, U+273B, U+273D) —
@@ -153,9 +175,10 @@ yet** (`turn_cost > 0`), *not* merely by "am I working":
   don't. A useful reminder that "same-looking glyph" ≠ "same vertical metrics":
   mixing Unicode blocks in an animation is how you get a wobble.
 - **otherwise** (idle, *or* you just hit Enter and no cost has come back yet) →
-  the **previous** turn's figure with a ticking `N ago` and **no** flower. The
-  "ago" already says it's the last turn. So hitting Enter does **not** start the
-  flower; it stays on `$X.X <age> ago` until real cost data arrives.
+  the **previous** turn's figure with a ticking `N ago` and **no** flower; the
+  separator slot falls back to the static `∈`. The "ago" already says it's the
+  last turn. So hitting Enter does **not** start the flower; it stays on
+  `$X.X <age> ago ∈ $total` until real cost data arrives.
 
 To avoid **flashing `$0.00`** the instant a new prompt lands, the just-finished
 turn's cost is snapshotted as "previous turn" **before** the baseline rolls
@@ -171,6 +194,76 @@ forward, so the gap before the new turn's usage shows the old number.
   main transcript. Minor inconsistency by design.
 - The window length is hardcoded to 5h (18000s); the status input only provides
   `resets_at`, not the window size.
+
+---
+
+## 4. Weekly quota — `+24% = 70% / 3d5h`
+
+The **last** segment, tracking the rolling **7-day** (604800s) rate-limit window.
+Segment 2 answers *"can I keep going right now"*; this one answers the slower
+question — *am I going to run out of week before the week runs out*.
+
+| Piece | Meaning | Source |
+|-------|---------|--------|
+| `+24%` | pace: **percentage points** off a straight line, `elapsed% − used%` | derived |
+| `=` | reading aid separating the two percentages (see below) | — |
+| `70%` | quota remaining this week = `100 − used%` | `.rate_limits.seven_day.used_percentage` |
+| `3d5h` | time until the weekly window resets | `.rate_limits.seven_day.resets_at` |
+
+Pace **leads** the absolute figure, mirroring the 5h arrow: the signed number is
+the "am I OK?" glance, the `% left` is the detail you read second.
+
+The `=` between them is **punctuation, not arithmetic**. Without it, `-19% 27%`
+is two bare percentages jammed together with nothing signalling they're different
+quantities — the eye tries to relate them and stalls. The `=` makes the pair scan
+as a single statement ("19% behind, which leaves 27%") for the price of one cell.
+A worked example of the general rule: when two adjacent numbers share a unit,
+spend a character telling the reader they don't share a *meaning*.
+
+`% left` uses the same thresholds as the 5h segment: **orange < 15%**, **red < 5%**.
+
+### Pace: a signed percentage, not an arrow
+
+`elapsed% − used%`, clamped to the window:
+
+| pace | meaning | color |
+|------|---------|-------|
+| `+N%` | consumed **less** than the calendar — `N` points of slack in hand | green |
+| `0%` | dead on the linear budget | — |
+| `-N%` (N < 10) | running **ahead** of the calendar | orange |
+| `-N%` (N ≥ 10) | badly ahead — this week ends early | red |
+
+Two decisions here, both about **reading speed**:
+
+- **Points, not a ratio** — deliberately not the ratio-with-bands used for the
+  5h arrow. Over a week a ratio is unusable at both ends: in the first hours
+  `time_left ≈ 1` makes it explode, and near the reset it goes numb. The
+  point-difference stays readable throughout, and it matches the arithmetic
+  people actually do in their heads ("it's Thursday, I should be about 57% in").
+- **A signed `%`, not a `↑`/`↓` glyph** — the pace sits immediately next to the
+  "% left" figure. Rendering both in the *same unit* lets you compare them
+  without a mental conversion ("28% left, but 18% behind"); a bare `↓18` beside
+  a `28%` invites reading the two as different kinds of quantity. The sign
+  carries the direction an arrow would have, at the same width.
+
+The `0%` case is printed rather than blanked so the segment doesn't change width
+as you cross the line.
+
+### Time left: mixed units, not a decimal day
+
+`3d5h`, not `3.2d`. A decimal day needs mental arithmetic before it becomes an
+hour you can plan around — and the whole point of the segment is deciding what to
+do *today*. A zero tail is dropped (`3d`, never `3d0h`), and below a day it
+degrades to `17h`, then `44m`.
+
+### Why this segment can be trusted more than you'd expect
+
+The weekly reading goes stale the same way the 5h one does — `rate_limits` is a
+cache of *this session's* last API response — but **worse**, because a terminal
+can sit idle for hours while the week keeps moving. That's exactly why it goes
+through the same machine-wide merge (see *Cross-terminal quota state* below):
+whichever of your terminals talked to the API most recently is the one whose
+number you see.
 
 ---
 
@@ -226,6 +319,33 @@ priority order:
    flat ≥ `NEW_TURN_GAP` (30s) ⇒ genuinely new turn (so a mid-turn tool pause
    doesn't split one turn in two).
 
+### Cross-terminal quota state
+`rate_limits` is **not a live feed** — it's a cache of the headers from *that
+session's* last API response. A terminal idle for an hour keeps showing frozen
+numbers, which is why two terminals openly disagree about how much quota is left.
+`~/.claude/hooks/quota-state.sh` fixes this with a machine-wide `~/.claude/quota.json`
+that every status line writes (~1×/sec) and reads back, for **both** windows:
+
+- **Merge rule without clocks.** The readings carry no age, so freshness can't be
+  compared directly. But within a window `used` only ever *increases* (quota is
+  consumed, never returned), and across windows `resets_at` increases — so
+  comparing `(resets_at, used)` lexicographically *is* a total "which reading is
+  newer" order. A reading that loses is simply discarded.
+- **Self-healing instead of locking.** Every terminal writes unlocked, so two
+  writers can interleave and lose an update — but the merge is monotone and re-runs
+  a second later, so a lost update heals itself. A lock would cost more than the
+  race does.
+- **Never blanks out knowledge.** A non-numeric or absent new reading always loses
+  the merge, so a terminal that has not yet seen a single header cannot wipe what
+  the others already know.
+- The merged value is shown **unmarked** — which terminal measured it is
+  bookkeeping, not worth spending a glyph on.
+- `quota-state.sh read` still emits only the two `five_hour` fields (the sibling
+  `quota-gate.sh` parses it with `${x%% *}`/`${x##* }` and parks a terminal on the
+  5h window alone); the weekly pair is a separate `read7` subcommand. Extending an
+  output that others parse positionally is exactly where a "harmless" change breaks
+  a consumer.
+
 ### Context-aware idle warning
 - The "N ago" clock turns **orange only past the ~5-min prompt-cache TTL** *and*
   only when context ≥ 100K tokens — because only then is the post-TTL uncached
@@ -266,12 +386,13 @@ To reproduce this exact status line: save the script below to `~/.claude/statusl
 
 ```sh
 #!/bin/sh
-# Claude Code status line: "Model (ctx% of SIZE) | 5h% left | spend | folder@branch"
+# Claude Code status line:
+#   "Model (ctx% of SIZE) | 5h% left | spend | folder@branch | 7d quota"
 #
 # MAINTENANCE RULE: whenever this script changes (format, segments, colors,
 # thresholds, turn-state logic — anything that alters behaviour), update its
 # companion reference in the same change:
-#   ~/workspace/petclinic/.claude/victor-statusbar.md   ("Victor Status Bar")
+#   ~/workspace/petclinic/.claude/victor-claude-statusline.md
 # The two are one unit; a behaviour change not reflected there is a bug in the
 # change, not a follow-up.
 input=$(cat)
@@ -288,6 +409,8 @@ ctx=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 total=$(echo "$input" | jq -r '.context_window.context_window_size // empty')
 five=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
 reset=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
+week=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
+week_reset=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
 
 # `rate_limits` is NOT a live feed: it caches the headers of *this session's*
 # last API response. A terminal that has been idle keeps showing frozen numbers,
@@ -295,13 +418,20 @@ reset=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 # the machine-wide file so every terminal displays the freshest reading any of
 # them has seen. The merged value is shown unmarked: which terminal measured it
 # is bookkeeping, not something worth spending a glyph on.
-merged=$("$HOME/.claude/hooks/quota-state.sh" publish "${five:-}" "${reset:-0}" 2>/dev/null)
+merged=$("$HOME/.claude/hooks/quota-state.sh" publish \
+  "${five:-}" "${reset:-0}" "${week:-}" "${week_reset:-0}" 2>/dev/null)
 if [ -n "$merged" ]; then
-  m_five=${merged%% *}
-  m_reset=${merged##* }
+  m_five=$(printf '%s' "$merged" | cut -d' ' -f1)
+  m_reset=$(printf '%s' "$merged" | cut -d' ' -f2)
+  m_week=$(printf '%s' "$merged" | cut -d' ' -f3)
+  m_week_reset=$(printf '%s' "$merged" | cut -d' ' -f4)
   if [ "$m_five" != "-1" ]; then
     five=$m_five
     reset=$m_reset
+  fi
+  if [ -n "$m_week" ] && [ "$m_week" != "-1" ]; then
+    week=$m_week
+    week_reset=$m_week_reset
   fi
 fi
 
@@ -398,9 +528,16 @@ if [ -n "$five" ]; then
       esac
     fi
   fi
-  pct_part="${left}%${ind}"
+  # Arrow LEADS the number ("↗98% left"), it does not trail it. The arrow is the
+  # part you read at a glance without parsing digits, and in a left-to-right line
+  # the glance lands on the first glyph of the segment — so the trend gets that
+  # slot and the exact figure follows for when you actually care.
+  pct_part="${ind}${left}%"
+  # "↗98% left / 4:47h": quota-left and time-left are two readings of the SAME
+  # window, joined with "/" rather than the "•" it replaces; "|" stays reserved
+  # for segment boundaries, so the eye still parses where the segment ends.
   if [ -n "$dur" ]; then
-    body="${pct_part} left • ${dur}"
+    body="${pct_part} left / ${dur}"
   else
     body="${pct_part} left"
   fi
@@ -625,14 +762,17 @@ if [ -n "$spend_ready" ]; then
   fi
   # Displayed cost + label. The switch is driven by whether the CURRENT turn has
   # actually billed yet (turn_cost>0), NOT merely by "am I working":
-  #   working AND the current turn has cost -> live figure with the animated
-  #     flower stuck straight onto it ($0.7✻, no space — it reads as one token,
-  #     the way the old ellipsis did); the spinning glyph IS the "this is still
-  #     adding up" signal, so no "current" word is needed next to it.
+  #   working AND the current turn has cost -> live figure, and the animated
+  #     flower TAKES THE PLACE of the "•" that normally separates turn cost from
+  #     session total ($0.7 ✻ $12). The separator slot is dead space anyway, so
+  #     the bloom costs no width and nothing shifts when it starts or stops; the
+  #     spinning glyph IS the "this is still adding up" signal, so no "current"
+  #     word is needed next to it.
   #   otherwise (idle, OR you just hit Enter and no cost has come back yet) ->
-  #     the PREVIOUS turn's figure with a ticking "<age> ago" and no flower — the
-  #     "ago" already says it's the last turn. So hitting Enter does NOT start
-  #     the flower; it stays on "$X.X <age> ago" until real cost data arrives.
+  #     the PREVIOUS turn's figure with a ticking "<age> ago", and the separator
+  #     falls back to the plain "•" — the "ago" already says it's the last turn.
+  #     So hitting Enter does NOT start the flower; it stays on "$X.X <age> ago"
+  #     until real cost data arrives.
   if [ "$idle" != "1" ] && [ "$(echo "$turn_cost > 0" | bc -l)" = "1" ]; then
     # Claude Code's own "Working…" spinner: the asterisk-flower blooming and
     # closing again (· ✢ ✳ ✻ ✽ then back down), so the status line pulses in
@@ -653,8 +793,9 @@ if [ -n "$spend_ready" ]; then
       3|5) flower="✻" ;;
       *) flower="✽" ;;
     esac
-    turn_money=$(printf '$%.1f%s' "$turn_cost" "$flower")
+    turn_money=$(printf '$%.1f' "$turn_cost")
     turn_suffix=""
+    sep="$flower"
   else
     # idle after a finished turn -> that turn's cost is in turn_cost; just after
     # Enter (turn_cost==0) -> fall back to the previous turn's cost.
@@ -663,9 +804,14 @@ if [ -n "$spend_ready" ]; then
     age_str=""
     [ -n "$age_secs" ] && age_str=$(fmt_age "$age_secs")
     turn_suffix="$age_str"
+    # "∈", not a neutral bullet: the two figures are not siblings — the turn cost
+    # is one element OF the session total. The set-membership sign states that
+    # relationship in one cell, so "$0.6 ∈ $3" reads as "this turn is part of
+    # that", not as "0.6 and 3".
+    sep="∈"
   fi
   total_money=$(awk -v c="$cost" 'BEGIN{printf "$%d", int(c)}')
-  spend_seg="${turn_money}${turn_suffix} • ${total_money}"
+  spend_seg="${turn_money}${turn_suffix} ${sep} ${total_money}"
 fi
 
 if [ -n "$spend_seg" ] && [ "$(printf '%.2f' "$cost")" != "0.00" ]; then
@@ -689,6 +835,81 @@ if [ -n "$dir" ] && [ -d "$dir" ]; then
   where="${leaf}${TEAL}${folder}${RESET}"
   [ -n "$branch" ] && where="${where}@${branch}"
   out="$out | $where"
+fi
+
+# --- Weekly quota, last segment: "-18% = 28% / 3d5h"
+# The 5h segment answers "can I keep going right now"; this one answers the
+# slower question — am I going to run out of week before the week runs out.
+# Three numbers, in the order you actually ask them:
+#   -18%  pace, in percentage POINTS off a straight line: elapsed% − used%.
+#         Positive = consumed less than the clock, i.e. points of slack in hand;
+#         negative = burning ahead of the calendar. Points, not a ratio, because
+#         over a whole week the linear budget is the mental model people
+#         actually use ("it's Thursday, I should be ~57% in").
+#   28%   quota left in the 7-day window (the absolute figure)
+#   3d5h  time until the window resets
+# Deliberately NOT the ratio-with-bands used for the 5h arrow: on a 7-day window
+# a ratio is wildly unstable in the first hours (tiny elapsed => huge ratio) and
+# numb at the end, whereas the point-difference stays readable throughout.
+if [ -n "$week" ]; then
+  wleft=$(printf '%.0f' "$(echo "100 - $week" | bc -l)")
+  wleft_str="${wleft}%"
+  if [ "$wleft" -lt 5 ]; then
+    wleft_str="${RED}${wleft_str}${RESET}"
+  elif [ "$wleft" -lt 15 ]; then
+    wleft_str="${ORANGE}${wleft_str}${RESET}"
+  fi
+
+  wpace=""
+  wdur=""
+  if [ -n "$week_reset" ] && [ "$week_reset" -gt 0 ] 2>/dev/null; then
+    now=$(date +%s)
+    wdiff=$((week_reset - now))
+    if [ "$wdiff" -gt 0 ]; then
+      # Time left as "3d5h" -- mixed units rather than a decimal day, because
+      # "3.2d" needs mental arithmetic to become an hour you can plan around.
+      # A zero tail is dropped ("3d", not "3d0h"); under a day it degrades to
+      # "5h", then "45m".
+      wdur=$(awk -v d="$wdiff" 'BEGIN{
+        dd=int(d/86400); hh=int((d%86400)/3600);
+        if (dd>0)      printf (hh>0 ? "%dd%dh" : "%dd"), dd, hh;
+        else if (hh>0) printf "%dh", hh;
+        else           printf "%dm", int(d/60) }')
+      # elapsed% − used% ; clamp elapsed to the 604800s window in case the
+      # header's resets_at is further out than one week.
+      delta=$(awk -v u="$week" -v d="$wdiff" 'BEGIN{
+        e=(604800-d)/604800*100; if(e<0)e=0; if(e>100)e=100;
+        printf "%.0f", e-u }')
+      # Signed percentage rather than an arrow glyph: the pace sits right next to
+      # the "% left" figure, and two numbers in the same unit compare instantly
+      # ("28% left, but 18% behind") where a "%" next to a "↓18" invites reading
+      # the second one as a different kind of quantity.
+      case "$delta" in
+        -*) wtxt="-${delta#-}%"
+            if [ "${delta#-}" -ge 10 ]; then wcol="$RED"; else wcol="$ORANGE"; fi ;;
+        0)  wtxt="0%"; wcol="" ;;
+        *)  wtxt="+${delta}%"; wcol="$GREEN" ;;
+      esac
+      if [ -n "$wcol" ]; then
+        wpace="${wcol}${wtxt}${RESET}"
+      else
+        wpace="$wtxt"
+      fi
+    fi
+  fi
+  # Pace LEADS the absolute figure, same reasoning as the 5h arrow: the signed
+  # number is the "am I OK?" glance, the "% left" is the detail you read second.
+  # The "=" between them is a reading aid, not arithmetic: without it "-18% 28%"
+  # is two bare percentages jammed together with nothing saying they are
+  # different quantities. It makes the pair scan as one statement -- "18% behind,
+  # which leaves 27%" -- for the price of one cell.
+  if [ -n "$wpace" ]; then
+    week_seg="${wpace} = ${wleft_str}"
+  else
+    week_seg="$wleft_str"
+  fi
+  [ -n "$wdur" ] && week_seg="${week_seg} / ${wdur}"
+  out="$out | $week_seg"
 fi
 
 echo "$out"
