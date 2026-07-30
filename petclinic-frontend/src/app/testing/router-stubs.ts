@@ -54,8 +54,11 @@ export class ActivatedRouteStub {
   }
 
   // ActivatedRoute.snapshot.params
+  // Note: this must NOT go through the `testParams` setter - that setter also emits through
+  // the `subject` shared by `params`/`queryParams`, and any consumer already subscribed to
+  // those streams (e.g. a component's ngOnInit) would receive an unwanted extra emission
+  // every time something merely reads `.snapshot` (as `routerLink` does internally).
   get snapshot() {
-    this.testParams = {id: 1};
-    return {params: this.testParams};
+    return {params: {id: 1}};
   }
 }
