@@ -54,6 +54,8 @@ See [GUARDRAILS.md](GUARDRAILS.md) for the full list of guardrail tests, living 
   rows added at runtime). Flyway recreates the seed on the next backend boot regardless, but to
   preserve runtime data start Postgres from the jar directly; use the script only for a
   deliberate reset.
+- ⚠️ **Production scale: `owners` will quickly reach ~10.000 rows.** The dev seed has 28, which
+  is misleading — size owner queries, grids, indexes and fetch plans for 10k, not for the seed.
 
 ### Security
 - Disabled by default

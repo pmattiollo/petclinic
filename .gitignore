@@ -89,3 +89,4 @@ rag-vector-store.json
 
 # Review-time architecture delta (scripts/architecture-diff.sh) — regenerate, never commit
 /pr-diff/
+/.vscode/settings.json
