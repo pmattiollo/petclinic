@@ -13,10 +13,10 @@ CREATE TABLE public.flyway_schema_history (
 
 CREATE TABLE public.owners (
     id integer NOT NULL,
-    first_name text,
-    last_name text,
+    first_name character varying(30) COLLATE pg_catalog."en-US-x-icu",
+    last_name character varying(30) COLLATE pg_catalog."en-US-x-icu",
     address text,
-    city text,
+    city character varying(80) COLLATE pg_catalog."en-US-x-icu",
     telephone text
 );
 
@@ -167,6 +167,14 @@ ALTER TABLE ONLY public.visits
     ADD CONSTRAINT visits_pkey PRIMARY KEY (id);
 
 CREATE INDEX flyway_schema_history_s_idx ON public.flyway_schema_history USING btree (success);
+
+CREATE INDEX owners_city_desc_name_idx ON public.owners USING btree (city DESC, last_name, first_name, id);
+
+CREATE INDEX owners_city_name_idx ON public.owners USING btree (city, last_name, first_name, id);
+
+CREATE INDEX owners_last_first_idx ON public.owners USING btree (last_name, first_name, id);
+
+CREATE INDEX owners_last_name_pattern_idx ON public.owners USING btree (last_name text_pattern_ops);
 
 CREATE INDEX pets_name_idx ON public.pets USING btree (name);
 
