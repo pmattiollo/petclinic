@@ -8,6 +8,7 @@ import { HttpResponse } from '@angular/common/http';
 import { HttpErrorHandler } from '../error.service';
 import { OwnerService } from './owner.service';
 import { Owner } from './owner';
+import { OwnerPage } from './owner-page';
 
 describe('OwnerService', () => {
   let httpTestingController: HttpTestingController;
@@ -34,6 +35,14 @@ describe('OwnerService', () => {
     }
   ];
 
+  const expectedOwnerPage: OwnerPage = {
+    content: expectedOwners,
+    totalElements: 2,
+    totalPages: 1,
+    number: 0,
+    size: 10
+  };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
@@ -51,11 +60,11 @@ describe('OwnerService', () => {
   it('should return expected owners (called once)', () => {
     ownerService
       .getOwners()
-      .subscribe((owners) => expect(owners).toEqual(expectedOwners), fail);
+      .subscribe((page) => expect(page).toEqual(expectedOwnerPage), fail);
 
     const req = httpTestingController.expectOne(ownerService.entityUrl);
     expect(req.request.method).toEqual('GET');
-    req.flush(expectedOwners);
+    req.flush(expectedOwnerPage);
   });
 
   it('search the owner by id', () => {
@@ -132,14 +141,24 @@ describe('OwnerService', () => {
   });
 
   it('search owners by last name prefix', () => {
-    ownerService.searchOwners('Fr').subscribe((owners) => {
-      expect(owners).toEqual(expectedOwners);
+    ownerService.getOwners({ lastName: 'Fr' }).subscribe((page) => {
+      expect(page).toEqual(expectedOwnerPage);
     });
 
     const req = httpTestingController.expectOne(
       ownerService.entityUrl + '?lastName=Fr'
     );
     expect(req.request.method).toEqual('GET');
-    req.flush(expectedOwners);
+    req.flush(expectedOwnerPage);
+  });
+
+  it('requests page, size and sort as query params', () => {
+    ownerService.getOwners({ lastName: 'Fr', page: 2, size: 20, sort: 'city,desc' }).subscribe();
+
+    const req = httpTestingController.expectOne(
+      ownerService.entityUrl + '?lastName=Fr&page=2&size=20&sort=city,desc'
+    );
+    expect(req.request.method).toEqual('GET');
+    req.flush(expectedOwnerPage);
   });
 });
