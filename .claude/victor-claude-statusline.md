@@ -26,19 +26,19 @@ blooms `·` → `✢` → `✳` → `✻` → `✽` and closes again, one frame 
 same spinner Claude Code draws in front of "Working…"):
 
 ```
-Opus 4.8/xhigh 50K/1M | ↗98% left / 4:47h | $0.5 ✻ $25 | ai@master | +24% = 70% / 3d5h
+Opus 4.8/xhigh 50K/1M | ↗98% left / 4:47h | $0.5 ✻ $25 | ai | +24% = 70% / 3d5h
 ```
 
 Idle, waiting on you (note the ticking "N ago" clock and no flower):
 
 ```
-Opus 4.8/xhigh 50K/1M | 98% left / 4:47h | $0.1 3m ago ∈ $25 | ai@master | +24% = 70% / 3d5h
+Opus 4.8/xhigh 50K/1M | 98% left / 4:47h | $0.1 3m ago ∈ $25 | ai | +24% = 70% / 3d5h
 ```
 
 Five `|`-separated segments: **model/context**, **5h quota + burn-rate**,
-**spend**, **location** (`folder@branch`, folder in teal, prefixed `🌿 ` only
-inside a linked git worktree), **7-day quota**. There is **no leading emoji** on
-the model segment.
+**spend**, **location** (`folder`, plus `@branch` **only when off `master`/`main`**;
+folder in teal, prefixed `🌿 ` only inside a linked git worktree), **7-day
+quota**. There is **no leading emoji** on the model segment.
 
 **`|` is reserved for segment boundaries — nothing else uses it.** Inside a
 segment, two readings of the same window are joined with `/` (`↗98% left / 4:47h`,
@@ -377,6 +377,11 @@ that every status line writes (~1×/sec) and reads back, for **both** windows:
   leading `🌿 ` marks a **linked worktree** (git-dir under `.git/worktrees/<name>`);
   it is *not* a separate segment, because the worktree name and the folder name
   are the same string and printing it twice was pure noise.
+- **The branch is printed only when it is neither `master` nor `main`.** The
+  trunk is the default state, so naming it says nothing; printing it on every
+  render trains the eye to skip that part of the line — which is exactly when
+  you'd miss the one time it mattered. Absence of `@branch` therefore *means*
+  "on the trunk", and any `@something` you do see is worth reading.
 
 ---
 
@@ -387,7 +392,7 @@ To reproduce this exact status line: save the script below to `~/.claude/statusl
 ```sh
 #!/bin/sh
 # Claude Code status line:
-#   "Model (ctx% of SIZE) | 5h% left | spend | folder@branch | 7d quota"
+#   "Model (ctx% of SIZE) | 5h% left | spend | folder[@branch] | 7d quota"
 #
 # MAINTENANCE RULE: whenever this script changes (format, segments, colors,
 # thresholds, turn-state logic — anything that alters behaviour), update its
@@ -818,7 +823,7 @@ if [ -n "$spend_seg" ] && [ "$(printf '%.2f' "$cost")" != "0.00" ]; then
   out="$out | $spend_seg"
 fi
 
-# Where am I: "<folder>@<branch>", mirroring the session title Claude Code draws
+# Where am I: "<folder>" (plus "@<branch>" only off master/main), mirroring the session title Claude Code draws
 # on the prompt's border — the folder is painted in that same teal so the eye
 # links the two. A 🌿 in front means the folder is a *linked* git worktree (git's
 # git-dir lives under .git/worktrees/<name>) rather than the main working tree;
@@ -833,7 +838,14 @@ if [ -n "$dir" ] && [ -d "$dir" ]; then
     *) leaf="" ;;
   esac
   where="${leaf}${TEAL}${folder}${RESET}"
-  [ -n "$branch" ] && where="${where}@${branch}"
+  # master/main is the default state, so naming it says nothing: the branch is
+  # only worth a segment when you are somewhere OTHER than the trunk. Showing it
+  # always trains the eye to skip it, which is exactly when you'd miss the one
+  # time it mattered. So: no branch shown => you're on the trunk.
+  case "$branch" in
+    ''|master|main) ;;
+    *) where="${where}@${branch}" ;;
+  esac
   out="$out | $where"
 fi
 
