@@ -49,6 +49,10 @@ class Visit {
   time : LocalTime
   description : String
 }
+class VisitDateRange {
+  earliest : LocalDate
+  latest : LocalDate
+}
 
 Owner "1" -- "0..*" Pet : owner
 Pet "1" -- "0..*" Visit : pet
