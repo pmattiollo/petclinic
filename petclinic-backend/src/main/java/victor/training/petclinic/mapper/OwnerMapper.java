@@ -2,9 +2,11 @@ package victor.training.petclinic.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.springframework.data.domain.Page;
 import victor.training.petclinic.domain.Owner;
 import victor.training.petclinic.rest.dto.OwnerDto;
 import victor.training.petclinic.rest.dto.OwnerFieldsDto;
+import victor.training.petclinic.rest.dto.OwnerPageDto;
 
 import java.util.List;
 
@@ -18,5 +20,8 @@ public interface OwnerMapper {
     Owner toOwner(OwnerFieldsDto ownerDto);
 
     List<OwnerDto> toOwnerDtoCollection(List<Owner> ownerCollection);
+
+    @Mapping(target = "content", source = "content")
+    OwnerPageDto toOwnerPageDto(Page<Owner> page);
 
 }
