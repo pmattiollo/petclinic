@@ -5,15 +5,6 @@
       "url": "https://mcp.context7.com/mcp"
     },
 
-    "playwright": {
-      "//": "In case MCPs are disabled, tell agent to use playwright cli",
-      "command": "npx",
-      "args": [
-        "@playwright/mcp@latest",
-        "--output-dir", "petclinic-ui-test/.playwright-mcp",
-        "--save-session"
-      ]
-    },
 
     "postgres-db": {
       "//": "In case MCPs are disabled, tell agent to use db-wo-mcp.js",
