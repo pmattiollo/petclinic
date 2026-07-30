@@ -82,4 +82,93 @@ test.describe('Owners Page', () => {
       ApiClient.sorted(expectedFilteredFullNames)
     );
   });
+
+  test('paginates through owners and can change page size', async ({ page }) => {
+    const ownersPage = new OwnersPage(page);
+    const allOwnersByName = await apiClient.fetchAllOwners();
+    test.skip(allOwnersByName.length <= 10, 'Needs more than one page of owners to test paging');
+
+    await ownersPage.open();
+
+    // Page 1 (default size 10)
+    await expect.poll(() => ownersPage.getOwnerFullNames()).toEqual(ApiClient.getDisplayNames(allOwnersByName.slice(0, 10)));
+    expect(ownersPage.currentPageIndex()).toBe(0);
+
+    // Next page carries the page index through and shows the next 10 owners
+    await ownersPage.goToNextPage();
+    await expect.poll(() => ownersPage.currentPageIndex()).toBe(1);
+    await expect.poll(() => ownersPage.getOwnerFullNames()).toEqual(
+      ApiClient.getDisplayNames(allOwnersByName.slice(10, 20))
+    );
+
+    // Changing the page size resets to page 1 (index 0) with the new size
+    await ownersPage.choosePageSize(20);
+    await expect.poll(() => ownersPage.currentPageIndex()).toBe(0);
+    const expectedFirst20 = ApiClient.getDisplayNames(allOwnersByName.slice(0, 20));
+    await expect.poll(() => ownersPage.getOwnerFullNames()).toEqual(expectedFirst20);
+  });
+
+  test('sorts owners by name and by city', async ({ page }) => {
+    const ownersPage = new OwnersPage(page);
+
+    const byNameAsc = await apiClient.fetchOwnersPage({sort: 'name,asc', size: 20});
+    const byNameDesc = await apiClient.fetchOwnersPage({sort: 'name,desc', size: 20});
+    const byCityAsc = await apiClient.fetchOwnersPage({sort: 'city,asc', size: 20});
+
+    await ownersPage.open();
+    await ownersPage.choosePageSize(20);
+    await expect.poll(() => ownersPage.getOwnerFullNames()).toEqual(ApiClient.getDisplayNames(byNameAsc.content));
+
+    // Clicking the Name header again reverses the direction
+    await ownersPage.sortByName();
+    await expect.poll(() => ownersPage.getOwnerFullNames()).toEqual(ApiClient.getDisplayNames(byNameDesc.content));
+
+    // Clicking City sorts by city (ascending, name stays ascending within each city)
+    await ownersPage.sortByCity();
+    await expect.poll(() => ownersPage.getOwnerFullNames()).toEqual(ApiClient.getDisplayNames(byCityAsc.content));
+  });
+
+  test('changing sort or page size from page 3 lands back on page 1', async ({ page }) => {
+    const ownersPage = new OwnersPage(page);
+    const allOwnersByCity = await apiClient.fetchAllOwners();
+    test.skip(allOwnersByCity.length <= 10, 'Needs more than one page of owners to test paging');
+
+    // Start on page 3 (index 2) via a direct deep link - the state lives entirely in the URL.
+    await page.goto('/owners?page=2&size=5&sort=name,asc');
+    await ownersPage.pageTitle.waitFor({ state: 'visible', timeout: 10000 });
+    await expect.poll(() => ownersPage.currentPageIndex()).toBe(2);
+
+    // Changing the sort column resets to page 1
+    await ownersPage.sortByCity();
+    await expect.poll(() => ownersPage.currentPageIndex()).toBe(0);
+
+    // Go back to page 3, then changing sort direction (clicking the same header again) resets too
+    await page.goto('/owners?page=2&size=5&sort=city,asc');
+    await ownersPage.pageTitle.waitFor({ state: 'visible', timeout: 10000 });
+    await expect.poll(() => ownersPage.currentPageIndex()).toBe(2);
+    await ownersPage.sortByCity();
+    await expect.poll(() => ownersPage.currentPageIndex()).toBe(0);
+
+    // Go back to page 3, then changing the page size resets too
+    await page.goto('/owners?page=2&size=5&sort=name,asc');
+    await ownersPage.pageTitle.waitFor({ state: 'visible', timeout: 10000 });
+    await expect.poll(() => ownersPage.currentPageIndex()).toBe(2);
+    await ownersPage.choosePageSize(20);
+    await expect.poll(() => ownersPage.currentPageIndex()).toBe(0);
+  });
+
+  test('only Name and City columns expose a sort control', async ({ page }) => {
+    const ownersPage = new OwnersPage(page);
+    await ownersPage.open();
+    await ownersPage.waitForOwnersCount(10);
+
+    await expect(ownersPage.nameSortHeader).toHaveAttribute('role', 'columnheader');
+    await expect(ownersPage.nameSortHeader.locator('.mat-sort-header-container')).toBeVisible();
+    await expect(ownersPage.citySortHeader.locator('.mat-sort-header-container')).toBeVisible();
+
+    // Address, Telephone and Pets are plain (non-sortable) headers - no sort-header container
+    await expect(ownersPage.addressHeader.locator('.mat-sort-header-container')).toHaveCount(0);
+    await expect(ownersPage.telephoneHeader.locator('.mat-sort-header-container')).toHaveCount(0);
+    await expect(ownersPage.petsHeader.locator('.mat-sort-header-container')).toHaveCount(0);
+  });
 });

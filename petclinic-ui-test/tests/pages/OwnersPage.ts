@@ -7,6 +7,15 @@ export class OwnersPage {
   readonly findOwnerButton: Locator;
   readonly ownerNameCells: Locator;
   readonly ownersTable: Locator;
+  readonly paginator: Locator;
+  readonly nextPageButton: Locator;
+  readonly previousPageButton: Locator;
+  readonly pageSizeSelect: Locator;
+  readonly nameSortHeader: Locator;
+  readonly citySortHeader: Locator;
+  readonly addressHeader: Locator;
+  readonly telephoneHeader: Locator;
+  readonly petsHeader: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -15,6 +24,15 @@ export class OwnersPage {
     this.findOwnerButton = page.locator('#search-owner-form button[type="submit"]');
     this.ownerNameCells = page.locator('#ownersTable td.ownerFullName');
     this.ownersTable = page.locator('#ownersTable');
+    this.paginator = page.locator('mat-paginator');
+    this.nextPageButton = page.locator('button.mat-mdc-paginator-navigation-next');
+    this.previousPageButton = page.locator('button.mat-mdc-paginator-navigation-previous');
+    this.pageSizeSelect = page.locator('.mat-mdc-paginator-page-size-select');
+    this.nameSortHeader = page.locator('th[mat-sort-header]:has-text("Name")');
+    this.citySortHeader = page.locator('th[mat-sort-header]:has-text("City")');
+    this.addressHeader = page.locator('th:has-text("Address")');
+    this.telephoneHeader = page.locator('th:has-text("Telephone")');
+    this.petsHeader = page.locator('th:has-text("Pets")');
   }
 
   async open() {
@@ -62,4 +80,29 @@ export class OwnersPage {
       // Let assertions fail with actual values when wait condition is not met
     }
   }
+
+  /** Reads the current page index straight from the URL's `page` query param (0-based; absent means 0). */
+  currentPageIndex(): number {
+    const url = new URL(this.page.url());
+    const page = url.searchParams.get('page');
+    return page ? Number(page) : 0;
+  }
+
+  async goToNextPage() {
+    await this.nextPageButton.click();
+  }
+
+  async sortByName() {
+    await this.nameSortHeader.click();
+  }
+
+  async sortByCity() {
+    await this.citySortHeader.click();
+  }
+
+  async choosePageSize(size: 5 | 10 | 20) {
+    await this.pageSizeSelect.click();
+    await this.page.locator(`mat-option:has-text("${size}")`).click();
+  }
 }
+
