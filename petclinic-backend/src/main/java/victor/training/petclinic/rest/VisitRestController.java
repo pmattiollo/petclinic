@@ -8,17 +8,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import victor.training.petclinic.mapper.VisitMapper;
+import victor.training.petclinic.domain.Pet;
 import victor.training.petclinic.domain.Visit;
+import victor.training.petclinic.domain.VisitDateRange;
+import victor.training.petclinic.repository.PetRepository;
 import victor.training.petclinic.repository.VisitRepository;
 import victor.training.petclinic.rest.dto.VisitDto;
 import victor.training.petclinic.rest.dto.VisitFieldsDto;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -27,6 +33,7 @@ import java.util.List;
 @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
 public class VisitRestController {
     private final VisitRepository visitRepository;
+    private final PetRepository petRepository;
     private final VisitMapper visitMapper;
 
     @GetMapping
@@ -47,6 +54,8 @@ public class VisitRestController {
 
     @PostMapping
     public ResponseEntity<Void> addVisit(@RequestBody @Validated VisitDto visitDto) {
+        Pet pet = petRepository.findById(visitDto.getPetId()).orElseThrow();
+        requireDateInRange(visitDto.getDate(), pet);
         int id = bookVisit(visitDto);
         return ResponseEntity.created(UriComponentsBuilder.fromPath("/api/visits/{id}")
                         .buildAndExpand(id).toUri())
@@ -68,9 +77,17 @@ public class VisitRestController {
     @PutMapping("{visitId}")
     public void updateVisit(@PathVariable int visitId, @RequestBody @Validated VisitFieldsDto visitDto) {
         Visit currentVisit = visitRepository.findById(visitId).orElseThrow();
+        requireDateInRange(visitDto.getDate(), currentVisit.getPet());
         currentVisit.setDate(visitDto.getDate());
         currentVisit.setDescription(visitDto.getDescription());
         visitRepository.save(currentVisit);
+    }
+
+    private void requireDateInRange(LocalDate date, Pet pet) {
+        VisitDateRange range = VisitDateRange.forPet(pet);
+        if (date != null && !range.contains(date)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, range.rejectionMessage(date));
+        }
     }
 
     @Transactional
