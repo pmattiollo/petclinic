@@ -170,6 +170,34 @@ export interface components {
        */
       telephone: string;
     };
+    OwnerPageDto: {
+      /** @description The owners on the current page. */
+      content?: components["schemas"]["OwnerDto"][];
+      /**
+       * Format: int32
+       * @description The 0-based index of the current page.
+       * @example 0
+       */
+      number?: number;
+      /**
+       * Format: int32
+       * @description The number of owners per page.
+       * @example 10
+       */
+      size?: number;
+      /**
+       * Format: int64
+       * @description The total number of owners matching the filter, across all pages.
+       * @example 42
+       */
+      totalElements?: number;
+      /**
+       * Format: int32
+       * @description The total number of pages.
+       * @example 5
+       */
+      totalPages?: number;
+    };
     PetDto: {
       /**
        * Format: date
@@ -558,13 +586,16 @@ export interface operations {
     parameters: {
       query?: {
         lastName?: string;
+        page?: number;
+        size?: number;
+        sort?: string;
       };
     };
     responses: {
       /** @description OK */
       200: {
         content: {
-          "application/json": components["schemas"]["OwnerDto"][];
+          "application/json": components["schemas"]["OwnerPageDto"];
         };
       };
       /** @description Bad Request */
