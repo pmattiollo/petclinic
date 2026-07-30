@@ -6,6 +6,7 @@
     },
 
     "playwright": {
+      "//": "In case MCPs are disabled, tell agent to use playwright cli",
       "command": "npx",
       "args": [
         "@playwright/mcp@latest",
@@ -15,6 +16,7 @@
     },
 
     "postgres-db": {
+      "//": "In case MCPs are disabled, tell agent to use db-wo-mcp.js",
       "command": "npx",
       "args": [
         "-y",
