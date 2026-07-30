@@ -26,13 +26,13 @@ blooms `·` → `✢` → `✳` → `✻` → `✽` and closes again, one frame 
 same spinner Claude Code draws in front of "Working…"):
 
 ```
-Opus 4.8/xhigh 50K/1M | ↗98% left / 4:47h | $0.5 ✻ $25 | ai | +24% = 70% / 3d5h
+Opus 4.8/xhigh 50K/1M | ↗98% left / 4:47h | $0.5 ✻ $25 | ai | +24% = 70% / 1d1h
 ```
 
 Idle, waiting on you (note the ticking "N ago" clock and no flower):
 
 ```
-Opus 4.8/xhigh 50K/1M | 98% left / 4:47h | $0.1 3m ago ∈ $25 | ai | +24% = 70% / 3d5h
+Opus 4.8/xhigh 50K/1M | 98% left / 4:47h | $0.1 3m ago ∈ $25 | ai | +24% = 70% / 1d1h
 ```
 
 Five `|`-separated segments: **model/context**, **5h quota + burn-rate**,
@@ -42,7 +42,7 @@ quota**. There is **no leading emoji** on the model segment.
 
 **`|` is reserved for segment boundaries — nothing else uses it.** Inside a
 segment, two readings of the same window are joined with `/` (`↗98% left / 4:47h`,
-`+24% = 70% / 3d5h`), which also buys back a couple of columns per join versus
+`+24% = 70% / 1d1h`), which also buys back a couple of columns per join versus
 the `•` it replaced.
 
 ---
@@ -197,7 +197,7 @@ forward, so the gap before the new turn's usage shows the old number.
 
 ---
 
-## 4. Weekly quota — `+24% = 70% / 3d5h`
+## 4. Weekly quota — `+24% = 70% / 1d1h`
 
 The **last** segment, tracking the rolling **7-day** (604800s) rate-limit window.
 Segment 2 answers *"can I keep going right now"*; this one answers the slower
@@ -208,7 +208,7 @@ question — *am I going to run out of week before the week runs out*.
 | `+24%` | pace: **percentage points** off a straight line, `elapsed% − used%` | derived |
 | `=` | reading aid separating the two percentages (see below) | — |
 | `70%` | quota remaining this week = `100 − used%` | `.rate_limits.seven_day.used_percentage` |
-| `3d5h` | time until the weekly window resets | `.rate_limits.seven_day.resets_at` |
+| `1d1h` | **working** time until the weekly window resets (weekends excluded) | `.rate_limits.seven_day.resets_at` |
 
 Pace **leads** the absolute figure, mirroring the 5h arrow: the signed number is
 the "am I OK?" glance, the `% left` is the detail you read second.
@@ -222,15 +222,42 @@ spend a character telling the reader they don't share a *meaning*.
 
 `% left` uses the same thresholds as the 5h segment: **orange < 15%**, **red < 5%**.
 
+### The clock is the *working* week — weekends are subtracted
+
+Everything time-related in this segment ignores Saturday and Sunday: the window
+is **5 working days**, not 7 calendar days, and both the elapsed fraction and the
+displayed time-left are counted in working seconds only.
+
+Calendar time lied in **both** directions. It called you "behind" all Friday,
+when the two days you supposedly still had were days you would not work — and it
+flattered you on Monday morning by counting a weekend you had already skipped.
+`1d1h` on a Thursday night is a number you can act on; `3d1h` is not, because two
+of those days aren't yours.
+
+Consequences worth knowing:
+
+- Monday 00:00 the segment starts at `5d`, not `7d`.
+- From **Saturday 00:00 the time-left reads `0m`** and the pace freezes for the
+  rest of the weekend. That is not a bug: there is no working time left before
+  the reset, so whatever quota you still hold is pure surplus and cannot run out.
+- A DST shift inside the window skews the accounting by an hour. Irrelevant
+  against a 5-day budget, and not worth the code to correct.
+
+Implementation note — macOS `awk` has no `strftime`, so the weekday is derived
+arithmetically: 1970-01-01 was a **Thursday**, so for local day index `D`,
+`dow = (D + 4) % 7` with `0 = Sunday`, `6 = Saturday`. The UTC offset is read
+from `date +%z` once per render, and one awk pass walks the interval a day at a
+time, returning *both* the working seconds left and the pace.
+
 ### Pace: a signed percentage, not an arrow
 
-`elapsed% − used%`, clamped to the window:
+`elapsed% − used%` over the working window:
 
 | pace | meaning | color |
 |------|---------|-------|
-| `+N%` | consumed **less** than the calendar — `N` points of slack in hand | green |
+| `+N%` | consumed **less** than the working week — `N` points of slack in hand | green |
 | `0%` | dead on the linear budget | — |
-| `-N%` (N < 10) | running **ahead** of the calendar | orange |
+| `-N%` (N < 10) | running **ahead** of the working week | orange |
 | `-N%` (N ≥ 10) | badly ahead — this week ends early | red |
 
 Two decisions here, both about **reading speed**:
@@ -251,10 +278,10 @@ as you cross the line.
 
 ### Time left: mixed units, not a decimal day
 
-`3d5h`, not `3.2d`. A decimal day needs mental arithmetic before it becomes an
+`1d1h`, not `1.1d`. A decimal day needs mental arithmetic before it becomes an
 hour you can plan around — and the whole point of the segment is deciding what to
-do *today*. A zero tail is dropped (`3d`, never `3d0h`), and below a day it
-degrades to `17h`, then `44m`.
+do *today*. A zero tail is dropped (`5d`, never `5d0h`), and below a day it
+degrades to `10h`, then `44m`, then `0m` across the weekend.
 
 ### Why this segment can be trusted more than you'd expect
 
@@ -849,17 +876,17 @@ if [ -n "$dir" ] && [ -d "$dir" ]; then
   out="$out | $where"
 fi
 
-# --- Weekly quota, last segment: "-18% = 28% / 3d5h"
+# --- Weekly quota, last segment: "+6% = 27% / 1d1h"
 # The 5h segment answers "can I keep going right now"; this one answers the
 # slower question — am I going to run out of week before the week runs out.
 # Three numbers, in the order you actually ask them:
-#   -18%  pace, in percentage POINTS off a straight line: elapsed% − used%.
+#   +6%   pace, in percentage POINTS off a straight line: elapsed% − used%.
 #         Positive = consumed less than the clock, i.e. points of slack in hand;
-#         negative = burning ahead of the calendar. Points, not a ratio, because
+#         negative = burning ahead of the week. Points, not a ratio, because
 #         over a whole week the linear budget is the mental model people
-#         actually use ("it's Thursday, I should be ~57% in").
-#   28%   quota left in the 7-day window (the absolute figure)
-#   3d5h  time until the window resets
+#         actually use ("it's Thursday, I should be ~80% in").
+#   27%   quota left in the 7-day window (the absolute figure)
+#   1d1h  WORKING time until the window resets — weekends excluded, see below
 # Deliberately NOT the ratio-with-bands used for the 5h arrow: on a 7-day window
 # a ratio is wildly unstable in the first hours (tiny elapsed => huge ratio) and
 # numb at the end, whereas the point-difference stays readable throughout.
@@ -878,20 +905,59 @@ if [ -n "$week" ]; then
     now=$(date +%s)
     wdiff=$((week_reset - now))
     if [ "$wdiff" -gt 0 ]; then
-      # Time left as "3d5h" -- mixed units rather than a decimal day, because
-      # "3.2d" needs mental arithmetic to become an hour you can plan around.
+      # BOTH the pace and the time-left are measured in WORKING time: Saturday
+      # and Sunday are subtracted from the window, from the time elapsed and
+      # from the time remaining, because a weekend burns none of the quota.
+      # Straight calendar time lied in both directions — it called you "behind"
+      # all Friday when the two days you supposedly had left were days you would
+      # not work, and it flattered you on Monday by counting a weekend you had
+      # already skipped. "1d1h" on a Thursday night is a number you can act on;
+      # "3d1h" is not, because two of those days aren't yours.
+      #
+      # Local weekday without strftime (macOS awk has none): 1970-01-01 was a
+      # Thursday, so for local day index D, dow = (D+4) % 7 with 0=Sun, 6=Sat.
+      # The UTC offset comes from date(1) once. A DST shift inside the window
+      # skews this by an hour — irrelevant against a 5-day budget.
+      off=$(date +%z | awk '{ s=(substr($0,1,1)=="-")?-1:1;
+        print s*(substr($0,2,2)*3600 + substr($0,4,2)*60) }')
+      # One awk pass yields both numbers: "<work_seconds_left> <pace_points>".
+      wcalc=$(awk -v u="$week" -v now="$now" -v r="$week_reset" -v off="$off" '
+        # seconds in [a,b) that fall on a weekday, walked one local day at a time
+        function work(a, b,   s, d, dow, ds, de, x, y) {
+          if (b <= a) return 0;
+          s = 0; d = int((a + off) / 86400);
+          while (d * 86400 - off < b) {
+            dow = (d + 4) % 7;
+            if (dow != 0 && dow != 6) {
+              ds = d * 86400 - off; de = ds + 86400;
+              x = (a > ds) ? a : ds; y = (b < de) ? b : de;
+              if (y > x) s += y - x;
+            }
+            d++;
+          }
+          return s;
+        }
+        BEGIN{
+          ws = r - 604800; if (now < ws) now = ws;
+          wt = work(ws, r); wl = work(now, r);
+          # wt==0 is unreachable for a 7-day window (it always holds 5 weekdays),
+          # but fall back to calendar time rather than divide by zero.
+          e = (wt > 0) ? (wt - wl) / wt * 100 : (604800 - (r - now)) / 604800 * 100;
+          if (e < 0) e = 0; if (e > 100) e = 100;
+          printf "%d %.0f", wl, e - u;
+        }')
+      wsecs=${wcalc%% *}
+      delta=${wcalc##* }
+      # Time left as "1d1h" -- mixed units rather than a decimal day, because
+      # "1.1d" needs mental arithmetic to become an hour you can plan around.
       # A zero tail is dropped ("3d", not "3d0h"); under a day it degrades to
-      # "5h", then "45m".
-      wdur=$(awk -v d="$wdiff" 'BEGIN{
+      # "5h", then "45m". Across the weekend this legitimately reads "0m":
+      # there is no working time left before the reset, which is the point.
+      wdur=$(awk -v d="$wsecs" 'BEGIN{
         dd=int(d/86400); hh=int((d%86400)/3600);
         if (dd>0)      printf (hh>0 ? "%dd%dh" : "%dd"), dd, hh;
         else if (hh>0) printf "%dh", hh;
         else           printf "%dm", int(d/60) }')
-      # elapsed% − used% ; clamp elapsed to the 604800s window in case the
-      # header's resets_at is further out than one week.
-      delta=$(awk -v u="$week" -v d="$wdiff" 'BEGIN{
-        e=(604800-d)/604800*100; if(e<0)e=0; if(e>100)e=100;
-        printf "%.0f", e-u }')
       # Signed percentage rather than an arrow glyph: the pace sits right next to
       # the "% left" figure, and two numbers in the same unit compare instantly
       # ("28% left, but 18% behind") where a "%" next to a "↓18" invites reading
