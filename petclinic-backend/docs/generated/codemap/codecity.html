@@ -32,7 +32,10 @@
     left: 16px;
     top: 16px;
     z-index: 2;
-    width: min(430px, calc(100vw - 32px));
+    /* As narrow as the widest thing inside allows: the dropdowns must still spell out
+       "instability Ce/(Ce+Ca)" and "Modules (Maven/Gradle)" next to the widest knob
+       label ("PACKAGES"). Measured truncation starts just under 320px. */
+    width: min(326px, calc(100vw - 32px));
     background: rgba(255, 255, 255, 0.88);
     border: 1px solid rgba(140, 148, 160, 0.45);
     border-radius: 8px;
@@ -59,27 +62,58 @@
     font-size: 12px;
     line-height: 1.35;
   }
-  /* Two rows of paired knobs, each pair joined by a separator glyph:
-       row 1   AREA  /  HEIGHT   (footprint & extrusion — the geometry)
-       row 2   COLOR @  SCALE    (the hue metric & the ramp it is drawn on)
-     so each row reads as one idea instead of four independent dropdowns. */
+  /* One knob per line, so they read as a stack of independent questions:
+       FILTER  [ ..repo.. * Service            ]
+       AREA    [ dropdown ]  [ ] /kloc
+       HEIGHT  [ dropdown ]  [ ] /kloc
+       COLOR   [ dropdown ]  [x] /kloc  [ ] lg
+     The dropdowns name the raw metric; "/kloc" turns a count into a density and
+     "lg" picks the colour ramp, both being one bit each rather than more dropdowns.
+     The filter shares the grid so its label lines up with the metric labels. */
   .controls {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: auto 1fr auto auto;
     gap: 6px 8px;
-    align-items: end;
+    align-items: center;
   }
-  .controls .sep {
-    align-self: end;
+  .controls .knob {
+    text-align: right;
+    color: #52606d;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .controls .checkbox {
     display: flex;
     align-items: center;
-    justify-content: center;
-    height: 30px;              /* ~ select height, so the glyph centres on the selects */
-    color: #7b8794;
-    font-size: 15px;
-    font-weight: 700;
-    user-select: none;
+    gap: 5px;
+    height: 30px;              /* ~ select height, so it sits on the dropdown's baseline */
+    color: #1f2933;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: none;
+    cursor: pointer;
   }
+  .controls .checkbox input { margin: 0; cursor: pointer; }
+  /* Trailing cell of a row that has no checkboxes of its own (Packages, Changes):
+     it swallows the two checkbox columns so the dropdown keeps the 1fr column and
+     therefore the exact width of the metric dropdowns above it. */
+  .controls .spanRest { grid-column: 3 / -1; }
+  /* Preset bubbles: ten colours, no words. The label is in the tooltip, because a row
+     of ten names would be a menu, and this is meant to be poked at. */
+  .presets { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 5px; }
+  .presets .presetDot {
+    width: 17px; height: 17px; padding: 0;
+    border: 1px solid rgba(15, 23, 42, 0.28); border-radius: 50%;
+    cursor: pointer;
+  }
+  .presets .presetDot:hover { transform: scale(1.15); }
+  .presets .presetDot.on { box-shadow: 0 0 0 2px #fff, 0 0 0 3px currentColor; }
+  .controls .filterCount { min-width: 0; text-align: left; }
+  /* Greyed out, not hidden: the row keeps its shape when you land on a metric
+     (size, committers, instability…) that has no meaningful per-KLOC form. */
+  .controls .checkbox.off { opacity: 0.35; cursor: default; }
+  .controls .checkbox.off input { cursor: default; }
   /* View switch (Classes / Packages / Modules) sits inline in the title row. */
   h1 .titleView {
     flex: none;
@@ -88,23 +122,17 @@
     background: #fff; text-transform: none;
   }
   h1 .titleView option:disabled { color: #aab4c8; }
-  /* Inline label+select rows (e.g. "Package names:") under the title. */
-  .viewOf {
-    display: flex; align-items: center; gap: 8px; margin: 5px 0 10px;
-    font-size: 13px; font-weight: 600; color: #1f2933;
-    text-transform: none; letter-spacing: 0;
-  }
-  .viewOf select {
-    font-size: 13px; font-weight: 650; padding: 4px 8px;
-    color: #1e3a8a; border-color: #b9c4d6;
-  }
-  .viewOf option:disabled { color: #aab4c8; }
-  .pkgRow { margin: 10px 0 0; }
   /* WHAT the change set is a diff of — the PR, the commit, or the dirty working
      tree. One line under the selector: the tag ("commit: a5d03cb") always fits,
      the message after it takes whatever panel width is left and ellipsises;
      hovering reveals the full text and the link opens it on GitHub. */
-  .changeSourceRow { display: flex; align-items: baseline; gap: 5px; margin: 4px 0 0; min-width: 0; }
+  .changeSourceRow {
+    grid-column: 2 / -1;
+    display: flex; align-items: baseline; gap: 5px; min-width: 0;
+  }
+  /* Needed because the `display: flex` above outranks the UA's `[hidden] { display: none }`:
+     without it the row stays on screen in "show everything", naming a diff nothing is using. */
+  .changeSourceRow[hidden] { display: none; }
   .changeSourceRow .srcArrow { flex: none; color: #9aa5b1; font-size: 12px; }
   .changeSource {
     flex: 1 1 auto; min-width: 0;
@@ -119,8 +147,17 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   .changeSource .srcDetail { color: #52606d; margin-left: 6px; }
-  /* Package-pattern filter: AspectJ-style globs (victor..*Service, ..repo.., *Service). */
-  .filterRow { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; }
+  /* History mode: the subject moves into a dropdown of the last commits that touched
+     rendered code, and .changeSource shrinks to just the id that links to GitHub. */
+  .commitPick {
+    flex: 1 1 auto; min-width: 0; max-width: 250px;
+    border: 1px solid #c8d0da; border-radius: 6px; background: #fff;
+    color: #1f2933; font-size: 12px; padding: 2px 20px 2px 6px;   /* room for the native arrow */
+  }
+  .changeSourceRow:has(.commitPick:not([hidden])) .changeSource { flex: none; }
+  /* Package-pattern filter: AspectJ-style globs (victor..*Service, ..repo.., *Service).
+     Sits on the grid's first row, spanning everything right of its label. */
+  .filterRow { grid-column: 2 / -1; display: flex; align-items: center; gap: 6px; min-width: 0; }
   .filterRow input {
     flex: 1 1 auto; min-width: 0;
     border: 1px solid #c8d0da; border-radius: 6px; background: #fff;
@@ -134,6 +171,10 @@
   }
   .filterRow button:hover { background: #eef1f5; color: #1f2933; }
   .filterCount { flex: none; font-size: 11px; color: #667085; min-width: 46px; text-align: right; }
+  /* No reserved gutter here: an empty count would otherwise keep the input from
+     reaching the panel's right edge, which is where the metric rows end. */
+  .filterRow .filterCount { min-width: 0; }
+  .filterRow:has(#pkgFilterCount:empty) { gap: 0; }
   /* Shortcuts help, pinned bottom-right, clear of the metrics tooltip (top-right). */
   #shortcuts {
     position: fixed; bottom: 16px; right: 16px; z-index: 2;
@@ -516,84 +557,92 @@
       <option value="modules" id="moduleOpt">Modules (Maven/Gradle)</option>
     </select></h1>
   <div class="controls">
-    <label>
-      Area
-      <select id="areaMetric">
-        <option value="bytes" selected>file size</option>
-        <option value="lines">lines of code (LOC)</option>
-        <option value="cognitive_complexity">cognitive complexity</option>
-        <option value="commits">total commits</option>
-        <option value="committers">committers</option>
-        <option value="fan_out">outgoing coupling (fan out)</option>
-      </select>
+    <span class="knob">Filter</span>
+    <div class="filterRow" title="AspectJ-style globs: victor..*Service &middot; ..repo.. &middot; *Service">
+      <input id="pkgFilter" type="text" spellcheck="false" autocomplete="off"
+             list="classFamilies" placeholder="..repo.. &middot; *Service">
+      <datalist id="classFamilies"><option value="..Pet*" label="Pet (14 classes)"></option><option value="..Owner*" label="Owner (6 classes)"></option><option value="..Specialty*" label="Specialty (6 classes)"></option><option value="..Vet*" label="Vet (5 classes)"></option><option value="..Visit*" label="Visit (5 classes)"></option><option value="..User*" label="User (4 classes)"></option><option value="..Firefighter*" label="Firefighter (3 classes)"></option></datalist>
+      <button id="pkgFilterClear" type="button" title="clear filter" hidden>&times;</button>
+      <span id="pkgFilterCount" class="filterCount"></span>
+    </div>
+
+    <span class="knob">Preset</span>
+    <div class="presets" id="presets" role="group" aria-label="metric presets"></div>
+
+    <span class="knob">Area</span>
+    <select id="areaMetric">
+      <option value="bytes" selected>file size</option>
+      <option value="lines">lines of code (LOC)</option>
+      <option value="cognitive_complexity">cognitive complexity</option>
+      <option value="commits">total commits</option>
+      <option value="committers">committers</option>
+      <option value="fan_out">outgoing coupling</option>
+    </select>
+    <label class="checkbox" title="Divide by thousands of lines, turning the count into a density.">
+      <input id="areaKloc" type="checkbox" aria-label="area per KLOC"> /kloc
     </label>
-    <span class="sep" aria-hidden="true">/</span>
-    <label>
-      Height
-      <select id="heightMetric">
-        <option value="lines">lines of code (LOC)</option>
-        <option value="cognitive_complexity" selected>cognitive complexity</option>
-        <option value="bug_commits">bugfix commits</option>
-        <option value="commits">total commits</option>
-        <option value="committers">committers</option>
-        <option value="fan_in">incoming coupling (fan in)</option>
-        <option value="fan_out">outgoing coupling (fan out)</option>
-        <option value="instability">instability Ce/(Ce+Ca)</option>
-      </select>
+    <span></span>
+
+    <span class="knob">Height</span>
+    <select id="heightMetric">
+      <option value="lines">lines of code (LOC)</option>
+      <option value="cognitive_complexity" selected>cognitive complexity</option>
+      <option value="bug_commits">bugfix commits</option>
+      <option value="commits">total commits</option>
+      <option value="committers">committers</option>
+      <option value="fan_in">incoming coupling</option>
+      <option value="fan_out">outgoing coupling</option>
+      <option value="instability">instability Ce/(Ce+Ca)</option>
+    </select>
+    <label class="checkbox" title="Divide by thousands of lines, turning the count into a density.">
+      <input id="heightKloc" type="checkbox" aria-label="height per KLOC"> /kloc
     </label>
-    <label>
-      Color
-      <select id="colorMetric">
-        <option value="complexity_per_kloc">cognitive complexity / KLOC</option>
-        <option value="bugs_per_kloc">bugfix commits / KLOC</option>
-        <option value="commits_per_kloc" selected>total commits / KLOC</option>
-        <option value="committers">committers</option>
-        <option value="instability">instability Ce/(Ce+Ca)</option>
-        <option value="fan_in">incoming coupling (fan in)</option>
-        <option value="fan_out">outgoing coupling (fan out)</option>
-      </select>
+    <span></span>
+
+    <span class="knob">Color</span>
+    <select id="colorMetric">
+      <option value="cognitive_complexity">cognitive complexity</option>
+      <option value="bug_commits">bugfix commits</option>
+      <option value="commits" selected>total commits</option>
+      <option value="committers">committers</option>
+      <option value="instability">instability Ce/(Ce+Ca)</option>
+      <option value="fan_in">incoming coupling</option>
+      <option value="fan_out">outgoing coupling</option>
+    </select>
+    <label class="checkbox" title="Divide by thousands of lines, turning the count into a density.">
+      <input id="colorKloc" type="checkbox" checked aria-label="colour per KLOC"> /kloc
     </label>
-    <span class="sep" aria-hidden="true">@</span>
-    <label>
-      Color scale
-      <select id="colorScale" aria-label="colour scale">
-        <option value="auto" selected>auto (log for /KLOC)</option>
-        <option value="linear">linear</option>
-        <option value="log">log</option>
-      </select>
+    <label class="checkbox"
+           title="Colour ramp: log instead of linear. Ticks itself to what the chosen metric wants; your own tick sticks for the session.">
+      <input id="colorLog" type="checkbox" aria-label="log colour ramp"> lg
     </label>
-  </div>
-  <div class="filterRow">
-    <input id="pkgFilter" type="text" spellcheck="false" autocomplete="off"
-           placeholder="filter e.g. victor..*Service &middot; ..repo.. &middot; *Service">
-    <button id="pkgFilterClear" type="button" title="clear filter" hidden>&times;</button>
-    <span id="pkgFilterCount" class="filterCount"></span>
-  </div>
-  <div class="viewOf pkgRow">
-    <span>Package names:</span>
+
+    <span class="knob">Packages</span>
     <select id="pkgLabelMode" aria-label="package label style">
       <option value="floating">floating tags</option>
       <option value="floor" selected>on the floor (edges)</option>
       <option value="off">off</option>
     </select>
-  </div>
-  <div class="viewOf pkgRow">
-    <span>Change set:</span>
+    <span class="spanRest"></span>
+
+    <span class="knob">Changes</span>
     <select id="changeMode" aria-label="change-set filter">
       <option value="off" selected>show everything</option>
       <option value="highlight">highlight changed</option>
       <option value="hide">only changed</option>
     </select>
-    <span id="changeCount" class="filterCount"></span>
-  </div>
-  <div class="changeSourceRow" id="changeSourceRow" hidden>
-    <span class="srcArrow" aria-hidden="true">&#8627;</span>
-    <a id="changeSource" class="changeSource" target="_blank" rel="noopener"></a>
+    <span id="changeCount" class="filterCount spanRest"></span>
+
+    <div class="changeSourceRow" id="changeSourceRow" hidden>
+      <span class="srcArrow" aria-hidden="true">&#8627;</span>
+      <select id="commitPick" class="commitPick" aria-label="which commit to diff against" hidden></select>
+      <a id="changeSource" class="changeSource" target="_blank" rel="noopener"></a>
+    </div>
   </div>
 </section>
 <nav id="breadcrumb" class="breadcrumb" hidden aria-label="package scope"></nav>
 <button id="howtoToggle" class="howto-toggle" type="button" aria-expanded="false" aria-controls="howto">
-  &#9874; Build for your repo
+  &#9874; How to build for your own repo
 </button>
 <section class="howto" id="howto" hidden>
   <div class="howto-card" role="dialog" aria-modal="true" aria-labelledby="howtoTitle">
@@ -626,11 +675,12 @@
 <script>
 const FILES = [{"path": "petclinic-backend/src/main/java/victor/training/petclinic/security/CorsConfig.java", "name": "CorsConfig", "district": "victor.training.petclinic.security", "bytes": 980, "lines": 21, "commits": 2, "bug_commits": 1, "commits_per_kloc": 95.24, "bugs_per_kloc": 47.62, "bugs_per_commit": 0.5, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyFeed.java", "name": "SpecialtyFeed", "district": "victor.training.petclinic.rest", "bytes": 1795, "lines": 46, "commits": 4, "bug_commits": 1, "commits_per_kloc": 86.96, "bugs_per_kloc": 21.74, "bugs_per_commit": 0.25, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 2, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mcp/PetClinicMcp.java", "name": "PetClinicMcp", "district": "victor.training.petclinic.mcp", "bytes": 10490, "lines": 220, "commits": 9, "bug_commits": 0, "commits_per_kloc": 40.91, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 17, "complexity_per_kloc": 77.27, "fan_in": 0, "fan_out": 7, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/repository/OwnerRepository.java", "name": "OwnerRepository", "district": "victor.training.petclinic.repository", "bytes": 636, "lines": 25, "commits": 7, "bug_commits": 0, "commits_per_kloc": 280.0, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 1, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/OwnerRestController.java", "name": "OwnerRestController", "district": "victor.training.petclinic.rest", "bytes": 7573, "lines": 159, "commits": 7, "bug_commits": 0, "commits_per_kloc": 44.03, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 16, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyRestController.java", "name": "SpecialtyRestController", "district": "victor.training.petclinic.rest", "bytes": 3388, "lines": 73, "commits": 6, "bug_commits": 0, "commits_per_kloc": 82.19, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 1, "fan_out": 6, "committers": 1, "instability": 0.8571428571428571, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/OwnerDto.java", "name": "OwnerDto", "district": "victor.training.petclinic.rest.dto", "bytes": 1803, "lines": 56, "commits": 6, "bug_commits": 0, "commits_per_kloc": 107.14, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 1, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/SpecialtyDto.java", "name": "SpecialtyDto", "district": "victor.training.petclinic.rest.dto", "bytes": 780, "lines": 23, "commits": 5, "bug_commits": 0, "commits_per_kloc": 217.39, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 4, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-database/src/main/java/ro/victorrentea/petclinic/db/PostgresLauncher.java", "name": "PostgresLauncher", "district": "ro.victorrentea.petclinic.db", "bytes": 3100, "lines": 79, "commits": 5, "bug_commits": 0, "commits_per_kloc": 63.29, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 5, "complexity_per_kloc": 63.29, "fan_in": 0, "fan_out": 1, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mcp/McpSecurity.java", "name": "McpSecurity", "district": "victor.training.petclinic.mcp", "bytes": 4895, "lines": 108, "commits": 4, "bug_commits": 0, "commits_per_kloc": 37.04, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 6, "complexity_per_kloc": 55.56, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java", "name": "PetTypeRestController", "district": "victor.training.petclinic.rest", "bytes": 3507, "lines": 80, "commits": 4, "bug_commits": 0, "commits_per_kloc": 50.0, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 1, "complexity_per_kloc": 12.5, "fan_in": 0, "fan_out": 6, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java", "name": "VisitRestController", "district": "victor.training.petclinic.rest", "bytes": 3468, "lines": 82, "commits": 4, "bug_commits": 0, "commits_per_kloc": 48.78, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 6, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/PetClinicApplication.java", "name": "PetClinicApplication", "district": "victor.training.petclinic", "bytes": 1060, "lines": 30, "commits": 3, "bug_commits": 0, "commits_per_kloc": 100.0, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java", "name": "VetRestController", "district": "victor.training.petclinic.rest", "bytes": 3662, "lines": 92, "commits": 3, "bug_commits": 0, "commits_per_kloc": 32.61, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 2, "complexity_per_kloc": 21.74, "fan_in": 0, "fan_out": 8, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java", "name": "PetRestController", "district": "victor.training.petclinic.rest", "bytes": 2255, "lines": 60, "commits": 3, "bug_commits": 0, "commits_per_kloc": 50.0, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 5, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/OwnerFieldsDto.java", "name": "OwnerFieldsDto", "district": "victor.training.petclinic.rest.dto", "bytes": 1041, "lines": 36, "commits": 3, "bug_commits": 0, "commits_per_kloc": 83.33, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ExceptionControllerAdvice.java", "name": "ExceptionControllerAdvice", "district": "victor.training.petclinic.rest.error", "bytes": 4195, "lines": 85, "commits": 3, "bug_commits": 0, "commits_per_kloc": 35.29, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 2, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/ChatbotApp.java", "name": "ChatbotApp", "district": "victor.training.petclinic.chatbot", "bytes": 1400, "lines": 33, "commits": 2, "bug_commits": 0, "commits_per_kloc": 60.61, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/Service.java", "name": "Service", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 1559, "lines": 48, "commits": 2, "bug_commits": 0, "commits_per_kloc": 41.67, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 5, "fan_out": 2, "committers": 1, "instability": 0.2857142857142857, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/repository/PetRepository.java", "name": "PetRepository", "district": "victor.training.petclinic.repository", "bytes": 604, "lines": 25, "commits": 2, "bug_commits": 0, "commits_per_kloc": 80.0, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 3, "fan_out": 2, "committers": 1, "instability": 0.4, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/repository/PetTypeRepository.java", "name": "PetTypeRepository", "district": "victor.training.petclinic.repository", "bytes": 422, "lines": 19, "commits": 2, "bug_commits": 0, "commits_per_kloc": 105.26, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 1, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/repository/VisitRepository.java", "name": "VisitRepository", "district": "victor.training.petclinic.repository", "bytes": 613, "lines": 24, "commits": 2, "bug_commits": 0, "commits_per_kloc": 83.33, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 3, "fan_out": 1, "committers": 1, "instability": 0.25, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/repository/UserRepository.java", "name": "UserRepository", "district": "victor.training.petclinic.repository", "bytes": 246, "lines": 8, "commits": 2, "bug_commits": 0, "commits_per_kloc": 250.0, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/repository/SpecialtyRepository.java", "name": "SpecialtyRepository", "district": "victor.training.petclinic.repository", "bytes": 529, "lines": 22, "commits": 2, "bug_commits": 0, "commits_per_kloc": 90.91, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 3, "fan_out": 1, "committers": 1, "instability": 0.25, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/repository/VetRepository.java", "name": "VetRepository", "district": "victor.training.petclinic.repository", "bytes": 590, "lines": 21, "commits": 2, "bug_commits": 0, "commits_per_kloc": 95.24, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/security/BasicAuthenticationConfig.java", "name": "BasicAuthenticationConfig", "district": "victor.training.petclinic.security", "bytes": 2256, "lines": 56, "commits": 2, "bug_commits": 0, "commits_per_kloc": 35.71, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 2, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/security/DisableSecurityConfig.java", "name": "DisableSecurityConfig", "district": "victor.training.petclinic.security", "bytes": 1124, "lines": 29, "commits": 2, "bug_commits": 0, "commits_per_kloc": 68.97, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mapper/VetMapper.java", "name": "VetMapper", "district": "victor.training.petclinic.mapper", "bytes": 566, "lines": 21, "commits": 2, "bug_commits": 0, "commits_per_kloc": 95.24, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 1, "fan_out": 4, "committers": 1, "instability": 0.8, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mapper/SpecialtyMapper.java", "name": "SpecialtyMapper", "district": "victor.training.petclinic.mapper", "bytes": 522, "lines": 19, "commits": 2, "bug_commits": 0, "commits_per_kloc": 105.26, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 3, "fan_out": 2, "committers": 1, "instability": 0.4, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mapper/PetMapper.java", "name": "PetMapper", "district": "victor.training.petclinic.mapper", "bytes": 1127, "lines": 37, "commits": 2, "bug_commits": 0, "commits_per_kloc": 54.05, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 4, "fan_out": 6, "committers": 1, "instability": 0.6, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mapper/PetTypeMapper.java", "name": "PetTypeMapper", "district": "victor.training.petclinic.mapper", "bytes": 628, "lines": 21, "commits": 2, "bug_commits": 0, "commits_per_kloc": 95.24, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 1, "fan_out": 3, "committers": 1, "instability": 0.75, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mapper/UserMapper.java", "name": "UserMapper", "district": "victor.training.petclinic.mapper", "bytes": 308, "lines": 14, "commits": 2, "bug_commits": 0, "commits_per_kloc": 142.86, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 1, "fan_out": 2, "committers": 1, "instability": 0.6666666666666666, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mapper/OwnerMapper.java", "name": "OwnerMapper", "district": "victor.training.petclinic.mapper", "bytes": 620, "lines": 22, "commits": 2, "bug_commits": 0, "commits_per_kloc": 90.91, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 1, "fan_out": 4, "committers": 1, "instability": 0.8, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mapper/VisitMapper.java", "name": "VisitMapper", "district": "victor.training.petclinic.mapper", "bytes": 1098, "lines": 31, "commits": 2, "bug_commits": 0, "commits_per_kloc": 64.52, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 3, "fan_out": 4, "committers": 1, "instability": 0.5714285714285714, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/RootRestController.java", "name": "RootRestController", "district": "victor.training.petclinic.rest", "bytes": 643, "lines": 22, "commits": 2, "bug_commits": 0, "commits_per_kloc": 90.91, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/UserRestController.java", "name": "UserRestController", "district": "victor.training.petclinic.rest", "bytes": 1769, "lines": 49, "commits": 2, "bug_commits": 0, "commits_per_kloc": 40.82, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 7, "complexity_per_kloc": 142.86, "fan_in": 0, "fan_out": 5, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/ApiExamples.java", "name": "ApiExamples", "district": "victor.training.petclinic.rest", "bytes": 3329, "lines": 70, "commits": 2, "bug_commits": 0, "commits_per_kloc": 28.57, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 6, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetTypeDto.java", "name": "PetTypeDto", "district": "victor.training.petclinic.rest.dto", "bytes": 450, "lines": 19, "commits": 2, "bug_commits": 0, "commits_per_kloc": 105.26, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 5, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VisitFieldsDto.java", "name": "VisitFieldsDto", "district": "victor.training.petclinic.rest.dto", "bytes": 698, "lines": 23, "commits": 2, "bug_commits": 0, "commits_per_kloc": 86.96, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 3, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetTypeFieldsDto.java", "name": "PetTypeFieldsDto", "district": "victor.training.petclinic.rest.dto", "bytes": 333, "lines": 12, "commits": 2, "bug_commits": 0, "commits_per_kloc": 166.67, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VisitDto.java", "name": "VisitDto", "district": "victor.training.petclinic.rest.dto", "bytes": 1621, "lines": 44, "commits": 2, "bug_commits": 0, "commits_per_kloc": 45.45, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 3, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/UserDto.java", "name": "UserDto", "district": "victor.training.petclinic.rest.dto", "bytes": 876, "lines": 31, "commits": 2, "bug_commits": 0, "commits_per_kloc": 64.52, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 1, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/ListGetFirst.java", "name": "ListGetFirst", "district": "victor.training.petclinic.rewrite", "bytes": 1740, "lines": 39, "commits": 1, "bug_commits": 0, "commits_per_kloc": 25.64, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 1, "complexity_per_kloc": 25.64, "fan_in": 0, "fan_out": 1, "committers": 1, "instability": 1.0, "changed": true}, {"path": "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java", "name": "InlineSingleUseLocalVariable", "district": "victor.training.petclinic.rewrite", "bytes": 11149, "lines": 248, "commits": 1, "bug_commits": 0, "commits_per_kloc": 4.03, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 23, "complexity_per_kloc": 92.74, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": true}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/JudgeGuard.java", "name": "JudgeGuard", "district": "victor.training.petclinic.chatbot.assistant", "bytes": 6168, "lines": 124, "commits": 1, "bug_commits": 0, "commits_per_kloc": 8.06, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 3, "complexity_per_kloc": 24.19, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/SecurityConfig.java", "name": "SecurityConfig", "district": "victor.training.petclinic.chatbot.assistant", "bytes": 3921, "lines": 75, "commits": 1, "bug_commits": 0, "commits_per_kloc": 13.33, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 1, "complexity_per_kloc": 13.33, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/OwnerJwtPrincipal.java", "name": "OwnerJwtPrincipal", "district": "victor.training.petclinic.chatbot.assistant", "bytes": 2411, "lines": 62, "commits": 1, "bug_commits": 0, "commits_per_kloc": 16.13, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 8, "complexity_per_kloc": 129.03, "fan_in": 3, "fan_out": 2, "committers": 1, "instability": 0.4, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/ChatHistory.java", "name": "ChatHistory", "district": "victor.training.petclinic.chatbot.assistant", "bytes": 1753, "lines": 50, "commits": 1, "bug_commits": 0, "commits_per_kloc": 20.0, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 2, "complexity_per_kloc": 40.0, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/TokenCostMeter.java", "name": "TokenCostMeter", "district": "victor.training.petclinic.chatbot.assistant", "bytes": 3496, "lines": 84, "commits": 1, "bug_commits": 0, "commits_per_kloc": 11.9, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 6, "complexity_per_kloc": 71.43, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/RemoteToolsConfig.java", "name": "RemoteToolsConfig", "district": "victor.training.petclinic.chatbot.assistant", "bytes": 3410, "lines": 63, "commits": 1, "bug_commits": 0, "commits_per_kloc": 15.87, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 3, "complexity_per_kloc": 47.62, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/LocalTools.java", "name": "LocalTools", "district": "victor.training.petclinic.chatbot.assistant", "bytes": 2210, "lines": 49, "commits": 1, "bug_commits": 0, "commits_per_kloc": 20.41, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 2, "complexity_per_kloc": 40.82, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/RagIngestion.java", "name": "RagIngestion", "district": "victor.training.petclinic.chatbot.assistant", "bytes": 5974, "lines": 150, "commits": 1, "bug_commits": 0, "commits_per_kloc": 6.67, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 21, "complexity_per_kloc": 140.0, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/Assistant.java", "name": "Assistant", "district": "victor.training.petclinic.chatbot.assistant", "bytes": 12311, "lines": 229, "commits": 1, "bug_commits": 0, "commits_per_kloc": 4.37, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 2, "complexity_per_kloc": 8.73, "fan_in": 1, "fan_out": 5, "committers": 1, "instability": 0.8333333333333334, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/diagram/AgentStateDiagram.java", "name": "AgentStateDiagram", "district": "victor.training.petclinic.chatbot.diagram", "bytes": 5207, "lines": 129, "commits": 1, "bug_commits": 0, "commits_per_kloc": 7.75, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 26, "complexity_per_kloc": 201.55, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/ServiceHealth.java", "name": "ServiceHealth", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 233, "lines": 4, "commits": 1, "bug_commits": 0, "commits_per_kloc": 250.0, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 1, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterGuard.java", "name": "FirefighterGuard", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 5729, "lines": 139, "commits": 1, "bug_commits": 0, "commits_per_kloc": 7.19, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 10, "complexity_per_kloc": 71.94, "fan_in": 5, "fan_out": 3, "committers": 1, "instability": 0.375, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/MetricsSnapshot.java", "name": "MetricsSnapshot", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 238, "lines": 6, "commits": 1, "bug_commits": 0, "commits_per_kloc": 166.67, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/ProcessControl.java", "name": "ProcessControl", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 909, "lines": 24, "commits": 1, "bug_commits": 0, "commits_per_kloc": 41.67, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 4, "fan_out": 2, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/RealProcessControl.java", "name": "RealProcessControl", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 3408, "lines": 87, "commits": 1, "bug_commits": 0, "commits_per_kloc": 11.49, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 6, "complexity_per_kloc": 68.97, "fan_in": 2, "fan_out": 2, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterAgent.java", "name": "FirefighterAgent", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 8233, "lines": 179, "commits": 1, "bug_commits": 0, "commits_per_kloc": 5.59, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 18, "complexity_per_kloc": 100.56, "fan_in": 1, "fan_out": 10, "committers": 1, "instability": 0.9090909090909091, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterController.java", "name": "FirefighterController", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 1637, "lines": 38, "commits": 1, "bug_commits": 0, "commits_per_kloc": 26.32, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 1, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/HealthProbe.java", "name": "HealthProbe", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 3524, "lines": 90, "commits": 1, "bug_commits": 0, "commits_per_kloc": 11.11, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 7, "complexity_per_kloc": 77.78, "fan_in": 1, "fan_out": 3, "committers": 1, "instability": 0.75, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/GrafanaFindings.java", "name": "GrafanaFindings", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 698, "lines": 17, "commits": 1, "bug_commits": 0, "commits_per_kloc": 58.82, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/RestartResult.java", "name": "RestartResult", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 874, "lines": 18, "commits": 1, "bug_commits": 0, "commits_per_kloc": 55.56, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 2, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/GrafanaClient.java", "name": "GrafanaClient", "district": "victor.training.petclinic.chatbot.firefighter", "bytes": 4241, "lines": 108, "commits": 1, "bug_commits": 0, "commits_per_kloc": 9.26, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 6, "complexity_per_kloc": 55.56, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/TriageController.java", "name": "TriageController", "district": "victor.training.petclinic.chatbot.triage", "bytes": 1418, "lines": 35, "commits": 1, "bug_commits": 0, "commits_per_kloc": 28.57, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 1, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/PetTriageAgent.java", "name": "PetTriageAgent", "district": "victor.training.petclinic.chatbot.triage", "bytes": 4509, "lines": 101, "commits": 1, "bug_commits": 0, "commits_per_kloc": 9.9, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 4, "complexity_per_kloc": 39.6, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/security/Roles.java", "name": "Roles", "district": "victor.training.petclinic.security", "bytes": 288, "lines": 11, "commits": 1, "bug_commits": 0, "commits_per_kloc": 90.91, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/mcp/McpTomcatCustomizer.java", "name": "McpTomcatCustomizer", "district": "victor.training.petclinic.mcp", "bytes": 1943, "lines": 42, "commits": 1, "bug_commits": 0, "commits_per_kloc": 23.81, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 3, "complexity_per_kloc": 71.43, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/domain/Vet.java", "name": "Vet", "district": "victor.training.petclinic.domain", "bytes": 1049, "lines": 47, "commits": 1, "bug_commits": 0, "commits_per_kloc": 21.28, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 3, "fan_out": 1, "committers": 1, "instability": 0.25, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/domain/Pet.java", "name": "Pet", "district": "victor.training.petclinic.domain", "bytes": 1907, "lines": 67, "commits": 1, "bug_commits": 0, "commits_per_kloc": 14.93, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 7, "fan_out": 3, "committers": 1, "instability": 0.3, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/domain/User.java", "name": "User", "district": "victor.training.petclinic.domain", "bytes": 738, "lines": 37, "commits": 1, "bug_commits": 0, "commits_per_kloc": 27.03, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 1, "complexity_per_kloc": 27.03, "fan_in": 4, "fan_out": 1, "committers": 1, "instability": 0.2, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/domain/Specialty.java", "name": "Specialty", "district": "victor.training.petclinic.domain", "bytes": 448, "lines": 22, "commits": 1, "bug_commits": 0, "commits_per_kloc": 45.45, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 6, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/domain/Owner.java", "name": "Owner", "district": "victor.training.petclinic.domain", "bytes": 2609, "lines": 95, "commits": 1, "bug_commits": 0, "commits_per_kloc": 10.53, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 1, "complexity_per_kloc": 10.53, "fan_in": 5, "fan_out": 1, "committers": 1, "instability": 0.16666666666666666, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/domain/Role.java", "name": "Role", "district": "victor.training.petclinic.domain", "bytes": 550, "lines": 26, "commits": 1, "bug_commits": 0, "commits_per_kloc": 38.46, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 1, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/domain/Visit.java", "name": "Visit", "district": "victor.training.petclinic.domain", "bytes": 785, "lines": 34, "commits": 1, "bug_commits": 0, "commits_per_kloc": 29.41, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 6, "fan_out": 1, "committers": 1, "instability": 0.14285714285714285, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/domain/PetType.java", "name": "PetType", "district": "victor.training.petclinic.domain", "bytes": 368, "lines": 19, "commits": 1, "bug_commits": 0, "commits_per_kloc": 52.63, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 6, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyFeedController.java", "name": "SpecialtyFeedController", "district": "victor.training.petclinic.rest", "bytes": 1516, "lines": 36, "commits": 1, "bug_commits": 0, "commits_per_kloc": 27.78, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 1, "complexity_per_kloc": 27.78, "fan_in": 0, "fan_out": 2, "committers": 1, "instability": 1.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VetDto.java", "name": "VetDto", "district": "victor.training.petclinic.rest.dto", "bytes": 1108, "lines": 37, "commits": 1, "bug_commits": 0, "commits_per_kloc": 27.03, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 1, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetDto.java", "name": "PetDto", "district": "victor.training.petclinic.rest.dto", "bytes": 1449, "lines": 46, "commits": 1, "bug_commits": 0, "commits_per_kloc": 21.74, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 4, "fan_out": 2, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetFieldsDto.java", "name": "PetFieldsDto", "district": "victor.training.petclinic.rest.dto", "bytes": 769, "lines": 29, "commits": 1, "bug_commits": 0, "commits_per_kloc": 34.48, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 2, "fan_out": 1, "committers": 1, "instability": 0.3333333333333333, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/RoleDto.java", "name": "RoleDto", "district": "victor.training.petclinic.rest.dto", "bytes": 372, "lines": 16, "commits": 1, "bug_commits": 0, "commits_per_kloc": 62.5, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VetFieldsDto.java", "name": "VetFieldsDto", "district": "victor.training.petclinic.rest.dto", "bytes": 838, "lines": 29, "commits": 1, "bug_commits": 0, "commits_per_kloc": 34.48, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorExtractor.java", "name": "ValidationErrorExtractor", "district": "victor.training.petclinic.rest.error", "bytes": 2806, "lines": 74, "commits": 1, "bug_commits": 0, "commits_per_kloc": 13.51, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 22, "complexity_per_kloc": 297.3, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorFieldExtractor.java", "name": "ValidationErrorFieldExtractor", "district": "victor.training.petclinic.rest.error", "bytes": 2118, "lines": 53, "commits": 1, "bug_commits": 0, "commits_per_kloc": 18.87, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 19, "complexity_per_kloc": 358.49, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "petclinic-database/src/main/java/ro/victorrentea/petclinic/db/NetworkLatencyProxy.java", "name": "NetworkLatencyProxy", "district": "ro.victorrentea.petclinic.db", "bytes": 3330, "lines": 114, "commits": 1, "bug_commits": 0, "commits_per_kloc": 8.77, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 11, "complexity_per_kloc": 96.49, "fan_in": 1, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}];
 const PACKAGES = [{"path": "victor.training.petclinic.chatbot", "name": "chatbot", "district": "victor.training.petclinic", "files": 1, "bytes": 1400, "lines": 33, "commits": 20, "bug_commits": 3, "commits_per_kloc": 606.06, "bugs_per_kloc": 90.91, "bugs_per_commit": 0.15, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "victor.training.petclinic", "name": "petclinic", "district": "victor.training", "files": 1, "bytes": 1060, "lines": 30, "commits": 3, "bug_commits": 0, "commits_per_kloc": 100.0, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": true}, {"path": "victor.training.petclinic.repository", "name": "repository", "district": "victor.training.petclinic", "files": 7, "bytes": 3640, "lines": 144, "commits": 7, "bug_commits": 0, "commits_per_kloc": 48.61, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 15, "fan_out": 8, "committers": 1, "instability": 0.34782608695652173, "changed": false}, {"path": "victor.training.petclinic.security", "name": "security", "district": "victor.training.petclinic", "files": 4, "bytes": 4648, "lines": 117, "commits": 4, "bug_commits": 1, "commits_per_kloc": 34.19, "bugs_per_kloc": 8.55, "bugs_per_commit": 0.25, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 0, "fan_out": 0, "committers": 2, "instability": 0.0, "changed": false}, {"path": "victor.training.petclinic.mcp", "name": "mcp", "district": "victor.training.petclinic", "files": 3, "bytes": 17328, "lines": 370, "commits": 11, "bug_commits": 0, "commits_per_kloc": 29.73, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 26, "complexity_per_kloc": 70.27, "fan_in": 1, "fan_out": 7, "committers": 1, "instability": 0.875, "changed": false}, {"path": "ro.victorrentea.petclinic.db", "name": "db", "district": "ro.victorrentea.petclinic", "files": 2, "bytes": 6430, "lines": 193, "commits": 5, "bug_commits": 0, "commits_per_kloc": 25.91, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 16, "complexity_per_kloc": 82.9, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}, {"path": "victor.training.petclinic.rest.dto", "name": "dto", "district": "victor.training.petclinic.rest", "files": 13, "bytes": 12138, "lines": 401, "commits": 10, "bug_commits": 0, "commits_per_kloc": 24.94, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 33, "fan_out": 7, "committers": 1, "instability": 0.175, "changed": false}, {"path": "victor.training.petclinic.rest", "name": "rest", "district": "victor.training.petclinic", "files": 11, "bytes": 32905, "lines": 769, "commits": 17, "bug_commits": 1, "commits_per_kloc": 22.11, "bugs_per_kloc": 1.3, "bugs_per_commit": 0.059, "cognitive_complexity": 11, "complexity_per_kloc": 14.3, "fan_in": 9, "fan_out": 56, "committers": 1, "instability": 0.8615384615384616, "changed": false}, {"path": "victor.training.petclinic.chatbot.triage", "name": "triage", "district": "victor.training.petclinic.chatbot", "files": 2, "bytes": 5927, "lines": 136, "commits": 3, "bug_commits": 0, "commits_per_kloc": 22.06, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 4, "complexity_per_kloc": 29.41, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}, {"path": "victor.training.petclinic.chatbot.assistant", "name": "assistant", "district": "victor.training.petclinic.chatbot", "files": 9, "bytes": 41654, "lines": 886, "commits": 15, "bug_commits": 2, "commits_per_kloc": 16.93, "bugs_per_kloc": 2.26, "bugs_per_commit": 0.133, "cognitive_complexity": 48, "complexity_per_kloc": 54.18, "fan_in": 10, "fan_out": 10, "committers": 1, "instability": 0.5, "changed": false}, {"path": "victor.training.petclinic.chatbot.diagram", "name": "diagram", "district": "victor.training.petclinic.chatbot", "files": 1, "bytes": 5207, "lines": 129, "commits": 2, "bug_commits": 0, "commits_per_kloc": 15.5, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 26, "complexity_per_kloc": 201.55, "fan_in": 0, "fan_out": 0, "committers": 1, "instability": 0.0, "changed": false}, {"path": "victor.training.petclinic.rest.error", "name": "error", "district": "victor.training.petclinic.rest", "files": 3, "bytes": 9119, "lines": 212, "commits": 3, "bug_commits": 0, "commits_per_kloc": 14.15, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 41, "complexity_per_kloc": 193.4, "fan_in": 2, "fan_out": 2, "committers": 1, "instability": 0.5, "changed": false}, {"path": "victor.training.petclinic.mapper", "name": "mapper", "district": "victor.training.petclinic", "files": 7, "bytes": 4869, "lines": 165, "commits": 2, "bug_commits": 0, "commits_per_kloc": 12.12, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 0, "complexity_per_kloc": 0.0, "fan_in": 14, "fan_out": 25, "committers": 1, "instability": 0.6410256410256411, "changed": false}, {"path": "victor.training.petclinic.rewrite", "name": "rewrite", "district": "victor.training.petclinic", "files": 2, "bytes": 12889, "lines": 287, "commits": 2, "bug_commits": 0, "commits_per_kloc": 6.97, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 24, "complexity_per_kloc": 83.62, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": true}, {"path": "victor.training.petclinic.chatbot.firefighter", "name": "firefighter", "district": "victor.training.petclinic.chatbot", "files": 12, "bytes": 31283, "lines": 758, "commits": 4, "bug_commits": 1, "commits_per_kloc": 5.28, "bugs_per_kloc": 1.32, "bugs_per_commit": 0.25, "cognitive_complexity": 47, "complexity_per_kloc": 62.01, "fan_in": 27, "fan_out": 27, "committers": 1, "instability": 0.5, "changed": false}, {"path": "victor.training.petclinic.domain", "name": "domain", "district": "victor.training.petclinic", "files": 8, "bytes": 8454, "lines": 347, "commits": 1, "bug_commits": 0, "commits_per_kloc": 2.88, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 2, "complexity_per_kloc": 5.76, "fan_in": 39, "fan_out": 8, "committers": 1, "instability": 0.1702127659574468, "changed": false}];   // per-package rows (same shape) for package mode
-const MODULES = [{"path": "petclinic-backend", "name": "petclinic-backend", "district": "", "files": 57, "bytes": 94161, "lines": 2555, "commits": 49, "bug_commits": 2, "commits_per_kloc": 19.18, "bugs_per_kloc": 0.78, "bugs_per_commit": 0.041, "cognitive_complexity": 80, "complexity_per_kloc": 31.31, "fan_in": 113, "fan_out": 113, "committers": 2, "instability": 0.5, "changed": true}, {"path": "petclinic-chatbot", "name": "petclinic-chatbot", "district": "", "files": 25, "bytes": 85471, "lines": 1942, "commits": 3, "bug_commits": 0, "commits_per_kloc": 1.54, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 125, "complexity_per_kloc": 64.37, "fan_in": 38, "fan_out": 38, "committers": 1, "instability": 0.5, "changed": false}, {"path": "refactoring-legacy", "name": "refactoring-legacy", "district": "", "files": 2, "bytes": 12889, "lines": 287, "commits": 1, "bug_commits": 0, "commits_per_kloc": 3.48, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 24, "complexity_per_kloc": 83.62, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": true}, {"path": "petclinic-database", "name": "petclinic-database", "district": "", "files": 2, "bytes": 6430, "lines": 193, "commits": 5, "bug_commits": 0, "commits_per_kloc": 25.91, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 16, "complexity_per_kloc": 82.9, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}];     // per-Maven/Gradle-module rows (same shape) for module mode
+const MODULES = [{"path": "petclinic-backend", "name": "petclinic-backend", "district": "", "files": 57, "bytes": 94161, "lines": 2555, "commits": 49, "bug_commits": 2, "commits_per_kloc": 19.18, "bugs_per_kloc": 0.78, "bugs_per_commit": 0.041, "cognitive_complexity": 80, "complexity_per_kloc": 31.31, "fan_in": 113, "fan_out": 113, "committers": 2, "instability": 0.5, "changed": false}, {"path": "petclinic-chatbot", "name": "petclinic-chatbot", "district": "", "files": 25, "bytes": 85471, "lines": 1942, "commits": 3, "bug_commits": 0, "commits_per_kloc": 1.54, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 125, "complexity_per_kloc": 64.37, "fan_in": 38, "fan_out": 38, "committers": 1, "instability": 0.5, "changed": false}, {"path": "refactoring-legacy", "name": "refactoring-legacy", "district": "", "files": 2, "bytes": 12889, "lines": 287, "commits": 1, "bug_commits": 0, "commits_per_kloc": 3.48, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 24, "complexity_per_kloc": 83.62, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": true}, {"path": "petclinic-database", "name": "petclinic-database", "district": "", "files": 2, "bytes": 6430, "lines": 193, "commits": 5, "bug_commits": 0, "commits_per_kloc": 25.91, "bugs_per_kloc": 0.0, "bugs_per_commit": 0.0, "cognitive_complexity": 16, "complexity_per_kloc": 82.9, "fan_in": 1, "fan_out": 1, "committers": 1, "instability": 0.5, "changed": false}];     // per-Maven/Gradle-module rows (same shape) for module mode
 const REPO_ABS = "/Users/victorrentea/workspace/petclinic";
 const BUILD_CMD = "# 1. The folder you want to visualise (a git repo of Java sources):\nREPO=\"$HOME/workspace/your-repo\"\n\n# 2. PetClinic's codemap generators do all the analysis & rendering:\nSCRIPTS=\"/Users/victorrentea/workspace/petclinic/petclinic-backend/docs/scripts/codemap\"\n\n# 3. One-time: vendor the tree-sitter parsers used to measure complexity.\n[ -d \"$SCRIPTS/.pylibs\" ] || pip install -r \"$SCRIPTS/requirements.txt\" --target \"$SCRIPTS/.pylibs\"\n\n# 4. Run the pipeline on REPO, writing the report into REPO/.codecity/ .\nHEATMAP_REPO=\"$REPO\" HEATMAP_OUT=\"$REPO/.codecity\" \\\n  CODECITY_TITLE=\"Code City: $(basename \"$REPO\")\" \"$SCRIPTS/generate.sh\"\n\n# 5. Open the city in your browser (macOS `open`; Linux `xdg-open`; Windows `start`).\nopen \"$REPO/.codecity/codecity.html\"\n";
 const HAS_CHANGES = true;  // any file in the current git change set?
 const CHANGE_SOURCE = {"kind": "commit", "label": "commit: a5d03cb", "detail": "Rename module petclinic-refactor-recipes -> refactoring-legacy", "tooltip": "Rename module petclinic-refactor-recipes -> refactoring-legacy\n\nJust a rename: directory, Maven artifactId (now victor.training.agentic:refactoring-legacy),\nREADME, and the pom-libs.txt inventory entry. Recipe FQNs and package are unchanged.\n\nCo-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>", "url": "https://github.com/victorrentea/petclinic/commit/a5d03cba4bdd39a5df9cd3431cd21cbf013798f0"};  // what that change set is a diff OF (PR / commit / working tree)
+const COMMIT_CHOICES = [{"short": "a5d03cb", "subject": "Rename module petclinic-refactor-recipes -> refactoring-legacy", "when": "4 days ago", "url": "https://github.com/victorrentea/petclinic/commit/a5d03cba4bdd39a5df9cd3431cd21cbf013798f0", "files": ["refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/ListGetFirst.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rewrite"], "dirs": [".", "refactoring-legacy", "refactoring-legacy/src", "refactoring-legacy/src/main", "refactoring-legacy/src/main/java", "refactoring-legacy/src/main/java/victor", "refactoring-legacy/src/main/java/victor/training", "refactoring-legacy/src/main/java/victor/training/petclinic", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite"]}, {"short": "c8023d3", "subject": "Add petclinic-refactor-recipes: inline single-use local variable (+ Refaster get(0)->getFirst)", "when": "6 days ago", "url": "https://github.com/victorrentea/petclinic/commit/c8023d38afc8344a8fca59f1e4ade3c0813441c0", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "31eb10e", "subject": "refactor(docs+domain): reflection-based domain diagram, ERD polish, group docs/scripts", "when": "3 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/31eb10e26e8817647f2ca7cf42af41ed981ef871", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/domain/Owner.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Pet.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/PetType.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Role.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Specialty.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/User.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Vet.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Visit.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/OwnerMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/PetMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/PetTypeMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/SpecialtyMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/UserMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/VetMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/VisitMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mcp/PetClinicMcp.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/OwnerRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/PetRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/PetTypeRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/SpecialtyRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/UserRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/VetRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/VisitRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/OwnerRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyFeed.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/UserRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.domain", "victor.training.petclinic.mapper", "victor.training.petclinic.mcp", "victor.training.petclinic.repository", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/domain", "petclinic-backend/src/main/java/victor/training/petclinic/mapper", "petclinic-backend/src/main/java/victor/training/petclinic/mcp", "petclinic-backend/src/main/java/victor/training/petclinic/repository", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "b121c26", "subject": "refactor(devtools): make WireMock an optional frontend-only tool", "when": "4 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/b121c263ff25d5b1163340e0caf0022f2637dced", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/ApiExamples.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "5987eaf", "subject": "feat(openapi): hard-code response examples in Java for every GET-list endpoint", "when": "4 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/5987eaf146312a5649b37905a5baeaf18daf3710", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/ApiExamples.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/OwnerRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "dde92c9", "subject": "feat(backend): add explicit book-visit span on POST /api/visits", "when": "5 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/dde92c945a5ce291f2674d58c3e0bb1029d4db7b", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "798fb4b", "subject": "fix(cors): allow any localhost port in dev", "when": "5 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/798fb4b6d8332cfdae9d07358a0388f42b77adb6", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/security/CorsConfig.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.security"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/security"]}, {"short": "8b3b8fb", "subject": "chore: rename start-observability.sh -> start-grafana.sh", "when": "5 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/8b3b8fb6e94ec88b20984cdc184d8005cf1696dd", "files": ["petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/Service.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.chatbot", "victor.training.petclinic.chatbot.firefighter"], "dirs": [".", "petclinic-chatbot", "petclinic-chatbot/src", "petclinic-chatbot/src/main", "petclinic-chatbot/src/main/java", "petclinic-chatbot/src/main/java/victor", "petclinic-chatbot/src/main/java/victor/training", "petclinic-chatbot/src/main/java/victor/training/petclinic", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter"]}, {"short": "82cc99b", "subject": "chore: finish petclinic-chatbot rename; annotate MCP tools with destructiveHint", "when": "7 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/82cc99b726114c0cc525d6140577813a8da79a4a", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/mcp/PetClinicMcp.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/ChatbotApp.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.chatbot", "victor.training.petclinic.mcp"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/mcp", "petclinic-chatbot", "petclinic-chatbot/src", "petclinic-chatbot/src/main", "petclinic-chatbot/src/main/java", "petclinic-chatbot/src/main/java/victor", "petclinic-chatbot/src/main/java/victor/training", "petclinic-chatbot/src/main/java/victor/training/petclinic", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot"]}, {"short": "fa04a59", "subject": "chore: rename petclinic-custom-chatbot -> petclinic-chatbot; add owners-by-pets report", "when": "7 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/fa04a592e486c48edfdf8d67a05e06ef9e807aae", "files": ["petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/ChatbotApp.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/Assistant.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/ChatHistory.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/JudgeGuard.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/LocalTools.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/OwnerJwtPrincipal.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/RagIngestion.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/RemoteToolsConfig.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/SecurityConfig.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/TokenCostMeter.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/diagram/AgentStateDiagram.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterAgent.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterController.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterGuard.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/GrafanaClient.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/GrafanaFindings.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/HealthProbe.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/MetricsSnapshot.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/ProcessControl.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/RealProcessControl.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/RestartResult.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/Service.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/ServiceHealth.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/PetTriageAgent.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/TriageController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.chatbot", "victor.training.petclinic.chatbot.assistant", "victor.training.petclinic.chatbot.diagram", "victor.training.petclinic.chatbot.firefighter", "victor.training.petclinic.chatbot.triage"], "dirs": [".", "petclinic-chatbot", "petclinic-chatbot/src", "petclinic-chatbot/src/main", "petclinic-chatbot/src/main/java", "petclinic-chatbot/src/main/java/victor", "petclinic-chatbot/src/main/java/victor/training", "petclinic-chatbot/src/main/java/victor/training/petclinic", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/diagram", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage"]}];   // recent commits that touched rendered code; empty unless the diff came from history
 
 // The active COLOR metric's p95 scale max, mirrored out of rebuildCity so the
 // hover tooltip's colour-scale marker can place this building on the ramp.
@@ -684,7 +734,43 @@ const hover = document.getElementById("hover");
 const areaSelect = document.getElementById("areaMetric");
 const heightSelect = document.getElementById("heightMetric");
 const colorSelect = document.getElementById("colorMetric");
-const colorScaleSelect = document.getElementById("colorScale");   // linear vs log colour ramp
+const colorLogCheck = document.getElementById("colorLog");   // linear vs log colour ramp
+
+// Only counts have a meaningful density; size, lines, committers, the couplings and
+// instability (already a ratio) do not, so their "/kloc" box is disabled, not silently ignored.
+const PER_KLOC = {
+  cognitive_complexity: "complexity_per_kloc",
+  commits: "commits_per_kloc",
+  bug_commits: "bugs_per_kloc",
+};
+const METRIC_KNOBS = [
+  { select: areaSelect, kloc: document.getElementById("areaKloc") },
+  { select: heightSelect, kloc: document.getElementById("heightKloc") },
+  { select: colorSelect, kloc: document.getElementById("colorKloc") },
+];
+
+// What the dropdown names, plus the "/kloc" bit: "commits" + /kloc = commits_per_kloc.
+function metricKey(knob) {
+  const base = knob.select.value;
+  return knob.kloc && knob.kloc.checked && PER_KLOC[base] ? PER_KLOC[base] : base;
+}
+const areaMetricKey = () => metricKey(METRIC_KNOBS[0]);
+const heightMetricKey = () => metricKey(METRIC_KNOBS[1]);
+const colorMetricKey = () => metricKey(METRIC_KNOBS[2]);
+
+// Landing on a metric with no density greys its box out; the tick you had is kept
+// aside and put back when you return to a metric that can use it.
+const klocIntent = new WeakMap();
+function syncKlocChecks() {
+  for (const knob of METRIC_KNOBS) {
+    if (!knob.kloc) continue;
+    const supported = !!PER_KLOC[knob.select.value];
+    if (!knob.kloc.disabled) klocIntent.set(knob.kloc, knob.kloc.checked);
+    knob.kloc.disabled = !supported;
+    knob.kloc.checked = supported && klocIntent.get(knob.kloc) === true;
+    knob.kloc.parentElement.classList.toggle("off", !supported);
+  }
+}
 const viewSelect = document.getElementById("viewMode");   // the title-row view switch
 const packageOpt = document.getElementById("packageOpt");
 const moduleOpt = document.getElementById("moduleOpt");
@@ -712,27 +798,72 @@ function changeMode() { return changeSelect ? changeSelect.value : "off"; }
 // full message plus a GitHub link live on hover.
 const changeSourceRow = document.getElementById("changeSourceRow");
 const changeSourceEl = document.getElementById("changeSource");
+// When the change set came from history, the reader gets a dropdown of the last
+// commits that really touched rendered code rather than being pinned to whatever
+// landed most recently; the id next to it stays the GitHub link.
+const commitPick = document.getElementById("commitPick");
+let commitChoice = 0;
+const hasCommitHistory = () => COMMIT_CHOICES.length > 1 && (CHANGE_SOURCE || {}).kind === "commit";
+
+// Re-flag every dataset against the picked commit. The generator pre-computes the
+// keys per dataset (file path / dotted package / module dir), so this stays a Set
+// lookup per row and no path logic gets re-implemented here.
+function applyCommitChoice() {
+  const choice = COMMIT_CHOICES[commitChoice];
+  if (!choice) return;
+  const [files, districts, dirs] =
+    [choice.files, choice.districts, choice.dirs].map(keys => new Set(keys));
+  for (const row of FILES) row.changed = files.has(row.path);
+  for (const row of PACKAGES) row.changed = districts.has(row.path);
+  for (const row of MODULES) row.changed = dirs.has(row.path);
+}
+
 function renderChangeSource() {
   if (!changeSourceRow || !changeSourceEl) return;
   const src = CHANGE_SOURCE || {};
+  const history = hasCommitHistory() ? COMMIT_CHOICES[commitChoice] : null;
   const show = changeMode() !== "off" && HAS_CHANGES && !!src.label;
   changeSourceRow.hidden = !show;
+  if (commitPick) commitPick.hidden = !history;
   if (!show) return;
   changeSourceEl.textContent = "";
   const tag = document.createElement("span");
   tag.className = "srcTag";
-  tag.textContent = src.label;
+  tag.textContent = history ? history.short : src.label;   // the combo already names it
   changeSourceEl.append(tag);
-  if (src.detail) {
+  const detailText = history ? history.when : src.detail;
+  if (detailText) {
     const detail = document.createElement("span");
     detail.className = "srcDetail";
-    detail.textContent = src.detail;
+    detail.textContent = detailText;
     changeSourceEl.append(detail);
   }
-  changeSourceEl.title = [src.label, src.tooltip || src.detail].filter(Boolean).join("\n\n")
-    + (src.url ? "\n\nclick to open on GitHub" : "");
-  if (src.url) changeSourceEl.href = src.url;
+  const url = history ? history.url : src.url;
+  changeSourceEl.title = history
+    ? [history.short, history.subject, history.when].filter(Boolean).join("\n\n")
+      + (url ? "\n\nclick to open on GitHub" : "")
+    : [src.label, src.tooltip || src.detail].filter(Boolean).join("\n\n")
+      + (url ? "\n\nclick to open on GitHub" : "");
+  if (url) changeSourceEl.href = url;
   else changeSourceEl.removeAttribute("href");
+}
+
+if (commitPick && hasCommitHistory()) {
+  COMMIT_CHOICES.forEach((choice, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = choice.subject || choice.short;
+    option.title = [choice.short, choice.subject, choice.when].filter(Boolean).join(" · ");
+    commitPick.append(option);
+  });
+  commitPick.value = "0";
+  commitPick.addEventListener("change", () => {
+    dismissIntro();
+    commitChoice = Number(commitPick.value);
+    applyCommitChoice();
+    if (changeMode() === "hide") { scopePath = ""; updateBreadcrumb(); rebuildCity(); frameCity(); }
+    else rebuildCity();
+  });
 }
 // The dropdown swaps which rows the treemap/floor/building machinery renders:
 // class rows, package rows (a building per package on its parent-package floor),
@@ -773,15 +904,31 @@ function filteredDataset() {
   if (changeMode() === "hide") data = data.filter(f => f.changed);
   return data;
 }
-const citySize = 900;
+// Wettel's original CodeCity plate is a landscape rectangle, not a square: a wide
+// city reads better on a 16:9 screen and can be taken in whole from a low, far
+// camera. Keep the ground *area* of the old 900x900 square so footprints — and
+// therefore the height scale — stay comparable.
+const cityAspect = 1.6;
+const citySize = 900;                                        // side of the equivalent square
+const cityW = Math.round(citySize * Math.sqrt(cityAspect));  // 1138 across
+const cityD = Math.round(citySize / Math.sqrt(cityAspect));  // 712 deep
+const cityRadius = Math.hypot(cityW, cityD) / 2;             // half-diagonal: shadow + camera fit
+let cityTop = 0;                                             // tallest building; heights are p95-scaled, so outliers blow past maxHeight
 const districtGap = 14;
 const fileGap = 3;
 const districtStep = 9;   // terrace rise per nesting level: tall enough to separate floors without hatching
+// Header strip kept clear along each district's top edge, where its name is written.
+// It has to be reserved in the treemap itself: children terraces rise ABOVE their
+// parent's floor and tile its whole area, so text laid anywhere else is buried.
+// A share of the district's own depth, so a big package gets big, readable letters
+// and a cramped one still keeps a legible minimum.
+const floorLabelBand = node => Math.min(40, Math.max(11, (node.y1 - node.y0) * 0.12));
 const maxHeight = 190;
 const minHeight = 5;
 let buildings = [];
 let districts = [];
 let cityLabels = [];
+const MIN_LABEL_ROOF_PX = 26;   // a roof narrower than this on screen doesn't get a name
 let districtLabels = [];   // floating package tags (CSS2DObjects), when pkgLabelMode = "floating"
 const floorLabelMeshes = [];   // flat on-the-floor package names; re-oriented each frame to face the camera
 
@@ -851,10 +998,15 @@ function scopedParts(file) {
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf4f5f7);
-scene.fog = new THREE.Fog(0xf4f5f7, 900, 2200);
+// No fog: the original CodeCity keeps the far districts as crisp as the near ones,
+// and a big city is mostly "far away" — haze would swallow exactly the overview
+// this page exists to give.
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 4000);
-camera.position.set(720, 620, 760);
+// A long lens (30°, not the usual 45°) shot from far back: perspective flattens
+// out, so the far districts stay the same scale as the near ones, the way the
+// original CodeCity plates look.
+const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 20000);
+camera.position.set(720, 620, 760);   // provisional; frameCity() fits it to the real city
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -877,7 +1029,7 @@ controls.dampingFactor = 0.06;
 controls.screenSpacePanning = true;
 controls.zoomToCursor = true;
 controls.minDistance = 140;
-controls.maxDistance = 1900;
+controls.maxDistance = cityRadius * 12;   // room to pull right back off a big city
 controls.target.set(0, 0, 0);
 controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
 controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
@@ -958,10 +1110,10 @@ const sun = new THREE.DirectionalLight(0xffffff, 2.2);
 sun.position.set(-420, 780, 520);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.left = -650;
-sun.shadow.camera.right = 650;
-sun.shadow.camera.top = 650;
-sun.shadow.camera.bottom = -650;
+sun.shadow.camera.left = -(cityRadius + 60);
+sun.shadow.camera.right = cityRadius + 60;
+sun.shadow.camera.top = cityRadius + 60;
+sun.shadow.camera.bottom = -(cityRadius + 60);
 scene.add(sun);
 
 const groundMaterial = new THREE.MeshStandardMaterial({
@@ -969,7 +1121,7 @@ const groundMaterial = new THREE.MeshStandardMaterial({
   roughness: 0.74,
   metalness: 0.02,
 });
-const ground = new THREE.Mesh(new THREE.BoxGeometry(citySize + 36, 8, citySize + 36), groundMaterial);
+const ground = new THREE.Mesh(new THREE.BoxGeometry(cityW + 36, 8, cityD + 36), groundMaterial);
 ground.position.y = -5;
 ground.receiveShadow = true;
 scene.add(ground);
@@ -995,11 +1147,19 @@ function metricMax(key) {
 // those on a log ramp so the crowded low end spreads across the palette;
 // evenly-distributed metrics (instability, couplings) stay linear.
 const LOG_DEFAULT_METRICS = new Set(["commits_per_kloc", "bugs_per_kloc", "complexity_per_kloc"]);
+
+// Ticking "log" yourself pins that metric to your choice for the rest of the session;
+// metrics you never touched keep following the default above. Deliberately not
+// persisted — a reload starts from the defaults again.
+const colorLogOverrides = new Map();
+
 function wantsLog(metric) {
-  const mode = colorScaleSelect ? colorScaleSelect.value : "auto";
-  if (mode === "log") return true;
-  if (mode === "linear") return false;
-  return LOG_DEFAULT_METRICS.has(metric);   // "auto"
+  return colorLogOverrides.has(metric) ? colorLogOverrides.get(metric) : LOG_DEFAULT_METRICS.has(metric);
+}
+
+// The checkbox always shows the ramp the current metric resolves to.
+function syncColorLogCheck() {
+  if (colorLogCheck) colorLogCheck.checked = wantsLog(colorMetricKey());
 }
 
 // Normalised colour position t in [0,1]. Shared by the buildings and the hover
@@ -1061,6 +1221,8 @@ function clearCity() {
   for (const label of cityLabels) {
     label.obj.removeFromParent();
     label.el.remove();
+    label.stem.removeFromParent();
+    label.stem.geometry.dispose();   // the material is shared, so it stays
   }
   cityLabels = [];
   for (const label of districtLabels) {
@@ -1090,19 +1252,34 @@ function clearCity() {
   }
 }
 
+function medianFootprint(root) {
+  const sides = root.leaves().map(l => Math.min(l.x1 - l.x0, l.y1 - l.y0)).sort((a, b) => a - b);
+  return sides.length ? sides[Math.floor(sides.length / 2)] : 0;
+}
+
 function rebuildCity() {
   clearCity();
-  const areaMetric = areaSelect.value;
-  const heightMetric = heightSelect.value;
-  const colorMetric = colorSelect.value;
+  cityTop = 0;                 // tallest building of THIS layout — what frameCity must fit
+  const areaMetric = areaMetricKey();
+  const heightMetric = heightMetricKey();
+  const colorMetric = colorMetricKey();
   const maxMetric = metricMax(heightMetric);
   const maxColor = metricMax(colorMetric);
   activeColorMax = maxColor;   // remembered for the hover tooltip's colour-scale marker
   activeColorLog = wantsLog(colorMetric);   // ditto: log vs linear for the tick position
 
+  // Streets narrow with depth, like a real city: boulevards between top-level
+  // modules, alleys between leaf packages. A flat districtGap at every level costs
+  // a deeply nested tree (org.springframework.a.b.c.d) most of its plate in white
+  // gaps, which is what made the big city look empty next to Wettel's dense plates.
+  const padOuter = node => Math.max(3, districtGap / (1 + node.depth * 0.7));
   const layout = d3.treemap()
-    .size([citySize, citySize])
-    .paddingOuter(districtGap)
+    .size([cityW, cityD])
+    .paddingOuter(padOuter)
+    // The near (+z) side only, and not for the root — nothing is written on the bare
+    // ground. This is the strip addFloorName writes the package name into, kept on the
+    // side facing the default camera so the names are the first thing you read.
+    .paddingBottom(node => padOuter(node) + (node.depth === 0 ? 0 : floorLabelBand(node)))
     .paddingInner(fileGap)
     .round(true);
   const root = layout(buildHierarchy(areaMetric));
@@ -1111,7 +1288,6 @@ function rebuildCity() {
   // it rises, so a parent package (e.g. victor) visibly contains its children
   // (rest, mapper, ...). A thin outline delimits every package from its siblings.
   _floorLabelBudget = 240;   // cap flat floor-text planes per rebuild (perf on big cities)
-  _floorLabelBoxes = [];     // fresh overlap map for this rebuild's floor labels
   floorLabelMeshes.length = 0;   // the previous rebuild's planes are gone; start the facing list over
   for (const node of root.descendants()) {
     if (node === root || !node.children) {
@@ -1121,8 +1297,8 @@ function rebuildCity() {
     const depth = Math.max(2, node.y1 - node.y0);
     const slab = districtStep + 2;
     const topY = node.depth * districtStep;
-    const cx = node.x0 + width / 2 - citySize / 2;
-    const cz = node.y0 + depth / 2 - citySize / 2;
+    const cx = node.x0 + width / 2 - cityW / 2;
+    const cz = node.y0 + depth / 2 - cityD / 2;
     // Heat-colour the riser (vertical "height" faces) with the same scale as the
     // buildings; leave the top surface a plain light plaster, so the only ink on a
     // floor is its label. Nesting reads from the terrace step alone.
@@ -1155,13 +1331,26 @@ function rebuildCity() {
     addPackageLabel(node, cx, cz, topY, width, depth);
   }
 
+  // In Wettel's plates a building is a block, not a needle: its height stays a small
+  // multiple of its footprint. But footprints shrink as the file count grows (same
+  // plate, more tiles), so a fixed height scale turns a 5000-file repo into a bed of
+  // nails. Tie the scale to the median footprint and the proportions hold at any size;
+  // a small repo has roomy tiles and simply keeps the full maxHeight.
+  const heightScale = Math.min(maxHeight, Math.max(50, medianFootprint(root) * 9));
+
   for (const leaf of root.leaves()) {
     const file = leaf.data.file;
     const width = Math.max(4, leaf.x1 - leaf.x0 - 1);
     const depth = Math.max(4, leaf.y1 - leaf.y0 - 1);
     const metricValue = Number(file[heightMetric]) || 0;
     const colorValue = Number(file[colorMetric]) || 0;
-    const height = minHeight + Math.pow(metricValue / (maxMetric || 1), 0.62) * maxHeight;
+    // maxMetric is the p95, so the handful of files above it land past 1.0 — left
+    // unbounded, one monster class turns the whole skyline into needles. Above the
+    // p95 the curve goes logarithmic: outliers still visibly tower, but the city
+    // keeps the boxy proportions of the original CodeCity plates.
+    const ratio = metricValue / (maxMetric || 1);
+    const scaled = ratio <= 1 ? Math.pow(ratio, 0.62) : 1 + Math.log10(ratio) * 0.8;
+    const height = minHeight + scaled * heightScale;
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const material = new THREE.MeshStandardMaterial({
       color: colorFor(colorValue, maxColor),
@@ -1171,16 +1360,17 @@ function rebuildCity() {
     const mesh = new THREE.Mesh(geometry, material);
     const baseY = leaf.parent.depth * districtStep;
     mesh.position.set(
-      leaf.x0 + (leaf.x1 - leaf.x0) / 2 - citySize / 2,
+      leaf.x0 + (leaf.x1 - leaf.x0) / 2 - cityW / 2,
       baseY + height / 2,
-      leaf.y0 + (leaf.y1 - leaf.y0) / 2 - citySize / 2
+      leaf.y0 + (leaf.y1 - leaf.y0) / 2 - cityD / 2
     );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.userData.file = file;
     mesh.userData.baseColor = material.color.clone();
     scene.add(mesh);
-    buildings.push({ mesh, file, height, colorValue, maxColor });
+    buildings.push({ mesh, file, height, colorValue, maxColor, footprint: Math.min(width, depth) });
+    cityTop = Math.max(cityTop, baseY + height);
   }
   styleForChanges();
   setupLabels(areaMetric, heightMetric, colorMetric);
@@ -1222,20 +1412,45 @@ const LABEL_GAP = 4;          // px breathing room required between two labels
 const _labelMeasure = document.createElement("canvas").getContext("2d");
 _labelMeasure.font = "700 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
+// A pill floating over a dense skyline reads as belonging to whatever building
+// happens to sit behind it, so every name is tied to the centre of its own roof by
+// a leader line. depthTest off: the stem is drawn over the city like the HTML pill
+// it hangs from, otherwise a name would show while its stem was buried.
+const LABEL_STEM = 16;      // world units from the roof up to the bottom of the pill
+const labelStemMaterial = new THREE.LineBasicMaterial({
+  color: 0x111827,
+  transparent: true,
+  opacity: 0.55,
+  depthTest: false,
+});
+
 // Persistent labels show ONLY the class name — every metric lives in the hover now.
 function makeLabel(entry, priority) {
+  const { x, z } = entry.mesh.position;
+  const roofY = entry.mesh.position.y + entry.height / 2;
   const div = document.createElement("div");
   div.className = "city-label";
   div.textContent = entry.file.name;
   const obj = new CSS2DObject(div);
-  obj.position.set(entry.mesh.position.x, entry.mesh.position.y + entry.height / 2 + 16, entry.mesh.position.z);
+  obj.position.set(x, roofY + LABEL_STEM, z);
   obj.center.set(0.5, 1);
   obj.visible = false;        // shown later, only if it survives de-overlap
   scene.add(obj);
+  const stem = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, roofY, z),
+      new THREE.Vector3(x, roofY + LABEL_STEM, z),
+    ]),
+    labelStemMaterial
+  );
+  stem.renderOrder = 3;
+  stem.visible = false;       // follows its label
+  scene.add(stem);
   cityLabels.push({
-    obj, el: div, priority,
+    obj, el: div, stem, priority,
     w: _labelMeasure.measureText(entry.file.name).width + 16,   // + .city-label horizontal padding
     h: 22,                    // single line
+    footprint: entry.footprint,   // world size of the roof this name belongs to
   });
 }
 
@@ -1271,16 +1486,30 @@ function setupLabels(areaMetric, heightMetric, colorMetric) {
 // Greedy screen-space de-overlap: walk candidates by priority, show one only if its
 // box clears every higher-priority box already shown; hide the rest. Runs each frame.
 const _labelNdc = new THREE.Vector3();
+function showLabel(L, on) {
+  L.obj.visible = on;
+  L.stem.visible = on;        // the leader line lives and dies with its name
+}
+
 function updateLabelVisibility() {
   if (introEl) {                                  // keep the intro screen clean
-    for (const L of cityLabels) L.obj.visible = false;
+    for (const L of cityLabels) showLabel(L, false);
     return;
   }
   const W = window.innerWidth, H = window.innerHeight;
   const placed = [];
+  // Pixels a world unit covers at distance d: the gate below turns names off for
+  // buildings too small on screen to own one. In a 5000-file city zoomed out that
+  // leaves a clean plate (Wettel's originals carry no labels either); zoom in and
+  // the names come back as the roofs grow.
+  const pxPerUnitAt = H / (2 * Math.tan(camera.fov * Math.PI / 360));
   for (const L of cityLabels) {
+    if (L.footprint * pxPerUnitAt / camera.position.distanceTo(L.obj.position) < MIN_LABEL_ROOF_PX) {
+      showLabel(L, false);
+      continue;
+    }
     _labelNdc.copy(L.obj.position).project(camera);
-    if (_labelNdc.z < -1 || _labelNdc.z > 1) { L.obj.visible = false; continue; }
+    if (_labelNdc.z < -1 || _labelNdc.z > 1) { showLabel(L, false); continue; }
     const x = (_labelNdc.x * 0.5 + 0.5) * W;
     const y = (-_labelNdc.y * 0.5 + 0.5) * H;
     const box = { left: x - L.w / 2, right: x + L.w / 2, top: y - L.h, bottom: y };
@@ -1289,7 +1518,7 @@ function updateLabelVisibility() {
       if (box.left < p.right + LABEL_GAP && box.right > p.left - LABEL_GAP &&
           box.top < p.bottom + LABEL_GAP && box.bottom > p.top - LABEL_GAP) { clash = true; break; }
     }
-    L.obj.visible = !clash;
+    showLabel(L, !clash);
     if (!clash) placed.push(box);
   }
 }
@@ -1297,12 +1526,11 @@ function updateLabelVisibility() {
 // ── Package-name labels (two switchable styles) ──────────────────────────────
 // "floating": a deep-blue capsule (see .district-label) hovering over the floor —
 //   deliberately unlike the dark class pills so a package never reads as a class.
-// "floor": the name laid FLAT on the platform top, centered along its EDGES (and,
-//   when it still fits without colliding, its corners), read along X or Z so it
-//   stays legible from any orbit angle. A global overlap check keeps labels apart.
+// "floor": the name laid FLAT in the district's header strip (see floorLabelBand),
+//   the one band of its floor no child terrace covers, and spun each frame so it
+//   never reads upside down.
 const _floorTexCache = new Map();   // "name|hex" -> {tex,w,h}; kept across rebuilds
 let _floorLabelBudget = 0;          // reset per rebuild in rebuildCity (perf cap)
-let _floorLabelBoxes = [];          // XZ AABBs of placed floor labels this rebuild — prevents overlap
 
 function floorTextTexture(text) {
   const hit = _floorTexCache.get(text);
@@ -1333,65 +1561,35 @@ function floorTextTexture(text) {
   return entry;
 }
 
-function addFloorName(text, cx, cz, topY, width, depth) {
-  if (width < 46 || depth < 46) return;              // too small to hold the text — skip
+// The strip runs the full width of the district, so the name only has to fit across
+// it; when it doesn't, shrink it rather than drop it, down to the point of illegibility.
+function addFloorName(text, cx, stripZ, topY, width, band) {
+  if (_floorLabelBudget <= 0) return;
   const { tex, w, h } = floorTextTexture(text);
-  const worldH = Math.min(16, depth * 0.16, width * 0.16);
-  const worldW = worldH * (w / h);
-  const fitsX = worldW <= width * 0.92;              // fits when read along X (yaw 0)
-  const fitsZ = worldW <= depth * 0.92;              // fits when read along Z (yaw 90°)
-  if (!fitsX && !fitsZ) return;                      // wouldn't fit along any edge
-  const halfW = width / 2, halfD = depth / 2, inset = 2;
-  const offX = halfW - worldH / 2 - inset;           // center-to-edge offset, perpendicular to the label
-  const offZ = halfD - worldH / 2 - inset;
-  // Preferred: one label centered on each edge that can hold it, running parallel to it.
-  const candidates = [];
-  if (fitsX) {
-    candidates.push({ x: cx, z: cz - offZ, yaw: 0 });               // bottom edge, reads along X
-    candidates.push({ x: cx, z: cz + offZ, yaw: 0 });               // top edge, reads along X
+  let worldH = band - 4;                             // 2 units of air above and below
+  let worldW = worldH * (w / h);
+  const room = width - 6;
+  if (worldW > room) {
+    const shrink = room / worldW;
+    if (shrink < 0.4) return;                        // would be too small to read anyway
+    worldH *= shrink;
+    worldW = room;
   }
-  if (fitsZ) {
-    candidates.push({ x: cx - offX, z: cz, yaw: Math.PI / 2 });     // left edge, reads along Z
-    candidates.push({ x: cx + offX, z: cz, yaw: Math.PI / 2 });     // right edge, reads along Z
-  }
-  // Corners are a bonus: only taken when the label still fits there without colliding.
-  const cyaw = fitsX ? 0 : Math.PI / 2;
-  const cmX = cyaw === 0 ? worldW / 2 : worldH / 2;
-  const cmZ = cyaw === 0 ? worldH / 2 : worldW / 2;
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    candidates.push({ x: cx + sx * (halfW - cmX - inset), z: cz + sz * (halfD - cmZ - inset), yaw: cyaw });
-  }
-  let placed = 0;
-  for (const c of candidates) {
-    if (placed >= 4 || _floorLabelBudget <= 0) return;
-    if (placeFloorLabelMesh(tex, worldW, worldH, c.x, c.z, c.yaw, topY)) placed++;
-  }
+  placeFloorLabelMesh(tex, worldW, worldH, cx, stripZ, topY);
 }
 
-// Lay one flat label plane only if its footprint clears every floor label already placed
-// this rebuild — the global overlap guard that keeps package names from crowding.
-function placeFloorLabelMesh(tex, worldW, worldH, x, z, yaw, topY) {
-  const alongX = yaw === 0;
-  const spanX = alongX ? worldW : worldH;
-  const spanZ = alongX ? worldH : worldW;
-  const box = { minX: x - spanX / 2, maxX: x + spanX / 2, minZ: z - spanZ / 2, maxZ: z + spanZ / 2 };
-  for (const b of _floorLabelBoxes) {
-    if (box.minX < b.maxX && box.maxX > b.minX && box.minZ < b.maxZ && box.maxZ > b.minZ) return false;
-  }
+function placeFloorLabelMesh(tex, worldW, worldH, x, z, topY) {
   _floorLabelBudget--;
   const mesh = new THREE.Mesh(
     new THREE.PlaneGeometry(worldW, worldH),
     new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
   );
   mesh.rotation.x = -Math.PI / 2;                    // lay flat on the platform top
-  mesh.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), yaw);   // run along X (0) or Z (90°)
   mesh.position.set(x, topY + 0.6, z);
   mesh.renderOrder = 3;
   mesh.userData.kind = "package";                    // disposed by clearCity's package sweep
   scene.add(mesh);
-  _floorLabelBoxes.push(box);
-  floorLabelMeshes.push({ mesh, baseYaw: yaw });     // spun to face the viewer each frame
-  return true;
+  floorLabelMeshes.push({ mesh, baseYaw: 0 });       // spun to face the viewer each frame
 }
 
 // A flat floor label reads upside down from the far side of an orbit. Each frame,
@@ -1422,7 +1620,10 @@ function addPackageLabel(node, cx, cz, topY, width, depth) {
   const shortName = full.split(".").pop();
   if (!shortName) return;
   if (mode === "floor") {
-    addFloorName(shortName, cx, cz, topY, width, depth);
+    const band = floorLabelBand(node);
+    if (depth < band + 2) return;                  // district shallower than its own strip
+    // Middle of the strip the layout reserved along this district's near edge.
+    addFloorName(shortName, cx, node.y1 - band / 2 - cityD / 2, topY, width, band);
     return;
   }
   const div = document.createElement("div");     // "floating"
@@ -1517,9 +1718,9 @@ function marksFor(file, ...keys) {
   const marks = [];
   for (const key of keys) {
     if (!key) continue;
-    if (key === areaSelect.value) marks.push('<span class="mk-area" title="area / footprint">&#x2194;&#xFE0F;</span>');
-    if (key === heightSelect.value) marks.push('<span class="mk-height" title="height">&#x2195;&#xFE0F;</span>');
-    if (key === colorSelect.value) {
+    if (key === areaMetricKey()) marks.push('<span class="mk-area" title="area / footprint">&#x2194;&#xFE0F;</span>');
+    if (key === heightMetricKey()) marks.push('<span class="mk-height" title="height">&#x2195;&#xFE0F;</span>');
+    if (key === colorMetricKey()) {
       const t = colorT(Number(file[key]) || 0, activeColorMax);
       marks.push('<span class="cbar" title="colour scale (light-&gt;red, capped at 95th pct)">' +
         `<span class="cbar-mark" style="left:${(t * 100).toFixed(1)}%"></span></span>`);
@@ -1529,7 +1730,7 @@ function marksFor(file, ...keys) {
 }
 
 function formatHover(file) {
-  const active = new Set([areaSelect.value, heightSelect.value, colorSelect.value]);
+  const active = new Set([areaMetricKey(), heightMetricKey(), colorMetricKey()]);
   const items = [];
   for (const p of HOVER_PROPS) {
     if (p.opt && (file[p.key] === undefined || file[p.key] === null)) continue;
@@ -1663,10 +1864,51 @@ function scopeUp() {
 }
 
 // Snap the camera back to a clean overview of whatever city is now laid out.
-function frameCity() {
-  camera.position.set(720, 620, 760);
-  controls.target.set(0, 0, 0);
+// Wettel's CodeCity plates are shot with a long lens from far away: low over the
+// horizon, swung off-axis so districts read diagonally, and far enough back that
+// near and far buildings come out the same size. Framing is *computed* from the
+// city's bounding box instead of hard-coded, so a 60-file toy and a 5000-file
+// monster both arrive fully in frame.
+const viewElevation = 26 * Math.PI / 180;   // above the ground plane
+const viewAzimuth = 34 * Math.PI / 180;     // swung off the Z axis
+
+function frameCity(elevation = viewElevation, azimuth = viewAzimuth) {
+  const top = Math.max(cityTop, maxHeight);
+  const target = new THREE.Vector3(0, top * 0.18, 0);
+  const dir = new THREE.Vector3(              // unit vector from the target out to the camera
+    Math.cos(elevation) * Math.sin(azimuth),
+    Math.sin(elevation),
+    Math.cos(elevation) * Math.cos(azimuth)
+  );
+  camera.position.copy(target).addScaledVector(dir, fitDistance(dir, target, top));
+  controls.target.copy(target);
   controls.update();
+}
+
+// Closest the camera may sit along `dir` while the whole city box still fits the
+// frustum — checked on both axes, so a wide city in a narrow window backs off far
+// enough instead of spilling out the sides.
+function fitDistance(dir, target, top) {
+  const forward = dir.clone().negate();       // the way the camera looks
+  const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+  const up = new THREE.Vector3().crossVectors(right, forward).normalize();
+  const tanV = Math.tan(camera.fov * Math.PI / 360);
+  const tanH = tanV * camera.aspect;
+  const halfW = cityW / 2 + 30;
+  const halfD = cityD / 2 + 30;
+  let dist = controls.minDistance;
+  for (const sx of [-1, 1]) {
+    for (const sy of [0, 1]) {
+      for (const sz of [-1, 1]) {
+        const corner = new THREE.Vector3(sx * halfW, sy * top, sz * halfD).sub(target);
+        const depth = corner.dot(forward);
+        dist = Math.max(dist,
+          Math.abs(corner.dot(right)) / tanH - depth,
+          Math.abs(corner.dot(up)) / tanV - depth);
+      }
+    }
+  }
+  return dist * 1.04;                         // a margin of air around the plate
 }
 
 function updateBreadcrumb() {
@@ -1901,15 +2143,117 @@ function buildIntro() {
   }
 }
 
+// The three dropdowns overlap in what they offer (committers, fan out, instability…).
+// Spending two of the city's three visual channels on the same number says nothing
+// twice, so whatever one dropdown shows is greyed out in the other two.
+const metricSelects = [areaSelect, heightSelect, colorSelect];
+function syncMetricOptions() {
+  const taken = new Set(metricSelects.map((sel) => sel.value));
+  for (const sel of metricSelects) {
+    for (const opt of sel.options) opt.disabled = opt.value !== sel.value && taken.has(opt.value);
+  }
+}
+
 function onMetricChange() {
+  dismissIntro();
+  syncMetricOptions();
+  syncKlocChecks();
+  syncColorLogCheck();           // the ramp follows the metric, /kloc included
+  markActivePreset();
+  rebuildCity();
+}
+
+// Ten saved answers to "what should area, height and colour mean?" — the question the
+// three dropdowns ask, and the one a newcomer has no basis to answer. Each bubble sets
+// all three metrics plus the four bits (/kloc x3, log), so a reading of the city is one
+// click away and the dropdowns stay there to show WHAT that reading is made of.
+const PRESETS = [
+  { dot: "#2563eb", label: "Overview — size, complexity, churn per KLOC",
+    metrics: ["bytes", "cognitive_complexity", "commits"], kloc: [false, false, true], log: true },
+  { dot: "#dc2626", label: "Hotspots — big files that churn and break",
+    metrics: ["bytes", "commits", "bug_commits"], kloc: [false, false, false], log: true },
+  { dot: "#ea580c", label: "Bug density — bugfixes per KLOC",
+    metrics: ["lines", "bug_commits", "commits"], kloc: [false, true, true], log: true },
+  { dot: "#7c3aed", label: "Complexity density — cognitive load per KLOC",
+    metrics: ["lines", "cognitive_complexity", "bug_commits"], kloc: [false, true, true], log: true },
+  { dot: "#059669", label: "Knowledge risk — how many hands touched each file",
+    metrics: ["bytes", "committers", "commits"], kloc: [false, false, true], log: true },
+  { dot: "#0891b2", label: "Coupling — outgoing vs incoming, coloured by instability",
+    metrics: ["fan_out", "fan_in", "instability"], kloc: [false, false, false], log: false },
+  { dot: "#d97706", label: "Instability — Martin's I = Ce/(Ce+Ca)",
+    metrics: ["bytes", "instability", "fan_in"], kloc: [false, false, false], log: false },
+  { dot: "#db2777", label: "Churn vs. team — commits per KLOC against committers",
+    metrics: ["lines", "commits", "committers"], kloc: [false, true, false], log: false },
+  { dot: "#4b5563", label: "Plain size — bytes, lines, complexity",
+    metrics: ["bytes", "lines", "cognitive_complexity"], kloc: [false, false, false], log: false },
+  { dot: "#4f46e5", label: "Dependencies — who is depended on, who depends",
+    metrics: ["bytes", "fan_in", "fan_out"], kloc: [false, false, false], log: false },
+];
+
+function applyPreset(preset) {
+  // Clear the mutual lock-out first: the target metrics may still be greyed out by
+  // whatever the other two dropdowns hold right now.
+  for (const knob of METRIC_KNOBS) for (const opt of knob.select.options) opt.disabled = false;
+  METRIC_KNOBS.forEach((knob, i) => {
+    knob.select.value = preset.metrics[i];
+    if (!knob.kloc) return;
+    knob.kloc.disabled = false;
+    knob.kloc.checked = preset.kloc[i];
+    klocIntent.set(knob.kloc, preset.kloc[i]);     // and remember it as the manual choice
+  });
+  syncMetricOptions();
+  syncKlocChecks();
+  colorLogOverrides.set(colorMetricKey(), preset.log);
+  syncColorLogCheck();
+  markActivePreset();
   dismissIntro();
   rebuildCity();
 }
 
-areaSelect.addEventListener("change", onMetricChange);
-heightSelect.addEventListener("change", onMetricChange);
-colorSelect.addEventListener("change", onMetricChange);
-if (colorScaleSelect) colorScaleSelect.addEventListener("change", onMetricChange);
+// A bubble lights up when the panel happens to show exactly its reading — after a
+// preset click, but equally after you land on the same combination by hand.
+function presetMatches(preset) {
+  return METRIC_KNOBS.every((knob, i) =>
+    knob.select.value === preset.metrics[i] &&
+    (!knob.kloc || knob.kloc.checked === (preset.kloc[i] && !knob.kloc.disabled))
+  ) && (!colorLogCheck || colorLogCheck.checked === preset.log);
+}
+
+const presetButtons = [];
+function markActivePreset() {
+  presetButtons.forEach((btn, i) => btn.classList.toggle("on", presetMatches(PRESETS[i])));
+}
+
+const presetsRow = document.getElementById("presets");
+if (presetsRow) {
+  PRESETS.forEach((preset) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "presetDot";
+    btn.style.background = preset.dot;
+    btn.style.color = preset.dot;                  // the .on ring picks this up as currentColor
+    btn.title = preset.label;
+    btn.setAttribute("aria-label", preset.label);
+    btn.addEventListener("click", () => applyPreset(preset));
+    presetsRow.appendChild(btn);
+    presetButtons.push(btn);
+  });
+}
+
+for (const knob of METRIC_KNOBS) {
+  knob.select.addEventListener("change", onMetricChange);
+  if (knob.kloc) knob.kloc.addEventListener("change", onMetricChange);
+}
+if (colorLogCheck) colorLogCheck.addEventListener("change", () => {
+  colorLogOverrides.set(colorMetricKey(), colorLogCheck.checked);
+  markActivePreset();
+  dismissIntro();
+  rebuildCity();                 // not onMetricChange: that would re-sync the tick away
+});
+syncKlocChecks();                // boot with /kloc greyed out where it makes no sense
+syncColorLogCheck();             // ...the ramp the initial metric wants
+syncMetricOptions();             // ...and the three metrics locked out of each other
+markActivePreset();              // ...and the bubble the initial reading belongs to
 viewSelect.addEventListener("change", () => {
   dismissIntro();
   scopePath = "";              // class / package / module hierarchies differ — reset the drill scope
@@ -1978,6 +2322,11 @@ positionBreadcrumb();
 window.addEventListener("resize", positionBreadcrumb);
 
 rebuildCity();
+frameCity();   // open on the whole city, not on a hard-coded viewpoint
+
+// Handle for screenshot/e2e drivers: everything here is module-scoped, so an
+// automated camera pose has no way in otherwise.
+window.codecity = { scene, camera, controls, frameCity, rebuildCity };
 
 function animate() {
   controls.update();
