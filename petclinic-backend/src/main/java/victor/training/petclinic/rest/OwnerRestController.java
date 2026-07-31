@@ -36,6 +36,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -68,10 +69,24 @@ public class OwnerRestController {
             schema = @Schema(implementation = OwnerPageDto.class),
             examples = @ExampleObject(name = "sample", value = ApiExamples.OWNERS)))
     @GetMapping(produces = "application/json")
-    public OwnerPageDto listOwners(@RequestParam(name = "lastName", defaultValue = "") String lastName,
-                                    @RequestParam(name = "page", defaultValue = "0") int page,
-                                    @RequestParam(name = "size", defaultValue = "10") int size,
-                                    @RequestParam(name = "sort", required = false) String sort) {
+    public OwnerPageDto listOwners(
+        @Parameter(description = "Last name prefix to filter by.")
+        @RequestParam(name = "lastName", defaultValue = "") String lastName,
+
+        @Parameter(description = "0-based page index; negative values are clamped to 0.")
+        @RequestParam(name = "page", defaultValue = "0") int page,
+
+        // No defaultValue on the @Schema: springdoc renders allowableValues as *string* enum
+        // entries, and a numeric `default: 10` next to them fails `spectral lint`.
+        @Parameter(description = "Rows per page; defaults to 10. Any other value falls back to 10.",
+            schema = @Schema(type = "integer", format = "int32", allowableValues = {"5", "10", "20"}))
+        @RequestParam(name = "size", defaultValue = "10") int size,
+
+        @Parameter(description = "Sort key and direction; an unsupported key silently falls back to name,asc.",
+            schema = @Schema(type = "string",
+                allowableValues = {"name,asc", "name,desc", "city,asc", "city,desc"},
+                defaultValue = "name,asc"))
+        @RequestParam(name = "sort", defaultValue = "name,asc") String sort) {
         Pageable pageable = ownerPageableFactory.toPageable(page, size, sort);
         Page<Owner> owners = ownerRepository.findByLastNameStartingWith(lastName, pageable);
         return ownerMapper.toOwnerPageDto(owners);

@@ -189,31 +189,46 @@ paths:
     get:
       operationId: listOwners
       parameters:
-      - in: query
+      - description: Last name prefix to filter by.
+        in: query
         name: lastName
         required: false
         schema:
           type: string
           default: ""
-      - in: query
+      - description: 0-based page index; negative values are clamped to 0.
+        in: query
         name: page
         required: false
         schema:
           type: integer
           format: int32
           default: 0
-      - in: query
+      - description: Rows per page; defaults to 10. Any other value falls back to
+          10.
+        in: query
         name: size
         required: false
         schema:
           type: integer
           format: int32
-          default: 10
-      - in: query
+          enum:
+          - "5"
+          - "10"
+          - "20"
+      - description: "Sort key and direction; an unsupported key silently falls back\
+          \ to name,asc."
+        in: query
         name: sort
         required: false
         schema:
           type: string
+          default: "name,asc"
+          enum:
+          - "name,asc"
+          - "name,desc"
+          - "city,asc"
+          - "city,desc"
       responses:
         "200":
           content:

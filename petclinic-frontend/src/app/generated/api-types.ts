@@ -585,10 +585,14 @@ export interface operations {
   listOwners: {
     parameters: {
       query?: {
+        /** @description Last name prefix to filter by. */
         lastName?: string;
+        /** @description 0-based page index; negative values are clamped to 0. */
         page?: number;
-        size?: number;
-        sort?: string;
+        /** @description Rows per page; defaults to 10. Any other value falls back to 10. */
+        size?: 5 | 10 | 20;
+        /** @description Sort key and direction; an unsupported key silently falls back to name,asc. */
+        sort?: "name,asc" | "name,desc" | "city,asc" | "city,desc";
       };
     };
     responses: {
