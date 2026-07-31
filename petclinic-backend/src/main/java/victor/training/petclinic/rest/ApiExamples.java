@@ -20,51 +20,51 @@ public final class ApiExamples {
     }
 
     public static final String VETS = """
-        [
-          { "id": 1, "firstName": "James", "lastName": "Carter", "specialties": [] },
-          { "id": 2, "firstName": "Helen", "lastName": "Leary",
-            "specialties": [ { "id": 1, "name": "radiology", "description": "x-rays and imaging" } ] },
-          { "id": 3, "firstName": "Linda", "lastName": "Douglas",
-            "specialties": [ { "id": 2, "name": "surgery", "description": "operations" },
-                             { "id": 3, "name": "dentistry", "description": "teeth" } ] }
-        ]""";
+            [
+              { "id": 1, "firstName": "James", "lastName": "Carter", "specialties": [] },
+              { "id": 2, "firstName": "Helen", "lastName": "Leary",
+                "specialties": [ { "id": 1, "name": "radiology", "description": "x-rays and imaging" } ] },
+              { "id": 3, "firstName": "Linda", "lastName": "Douglas",
+                "specialties": [ { "id": 2, "name": "surgery", "description": "operations" },
+                                 { "id": 3, "name": "dentistry", "description": "teeth" } ] }
+            ]""";
 
     public static final String OWNERS = """
-        [
-          { "id": 1, "firstName": "George", "lastName": "Franklin", "address": "110 W. Liberty St.",
-            "city": "Madison", "telephone": "6085551023",
-            "pets": [ { "id": 1, "name": "Leo", "birthDate": "2010-09-07",
-                        "type": { "id": 1, "name": "cat" }, "ownerId": 1, "visits": [] } ] },
-          { "id": 2, "firstName": "Betty", "lastName": "Davis", "address": "638 Cardinal Ave.",
-            "city": "Sun Prairie", "telephone": "6085551749", "pets": [] }
-        ]""";
+            [
+              { "id": 1, "firstName": "George", "lastName": "Franklin", "address": "110 W. Liberty St.",
+                "city": "Madison", "telephone": "6085551023",
+                "pets": [ { "id": 1, "name": "Leo", "birthDate": "2010-09-07",
+                            "type": { "id": 1, "name": "cat" }, "ownerId": 1, "visits": [] } ] },
+              { "id": 2, "firstName": "Betty", "lastName": "Davis", "address": "638 Cardinal Ave.",
+                "city": "Sun Prairie", "telephone": "6085551749", "pets": [] }
+            ]""";
 
     public static final String PETS = """
-        [
-          { "id": 1, "name": "Leo", "birthDate": "2010-09-07", "type": { "id": 1, "name": "cat" },
-            "ownerId": 1, "visits": [] },
-          { "id": 2, "name": "Basil", "birthDate": "2012-08-06", "type": { "id": 2, "name": "hamster" },
-            "ownerId": 2,
-            "visits": [ { "id": 1, "date": "2013-01-01", "description": "rabies shot", "petId": 2 } ] }
-        ]""";
+            [
+              { "id": 1, "name": "Leo", "birthDate": "2010-09-07", "type": { "id": 1, "name": "cat" },
+                "ownerId": 1, "visits": [] },
+              { "id": 2, "name": "Basil", "birthDate": "2012-08-06", "type": { "id": 2, "name": "hamster" },
+                "ownerId": 2,
+                "visits": [ { "id": 1, "date": "2013-01-01", "description": "rabies shot", "petId": 2 } ] }
+            ]""";
 
     public static final String VISITS = """
-        [
-          { "id": 1, "date": "2013-01-01", "description": "rabies shot", "petId": 7 },
-          { "id": 2, "date": "2013-01-02", "description": "annual checkup", "petId": 8 }
-        ]""";
+            [
+              { "id": 1, "date": "2013-01-01", "description": "rabies shot", "petId": 7 },
+              { "id": 2, "date": "2013-01-02", "description": "annual checkup", "petId": 8 }
+            ]""";
 
     public static final String SPECIALTIES = """
-        [
-          { "id": 1, "name": "radiology", "description": "x-rays, broken bones, imaging" },
-          { "id": 2, "name": "surgery", "description": "operations, spaying, neutering" },
-          { "id": 3, "name": "dentistry", "description": "teeth cleaning, extractions" }
-        ]""";
+            [
+              { "id": 1, "name": "radiology", "description": "x-rays, broken bones, imaging" },
+              { "id": 2, "name": "surgery", "description": "operations, spaying, neutering" },
+              { "id": 3, "name": "dentistry", "description": "teeth cleaning, extractions" }
+            ]""";
 
     public static final String PET_TYPES = """
-        [
-          { "id": 1, "name": "cat" },
-          { "id": 2, "name": "dog" },
-          { "id": 3, "name": "hamster" }
-        ]""";
+            [
+              { "id": 1, "name": "cat" },
+              { "id": 2, "name": "dog" },
+              { "id": 3, "name": "hamster" }
+            ]""";
 }

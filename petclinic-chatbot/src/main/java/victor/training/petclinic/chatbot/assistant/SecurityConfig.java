@@ -34,42 +34,42 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @EnableWebSecurity
 class SecurityConfig {
 
-  @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    return http
-        .csrf(csrf -> csrf.disable())
-        .httpBasic(httpBasic -> httpBasic.disable())
-        .formLogin(formLogin -> formLogin.disable())
-        // Stateless: identity comes from the Bearer token on every request, no server session.
-        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        // Only the static page + its assets load without a token (the browser fetches them before it
-        // can present one). Everything else — notably /assistant — still requires the token.
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/", "/index.html", "/*.css", "/*.js").permitAll()
-            // Actuator open for scraping (demo): Prometheus pulls /actuator/prometheus without a JWT.
-            .requestMatchers("/actuator/**").permitAll()
-            .anyRequest().authenticated())
-        .addFilterBefore(new BearerAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-        .build();
-  }
-
-  /**
-   * Decodes the {@code Authorization: Bearer <jwt>} header into an {@link OwnerJwtPrincipal} and, when
-   * present, authenticates the request with it. We trust the (unverified) token in this demo. When the
-   * header is absent or unparseable, the request stays unauthenticated -> 401 for protected paths.
-   */
-  static class BearerAuthenticationFilter extends OncePerRequestFilter {
-    @Override
-    protected void doFilterInternal(
-        HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-        throws ServletException, IOException {
-      String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-      OwnerJwtPrincipal owner = OwnerJwtPrincipal.fromBearerHeader(header);
-      if (owner != null) {
-        var auth = new UsernamePasswordAuthenticationToken(owner, null, List.of());
-        SecurityContextHolder.getContext().setAuthentication(auth);
-      }
-      chain.doFilter(request, response);
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf(csrf -> csrf.disable())
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .formLogin(formLogin -> formLogin.disable())
+                // Stateless: identity comes from the Bearer token on every request, no server session.
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Only the static page + its assets load without a token (the browser fetches them before it
+                // can present one). Everything else — notably /assistant — still requires the token.
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/index.html", "/*.css", "/*.js").permitAll()
+                        // Actuator open for scraping (demo): Prometheus pulls /actuator/prometheus without a JWT.
+                        .requestMatchers("/actuator/**").permitAll()
+                        .anyRequest().authenticated())
+                .addFilterBefore(new BearerAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
-  }
+
+    /**
+     * Decodes the {@code Authorization: Bearer <jwt>} header into an {@link OwnerJwtPrincipal} and, when
+     * present, authenticates the request with it. We trust the (unverified) token in this demo. When the
+     * header is absent or unparseable, the request stays unauthenticated -> 401 for protected paths.
+     */
+    static class BearerAuthenticationFilter extends OncePerRequestFilter {
+        @Override
+        protected void doFilterInternal(
+                HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+                throws ServletException, IOException {
+            String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+            OwnerJwtPrincipal owner = OwnerJwtPrincipal.fromBearerHeader(header);
+            if (owner != null) {
+                var auth = new UsernamePasswordAuthenticationToken(owner, null, List.of());
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+            chain.doFilter(request, response);
+        }
+    }
 }

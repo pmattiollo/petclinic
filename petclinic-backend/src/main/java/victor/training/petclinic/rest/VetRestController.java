@@ -38,16 +38,16 @@ public class VetRestController {
 
     @GetMapping
     @ApiResponse(responseCode = "200", description = "OK",
-        content = @Content(mediaType = "application/json",
-            array = @ArraySchema(schema = @Schema(implementation = VetDto.class)),
-            examples = @ExampleObject(name = "sample", value = ApiExamples.VETS)))
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = VetDto.class)),
+                    examples = @ExampleObject(name = "sample", value = ApiExamples.VETS)))
     public List<VetDto> listVets() {
         List<Vet> allVets = vetRepository.findAll();
         return vetMapper.toVetDtos(allVets);
     }
 
     @GetMapping("{vetId}")
-    public VetDto getVet(@PathVariable int vetId)  {
+    public VetDto getVet(@PathVariable int vetId) {
         Vet vet = vetRepository.findById(vetId).orElseThrow();
         return vetMapper.toVetDto(vet);
     }
@@ -57,13 +57,12 @@ public class VetRestController {
         Vet vet = vetMapper.toVet(vetDto);
         updateSpecialties(vet);
         URI createdVetUri = UriComponentsBuilder.fromPath("/api/vets/{id}")
-            .buildAndExpand(vet.getId()).toUri();
+                .buildAndExpand(vet.getId()).toUri();
         return ResponseEntity.created(createdVetUri).build();
     }
 
-
     @PutMapping("{vetId}")
-    public void updateVet(@PathVariable int vetId, @RequestBody VetDto vetDto)  {
+    public void updateVet(@PathVariable int vetId, @RequestBody VetDto vetDto) {
         Vet currentVet = vetRepository.findById(vetId).orElseThrow();
         currentVet.setFirstName(vetDto.getFirstName());
         currentVet.setLastName(vetDto.getLastName());
@@ -75,8 +74,9 @@ public class VetRestController {
     }
 
     private void updateSpecialties(Vet currentVet) {
-        if(currentVet.getNrOfSpecialties() > 0){
-            Set<String> names = currentVet.getSpecialties().stream().map(Specialty::getName).collect(Collectors.toSet());
+        if (currentVet.getNrOfSpecialties() > 0) {
+            Set<String> names = currentVet.getSpecialties().stream().map(Specialty::getName)
+                    .collect(Collectors.toSet());
             List<Specialty> vetSpecialities = specialtyRepository.findSpecialtiesByNameIn(names);
             currentVet.setSpecialties(vetSpecialities);
         }

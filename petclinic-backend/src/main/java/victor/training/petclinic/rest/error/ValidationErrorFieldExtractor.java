@@ -8,11 +8,13 @@ import java.util.List;
 
 public final class ValidationErrorFieldExtractor {
 
-    private ValidationErrorFieldExtractor() {}
+    private ValidationErrorFieldExtractor() {
+    }
 
     public static List<String> extract(BindingResult bindingResult) {
         List<String> result = new ArrayList<>();
-        if (bindingResult == null) return result;
+        if (bindingResult == null)
+            return result;
         for (FieldError fe : bindingResult.getFieldErrors()) {
             String field = humanizePath(fe.getField());
             String message = fe.getDefaultMessage() == null ? "" : fe.getDefaultMessage().trim();
@@ -36,18 +38,22 @@ public final class ValidationErrorFieldExtractor {
     }
 
     private static String humanizePath(String path) {
-        if (path == null || path.isEmpty()) return "Value";
+        if (path == null || path.isEmpty())
+            return "Value";
         String single = path.replaceAll("([a-z])([A-Z])", "$1 $2");
         single = single.replace('.', ' ').trim();
-        if (single.isEmpty()) return "Value";
+        if (single.isEmpty())
+            return "Value";
         String[] parts = single.split("\\s+");
-        for (int i = 0; i < parts.length; i++) parts[i] = parts[i].toLowerCase();
+        for (int i = 0; i < parts.length; i++)
+            parts[i] = parts[i].toLowerCase();
         parts[0] = Character.toUpperCase(parts[0].charAt(0)) + (parts[0].length() > 1 ? parts[0].substring(1) : "");
         return String.join(" ", parts);
     }
 
     private static String capitalizeFirst(String s) {
-        if (s == null || s.isEmpty()) return s;
+        if (s == null || s.isEmpty())
+            return s;
         return Character.toUpperCase(s.charAt(0)) + (s.length() > 1 ? s.substring(1) : "");
     }
 }

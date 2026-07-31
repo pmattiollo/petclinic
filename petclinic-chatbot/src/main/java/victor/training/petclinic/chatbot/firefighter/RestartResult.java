@@ -8,11 +8,11 @@ package victor.training.petclinic.chatbot.firefighter;
  */
 public record RestartResult(Service service, boolean accepted, String reason, boolean escalationTriggered) {
 
-  static RestartResult accepted(Service service, String reason, boolean escalationTriggered) {
-    return new RestartResult(service, true, reason, escalationTriggered);
-  }
+    static RestartResult accepted(Service service, String reason, boolean escalationTriggered) {
+        return new RestartResult(service, true, reason, escalationTriggered);
+    }
 
-  static RestartResult refused(Service service, String reason) {
-    return new RestartResult(service, false, reason, false);
-  }
+    static RestartResult refused(Service service, String reason) {
+        return new RestartResult(service, false, reason, false);
+    }
 }

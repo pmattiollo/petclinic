@@ -31,8 +31,8 @@ public class ValidationErrorRenderingTest {
         mockMvc.perform(post("/api/owners")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.errors").exists())
-            .andExpect(jsonPath("$.errors", hasSize(2)));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors").exists())
+                .andExpect(jsonPath("$.errors", hasSize(2)));
     }
 }

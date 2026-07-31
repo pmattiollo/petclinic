@@ -9,16 +9,16 @@ package victor.training.petclinic.chatbot.firefighter;
  */
 public interface ProcessControl {
 
-  /**
-   * Force-kill whatever process is listening on {@code port}.
-   *
-   * @return true if a process was found and killed, false if the port was already free.
-   */
-  boolean kill(int port);
+    /**
+     * Force-kill whatever process is listening on {@code port}.
+     *
+     * @return true if a process was found and killed, false if the port was already free.
+     */
+    boolean kill(int port);
 
-  /**
-   * Launch a start-*.sh {@code script} (relative to the repo root) in the background, detached,
-   * so it outlives this request.
-   */
-  void start(String script);
+    /**
+     * Launch a start-*.sh {@code script} (relative to the repo root) in the background, detached,
+     * so it outlives this request.
+     */
+    void start(String script);
 }

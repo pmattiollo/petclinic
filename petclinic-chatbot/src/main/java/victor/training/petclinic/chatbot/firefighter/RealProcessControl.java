@@ -29,59 +29,59 @@ import org.springframework.stereotype.Component;
 @Component
 public class RealProcessControl implements ProcessControl {
 
-  private final Path repoRoot;
+    private final Path repoRoot;
 
-  public RealProcessControl(@Value("${firefighter.repo-root:..}") String repoRoot) {
-    this.repoRoot = Paths.get(repoRoot).toAbsolutePath().normalize();
-  }
-
-  @Override
-  public boolean kill(int port) {
-    try {
-      // Resolve PID(s) on the port. lsof prints one PID per line; empty output -> port already free.
-      Process lsof = new ProcessBuilder("lsof", "-ti", "tcp:" + port)
-          .redirectErrorStream(true)
-          .start();
-      String pids = new String(lsof.getInputStream().readAllBytes()).trim();
-      lsof.waitFor(5, TimeUnit.SECONDS);
-      if (pids.isEmpty()) {
-        log.info("🚒 nothing listening on :{} — nothing to kill", port);
-        return false;
-      }
-      for (String pid : pids.split("\\s+")) {
-        log.warn("🚒 kill -9 {} (was on :{})", pid, port);
-        new ProcessBuilder("kill", "-9", pid).start().waitFor(5, TimeUnit.SECONDS);
-      }
-      return true;
-    } catch (IOException e) {
-      log.error("🚒 failed to kill process on :{}", port, e);
-      return false;
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      return false;
+    public RealProcessControl(@Value("${firefighter.repo-root:..}") String repoRoot) {
+        this.repoRoot = Paths.get(repoRoot).toAbsolutePath().normalize();
     }
-  }
 
-  @Override
-  public void start(String script) {
-    try {
-      File root = repoRoot.toFile();
-      // nohup … & detached: ignore stdin, redirect stdout/stderr to a log, survive JVM exit.
-      File logFile = new File(root, "firefighter-" + sanitize(script) + ".log");
-      log.warn("🚒 launching {} detached (cwd={}, log={})", script, root, logFile);
-      new ProcessBuilder("nohup", "bash", script)
-          .directory(root)
-          .redirectOutput(ProcessBuilder.Redirect.appendTo(logFile))
-          .redirectError(ProcessBuilder.Redirect.appendTo(logFile))
-          .redirectInput(new File("/dev/null"))
-          .start();
-      // We intentionally do NOT wait — the script is long-running and must keep running detached.
-    } catch (IOException e) {
-      log.error("🚒 failed to launch {}", script, e);
+    @Override
+    public boolean kill(int port) {
+        try {
+            // Resolve PID(s) on the port. lsof prints one PID per line; empty output -> port already free.
+            Process lsof = new ProcessBuilder("lsof", "-ti", "tcp:" + port)
+                    .redirectErrorStream(true)
+                    .start();
+            String pids = new String(lsof.getInputStream().readAllBytes()).trim();
+            lsof.waitFor(5, TimeUnit.SECONDS);
+            if (pids.isEmpty()) {
+                log.info("🚒 nothing listening on :{} — nothing to kill", port);
+                return false;
+            }
+            for (String pid : pids.split("\\s+")) {
+                log.warn("🚒 kill -9 {} (was on :{})", pid, port);
+                new ProcessBuilder("kill", "-9", pid).start().waitFor(5, TimeUnit.SECONDS);
+            }
+            return true;
+        } catch (IOException e) {
+            log.error("🚒 failed to kill process on :{}", port, e);
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
-  }
 
-  private String sanitize(String script) {
-    return script.replaceAll("[^a-zA-Z0-9._-]", "_");
-  }
+    @Override
+    public void start(String script) {
+        try {
+            File root = repoRoot.toFile();
+            // nohup … & detached: ignore stdin, redirect stdout/stderr to a log, survive JVM exit.
+            File logFile = new File(root, "firefighter-" + sanitize(script) + ".log");
+            log.warn("🚒 launching {} detached (cwd={}, log={})", script, root, logFile);
+            new ProcessBuilder("nohup", "bash", script)
+                    .directory(root)
+                    .redirectOutput(ProcessBuilder.Redirect.appendTo(logFile))
+                    .redirectError(ProcessBuilder.Redirect.appendTo(logFile))
+                    .redirectInput(new File("/dev/null"))
+                    .start();
+            // We intentionally do NOT wait — the script is long-running and must keep running detached.
+        } catch (IOException e) {
+            log.error("🚒 failed to launch {}", script, e);
+        }
+    }
+
+    private String sanitize(String script) {
+        return script.replaceAll("[^a-zA-Z0-9._-]", "_");
+    }
 }

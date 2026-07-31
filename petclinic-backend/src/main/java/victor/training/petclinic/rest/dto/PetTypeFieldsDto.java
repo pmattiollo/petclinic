@@ -6,7 +6,8 @@ import lombok.Data;
 
 @Data
 public class PetTypeFieldsDto {
-    @NotNull @Size(min = 1, max = 80)
+    @NotNull
+    @Size(min = 1, max = 80)
     @Schema(example = "cat", description = "The name of the pet type.")
     private String name;
 }

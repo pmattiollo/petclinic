@@ -36,18 +36,20 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class DomainModelExtractorTest {
 
-    private static final String BASE_PKG         = "victor.training.petclinic";
+    private static final String BASE_PKG = "victor.training.petclinic";
     private static final String DOMAIN_MODEL_PKG = BASE_PKG + ".domain";
-    private static final Path   GENERATED_DIR    = Paths.get("docs/generated");
+    private static final Path GENERATED_DIR = Paths.get("docs/generated");
 
-    private static final String ONE  = "1";
+    private static final String ONE = "1";
     private static final String MANY = "0..*";
 
     /** A field that points at another domain class. */
-    private record Ref(Class<?> owner, Class<?> target, boolean many, String field) {}
+    private record Ref(Class<?> owner, Class<?> target, boolean many, String field) {
+    }
 
     private record Association(String left, String leftCardinality,
-                               String right, String rightCardinality, String label) {}
+            String right, String rightCardinality, String label) {
+    }
 
     @Test
     void generateDomainModelDiagram() throws IOException {
@@ -79,9 +81,9 @@ class DomainModelExtractorTest {
 
         for (Association a : associations) {
             sb.append(a.left())
-              .append(" \"").append(a.leftCardinality()).append("\" -- \"")
-              .append(a.rightCardinality()).append("\" ")
-              .append(a.right());
+                    .append(" \"").append(a.leftCardinality()).append("\" -- \"")
+                    .append(a.rightCardinality()).append("\" ")
+                    .append(a.right());
             if (a.label() != null && !a.label().isBlank()) {
                 sb.append(" : ").append(a.label());
             }
@@ -98,14 +100,14 @@ class DomainModelExtractorTest {
 
     private List<Class<?>> discoverDomainClasses() {
         JavaClasses classes = new ClassFileImporter()
-            .withImportOption(new ImportOption.DoNotIncludeTests())
-            .importPackages(DOMAIN_MODEL_PKG);
+                .withImportOption(new ImportOption.DoNotIncludeTests())
+                .importPackages(DOMAIN_MODEL_PKG);
         return classes.stream()
-            .filter(c -> c.getPackageName().equals(DOMAIN_MODEL_PKG))
-            .filter(c -> !c.isAnonymousClass() && !c.isInnerClass())
-            .<Class<?>>map(JavaClass::reflect)
-            .sorted(Comparator.comparing(Class::getSimpleName))
-            .toList();
+                .filter(c -> c.getPackageName().equals(DOMAIN_MODEL_PKG))
+                .filter(c -> !c.isAnonymousClass() && !c.isInnerClass())
+                .<Class<?>>map(JavaClass::reflect)
+                .sorted(Comparator.comparing(Class::getSimpleName))
+                .toList();
     }
 
     // ── Associations: derived from field types alone, no annotations ───────────
@@ -117,11 +119,13 @@ class DomainModelExtractorTest {
         Map<String, List<Ref>> byPair = new LinkedHashMap<>();
         for (Class<?> cls : entities) {
             for (Field f : cls.getDeclaredFields()) {
-                if (isSkippable(f)) continue;
+                if (isSkippable(f))
+                    continue;
                 Class<?> target = referencedDomainClass(f, domain);
-                if (target == null || target.equals(cls)) continue;   // skip self-references
+                if (target == null || target.equals(cls))
+                    continue; // skip self-references
                 byPair.computeIfAbsent(pairKey(cls, target), k -> new ArrayList<>())
-                      .add(new Ref(cls, target, isCollection(f.getType()), f.getName()));
+                        .add(new Ref(cls, target, isCollection(f.getType()), f.getName()));
             }
         }
 
@@ -142,40 +146,42 @@ class DomainModelExtractorTest {
         Ref aToB = directed(refs, a, b);
         Ref bToA = directed(refs, b, a);
 
-        String aPerB = countPerOne(bToA, aToB);   // how many A relate to one B
-        String bPerA = countPerOne(aToB, bToA);   // how many B relate to one A
+        String aPerB = countPerOne(bToA, aToB); // how many A relate to one B
+        String bPerA = countPerOne(aToB, bToA); // how many B relate to one A
 
         // Put the parent ("1" side with a "0..*" child) on the left; otherwise keep A left.
         boolean bIsParent = aPerB.equals(MANY) && bPerA.equals(ONE);
-        Class<?> left  = bIsParent ? b : a;
+        Class<?> left = bIsParent ? b : a;
         Class<?> right = bIsParent ? a : b;
-        String leftMult  = left.equals(a) ? aPerB : bPerA;   // count of LEFT per one RIGHT
-        String rightMult = left.equals(a) ? bPerA : aPerB;   // count of RIGHT per one LEFT
+        String leftMult = left.equals(a) ? aPerB : bPerA; // count of LEFT per one RIGHT
+        String rightMult = left.equals(a) ? bPerA : aPerB; // count of RIGHT per one LEFT
 
         return new Association(left.getSimpleName(), leftMult,
-                               right.getSimpleName(), rightMult, chooseLabel(refs));
+                right.getSimpleName(), rightMult, chooseLabel(refs));
     }
 
     /** Multiplicity at one end: read the counterpart's field to us, else a reverse default. */
     private String countPerOne(Ref counterpartToThis, Ref thisToCounterpart) {
-        if (counterpartToThis != null) return counterpartToThis.many() ? MANY : ONE;
-        if (thisToCounterpart != null) return thisToCounterpart.many() ? ONE : MANY;
+        if (counterpartToThis != null)
+            return counterpartToThis.many() ? MANY : ONE;
+        if (thisToCounterpart != null)
+            return thisToCounterpart.many() ? ONE : MANY;
         return ONE;
     }
 
     private Ref directed(List<Ref> refs, Class<?> from, Class<?> to) {
         return refs.stream()
-            .filter(r -> r.owner().equals(from) && r.target().equals(to))
-            .findFirst().orElse(null);
+                .filter(r -> r.owner().equals(from) && r.target().equals(to))
+                .findFirst().orElse(null);
     }
 
     /** Label the edge with a field name, preferring the to-one side (owner, pet, user…). */
     private String chooseLabel(List<Ref> refs) {
         return refs.stream()
-            .sorted(Comparator.comparing(Ref::many)                      // to-one (false) first
-                              .thenComparing(r -> r.owner().getSimpleName()))
-            .map(Ref::field)
-            .findFirst().orElse(null);
+                .sorted(Comparator.comparing(Ref::many) // to-one (false) first
+                        .thenComparing(r -> r.owner().getSimpleName()))
+                .map(Ref::field)
+                .findFirst().orElse(null);
     }
 
     // ── Members: every non-static field that is not itself an association ──────
@@ -190,8 +196,10 @@ class DomainModelExtractorTest {
             return lines;
         }
         for (Field f : cls.getDeclaredFields()) {
-            if (isSkippable(f)) continue;
-            if (referencedDomainClass(f, domain) != null) continue;   // association, not attribute
+            if (isSkippable(f))
+                continue;
+            if (referencedDomainClass(f, domain) != null)
+                continue; // association, not attribute
             lines.add(f.getName() + " : " + typeName(f.getGenericType()));
         }
         return lines;
@@ -202,10 +210,12 @@ class DomainModelExtractorTest {
     /** The domain class a field points at (directly or as a collection element), or null. */
     private Class<?> referencedDomainClass(Field field, Set<Class<?>> domain) {
         Class<?> raw = field.getType();
-        if (domain.contains(raw)) return raw;
+        if (domain.contains(raw))
+            return raw;
         if (isCollection(raw) && field.getGenericType() instanceof ParameterizedType pt) {
             for (Type arg : pt.getActualTypeArguments()) {
-                if (arg instanceof Class<?> c && domain.contains(c)) return c;
+                if (arg instanceof Class<?> c && domain.contains(c))
+                    return c;
             }
         }
         return null;
@@ -234,7 +244,8 @@ class DomainModelExtractorTest {
             StringBuilder sb = new StringBuilder(typeName(pt.getRawType())).append("<");
             Type[] args = pt.getActualTypeArguments();
             for (int i = 0; i < args.length; i++) {
-                if (i > 0) sb.append(", ");
+                if (i > 0)
+                    sb.append(", ");
                 sb.append(typeName(args[i]));
             }
             return sb.append(">").toString();

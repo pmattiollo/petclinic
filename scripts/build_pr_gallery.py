@@ -81,8 +81,8 @@ def build(directory: Path) -> str:
         parts.append("<p>No architecture diagram changed on this branch.</p>")
     else:
         parts.append('<p class="legend"><strong>Red</strong> = added · '
-                     "<strong>Red struck-through</strong> = removed. "
-                     "Each image is the <em>delta</em>, not the snapshot.</p>")
+                    "<strong>Red struck-through</strong> = removed. "
+                    "Each image is the <em>delta</em>, not the snapshot.</p>")
         for svg in svgs:
             stem = svg.name[: -len(".diff.svg")]
             parts += [

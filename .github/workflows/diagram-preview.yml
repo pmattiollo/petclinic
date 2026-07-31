@@ -91,7 +91,7 @@ jobs:
         run: |
           # One comment per PR, edited in place — repeated pushes must not spam the thread.
           id=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
-                 --jq 'map(select(.body | startswith("<!-- diagram-preview -->"))) | .[0].id // empty')
+                --jq 'map(select(.body | startswith("<!-- diagram-preview -->"))) | .[0].id // empty')
           if [ -n "$id" ]; then
             gh api -X PATCH "repos/$REPO/issues/comments/$id" -F body=@body.md --silent
             echo "Updated comment $id"

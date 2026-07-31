@@ -8,7 +8,8 @@ import lombok.Data;
 public class SpecialtyDto {
 
     @Min(0)
-    @Schema(accessMode = Schema.AccessMode.READ_ONLY, example = "1", description = "The ID of the specialty.", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY, example = "1", description = "The ID of the specialty.",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer id;
 
     @NotNull
@@ -18,6 +19,6 @@ public class SpecialtyDto {
 
     @Size(max = 4000)
     @Schema(example = "limping, broken bone, swollen leg, can't bear weight",
-        description = "The section that identifies this specialty (symptoms); vectorized into the chatbot RAG.")
+            description = "The section that identifies this specialty (symptoms); vectorized into the chatbot RAG.")
     private String description;
 }

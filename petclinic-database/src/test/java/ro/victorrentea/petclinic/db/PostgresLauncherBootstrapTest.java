@@ -20,8 +20,8 @@ class PostgresLauncherBootstrapTest {
 
             String url = "jdbc:postgresql://localhost:" + pg.getPort() + "/petclinic";
             try (Connection c = DriverManager.getConnection(url, "petclinic", "petclinic");
-                 Statement s = c.createStatement();
-                 ResultSet rs = s.executeQuery("SELECT current_user, current_database()")) {
+                    Statement s = c.createStatement();
+                    ResultSet rs = s.executeQuery("SELECT current_user, current_database()")) {
                 assertTrue(rs.next());
                 assertEquals("petclinic", rs.getString(1));
                 assertEquals("petclinic", rs.getString(2));

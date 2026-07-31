@@ -13,36 +13,34 @@ import java.util.Optional;
  * the port is what we {@code kill -9} before relaunching.
  */
 public enum Service {
-  DB("./start-database.sh", 5432, null),
-  BE("./start-backend.sh", 8080, "/actuator/health"),
-  FE("./start-frontend.sh", 4200, null),
-  OTEL("./start-grafana.sh", 3300, null);
+    DB("./start-database.sh", 5432, null), BE("./start-backend.sh", 8080, "/actuator/health"), FE("./start-frontend.sh",
+            4200, null), OTEL("./start-grafana.sh", 3300, null);
 
-  private final String script;
-  private final int port;
-  private final String healthPath;
+    private final String script;
+    private final int port;
+    private final String healthPath;
 
-  Service(String script, int port, String healthPath) {
-    this.script = script;
-    this.port = port;
-    this.healthPath = healthPath;
-  }
+    Service(String script, int port, String healthPath) {
+        this.script = script;
+        this.port = port;
+        this.healthPath = healthPath;
+    }
 
-  public String script() {
-    return script;
-  }
+    public String script() {
+        return script;
+    }
 
-  public int port() {
-    return port;
-  }
+    public int port() {
+        return port;
+    }
 
-  /** The Actuator health path if this service exposes one (BE), else empty. */
-  public Optional<String> healthPath() {
-    return Optional.ofNullable(healthPath);
-  }
+    /** The Actuator health path if this service exposes one (BE), else empty. */
+    public Optional<String> healthPath() {
+        return Optional.ofNullable(healthPath);
+    }
 
-  /** Base URL for a localhost HTTP probe against this service (e.g. {@code http://localhost:8080}). */
-  public String baseUrl() {
-    return "http://localhost:" + port;
-  }
+    /** Base URL for a localhost HTTP probe against this service (e.g. {@code http://localhost:8080}). */
+    public String baseUrl() {
+        return "http://localhost:" + port;
+    }
 }

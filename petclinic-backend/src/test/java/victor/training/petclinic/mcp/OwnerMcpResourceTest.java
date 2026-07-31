@@ -26,9 +26,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Transactional
 class OwnerMcpResourceTest {
 
-    @Autowired PetClinicMcp petClinicMcp;
-    @Autowired OwnerRepository ownerRepository;
-    @Autowired PetRepository petRepository;
+    @Autowired
+    PetClinicMcp petClinicMcp;
+    @Autowired
+    OwnerRepository ownerRepository;
+    @Autowired
+    PetRepository petRepository;
 
     @AfterEach
     void clearAuth() {
@@ -38,15 +41,15 @@ class OwnerMcpResourceTest {
     @Test
     void renders_profile_with_pets_for_authenticated_owner() {
         Pet pet = new Pet()
-            .setName("Scabbers")
-            .setBirthDate(LocalDate.of(2018, 6, 1))
-            .setType(petRepository.findPetTypes().get(0));
+                .setName("Scabbers")
+                .setBirthDate(LocalDate.of(2018, 6, 1))
+                .setType(petRepository.findPetTypes().get(0));
         Owner ron = new Owner()
-            .setFirstName("Ronald")
-            .setLastName("Weasley_TST")
-            .setAddress("The Burrow")
-            .setCity("Ottery St Catchpole")
-            .setTelephone("0119544321");
+                .setFirstName("Ronald")
+                .setLastName("Weasley_TST")
+                .setAddress("The Burrow")
+                .setCity("Ottery St Catchpole")
+                .setTelephone("0119544321");
         ron.addPet(pet);
         ownerRepository.save(ron);
         authenticateAs(ron.getId());
@@ -54,9 +57,9 @@ class OwnerMcpResourceTest {
         String profile = petClinicMcp.getOwnerProfile();
 
         assertThat(profile)
-            .contains("Ronald").contains("Weasley_TST")
-            .contains("The Burrow")
-            .contains("Scabbers");
+                .contains("Ronald").contains("Weasley_TST")
+                .contains("The Burrow")
+                .contains("Scabbers");
     }
 
     @Test
@@ -64,14 +67,14 @@ class OwnerMcpResourceTest {
         authenticateAs(999_999);
 
         assertThatThrownBy(() -> petClinicMcp.getOwnerProfile())
-            .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(IllegalStateException.class);
     }
 
     private static void authenticateAs(int ownerId) {
         var auth = new UsernamePasswordAuthenticationToken(
-            String.valueOf(ownerId),
-            null,
-            List.of(new SimpleGrantedAuthority("ROLE_MCP")));
+                String.valueOf(ownerId),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_MCP")));
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

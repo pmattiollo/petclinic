@@ -23,20 +23,17 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @AnalyzeClasses(
-    packages = "victor.training.petclinic",
-    importOptions = DoNotIncludeTests.class
-)
+        packages = "victor.training.petclinic",
+        importOptions = DoNotIncludeTests.class)
 class PackagesArchTest {
 
     private static final Path DIAGRAM = Paths.get("docs/packages.puml");
     private static final Path SOURCE_ROOT = Paths.get("src/main/java/victor/training/petclinic");
 
     @ArchTest
-    static final ArchRule adheresToDiagram =
-        classes().should(adhereToPlantUmlDiagram(
+    static final ArchRule adheresToDiagram = classes().should(adhereToPlantUmlDiagram(
             DIAGRAM,
-            consideringOnlyDependenciesInAnyPackage("..petclinic..")
-        ));
+            consideringOnlyDependenciesInAnyPackage("..petclinic..")));
 
     @Test
     void diagramPackagesMatchCodePackages() throws IOException {
@@ -44,8 +41,8 @@ class PackagesArchTest {
         Set<String> codePackages = listCodePackages();
 
         assertThat(diagramPackages)
-            .as("packages.puml stereotypes must match the actual subpackages of victor.training.petclinic exactly")
-            .isEqualTo(codePackages);
+                .as("packages.puml stereotypes must match the actual subpackages of victor.training.petclinic exactly")
+                .isEqualTo(codePackages);
     }
 
     private static Set<String> parsePackagesFromDiagram() throws IOException {
@@ -62,10 +59,10 @@ class PackagesArchTest {
     private static Set<String> listCodePackages() throws IOException {
         try (Stream<Path> paths = Files.walk(SOURCE_ROOT)) {
             return paths.filter(Files::isDirectory)
-                .filter(dir -> !dir.equals(SOURCE_ROOT))
-                .filter(PackagesArchTest::containsJavaFile)
-                .map(dir -> SOURCE_ROOT.relativize(dir).toString().replace('/', '.'))
-                .collect(Collectors.toCollection(TreeSet::new));
+                    .filter(dir -> !dir.equals(SOURCE_ROOT))
+                    .filter(PackagesArchTest::containsJavaFile)
+                    .map(dir -> SOURCE_ROOT.relativize(dir).toString().replace('/', '.'))
+                    .collect(Collectors.toCollection(TreeSet::new));
         }
     }
 

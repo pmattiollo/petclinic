@@ -20,16 +20,16 @@ import victor.training.petclinic.chatbot.triage.PetTriageAgent.TriageReport;
 @RestController
 class TriageController {
 
-  private final AgentPlatform agentPlatform;
+    private final AgentPlatform agentPlatform;
 
-  TriageController(AgentPlatform agentPlatform) {
-    this.agentPlatform = agentPlatform;
-  }
+    TriageController(AgentPlatform agentPlatform) {
+        this.agentPlatform = agentPlatform;
+    }
 
-  @GetMapping(value = "/triage", produces = "text/markdown")
-  String triage(@RequestParam String symptom) {
-    return AgentInvocation.create(agentPlatform, TriageReport.class)
-        .invoke(new OwnerSymptom(symptom))
-        .markdown();
-  }
+    @GetMapping(value = "/triage", produces = "text/markdown")
+    String triage(@RequestParam String symptom) {
+        return AgentInvocation.create(agentPlatform, TriageReport.class)
+                .invoke(new OwnerSymptom(symptom))
+                .markdown();
+    }
 }

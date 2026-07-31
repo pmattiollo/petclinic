@@ -33,9 +33,9 @@ public class PetRestController {
 
     @GetMapping(produces = "application/json")
     @ApiResponse(responseCode = "200", description = "OK",
-        content = @Content(mediaType = "application/json",
-            array = @ArraySchema(schema = @Schema(implementation = PetDto.class)),
-            examples = @ExampleObject(name = "sample", value = ApiExamples.PETS)))
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = PetDto.class)),
+                    examples = @ExampleObject(name = "sample", value = ApiExamples.PETS)))
     public List<PetDto> listPets() {
         List<Pet> allPets = petRepository.findAll();
         return petMapper.toPetsDto(allPets);
@@ -46,9 +46,9 @@ public class PetRestController {
     public void updatePet(@PathVariable int petId, @Validated @RequestBody PetDto petDto) {
         Pet currentPet = petRepository.findById(petId).orElseThrow();
         currentPet
-            .setBirthDate(petDto.getBirthDate())
-            .setName(petDto.getName())
-            .setType(petMapper.toPetType(petDto.getType()));
+                .setBirthDate(petDto.getBirthDate())
+                .setName(petDto.getName())
+                .setType(petMapper.toPetType(petDto.getType()));
     }
 
     @DeleteMapping("/{petId}")

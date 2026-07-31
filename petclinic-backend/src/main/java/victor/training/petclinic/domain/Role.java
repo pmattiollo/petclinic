@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "roles" ,uniqueConstraints = @UniqueConstraint(columnNames = {"username", "role"}))
+@Table(name = "roles", uniqueConstraints = @UniqueConstraint(columnNames = {"username", "role"}))
 @Getter
 @Setter
 public class Role {
@@ -20,7 +20,7 @@ public class Role {
     @JsonIgnore
     private User user;
 
-    @Column( name = "role")
+    @Column(name = "role")
     private String name;
 
 }

@@ -7,7 +7,7 @@ const specialtyRoutes: Routes = [
   {path: 'specialties', component: SpecialtyListComponent},
   // {path: 'specialties/add', component: SpecialtyAddComponent},
   // {path: 'specialties/:id', component: SpecialtyDetailComponent},
-   {path: 'specialties/:id/edit', component: SpecialtyEditComponent}
+  {path: 'specialties/:id/edit', component: SpecialtyEditComponent}
 ];
 
 @NgModule({

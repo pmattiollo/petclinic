@@ -21,8 +21,16 @@ def _diff():
 
 def test_parse_elements_and_members():
     d = _parse(BEFORE)
-    assert set(d.elements) == {"Owner", "Pet", "PetType", "Role",
-                               "Specialty", "User", "Vet", "Visit"}
+    assert set(d.elements) == {
+        "Owner",
+        "Pet",
+        "PetType",
+        "Role",
+        "Specialty",
+        "User",
+        "Vet",
+        "Visit",
+    }
     assert d.elements["Owner"].members[0] == "id : Integer"
     assert "email : String" not in d.elements["Owner"].members
 
@@ -83,8 +91,10 @@ def test_identical_snapshots_have_no_diff_markup():
 
 
 if __name__ == "__main__":
-    tests = sorted(n for n, v in list(globals().items())
-                   if n.startswith("test_") and callable(v))
+    tests = sorted(
+        n for n, v in list(globals().items())
+        if n.startswith("test_") and callable(v)
+    )
     for name in tests:
         globals()[name]()
         print("PASS", name)

@@ -22,28 +22,28 @@ import org.springframework.stereotype.Component;
 @Component
 class LocalTools {
 
-  /** ToolContext key under which the controller publishes the authenticated owner's email. */
-  static final String OWNER_EMAIL = "ownerEmail";
+    /** ToolContext key under which the controller publishes the authenticated owner's email. */
+    static final String OWNER_EMAIL = "ownerEmail";
 
-  @Tool(description = "Returns the current local date and time (ISO-8601, e.g. 2026-06-09T23:33). "
-      + "Call it to resolve relative times like 'now', 'in 1 hour' or 'tomorrow' — never guess the time.")
-  String currentDateTime() {
-    return LocalDateTime.now().withNano(0).toString();
-  }
-
-  @Tool(description = "Email the authenticated pet owner (e.g. a visit confirmation). "
-      + "The recipient is always the logged-in owner — do not pass an address.")
-  String sendEmail(
-      @ToolParam(description = "email subject line") String subject,
-      @ToolParam(description = "email body text") String body,
-      ToolContext toolContext) {
-    // Injected by the controller from the security principal — never supplied by the model.
-    Object to = toolContext.getContext().get(OWNER_EMAIL);
-    if (to == null || to.toString().isBlank()) {
-      return "No authenticated owner email available — cannot send.";
+    @Tool(description = "Returns the current local date and time (ISO-8601, e.g. 2026-06-09T23:33). "
+            + "Call it to resolve relative times like 'now', 'in 1 hour' or 'tomorrow' — never guess the time.")
+    String currentDateTime() {
+        return LocalDateTime.now().withNano(0).toString();
     }
-    // Demo only — no real email is sent; we just pretend and log it.
-    log.info("📧 (demo) sent email to {} — subject: \"{}\" — body: \"{}\"", to, subject, body);
-    return "Email sent to " + to;
-  }
+
+    @Tool(description = "Email the authenticated pet owner (e.g. a visit confirmation). "
+            + "The recipient is always the logged-in owner — do not pass an address.")
+    String sendEmail(
+            @ToolParam(description = "email subject line") String subject,
+            @ToolParam(description = "email body text") String body,
+            ToolContext toolContext) {
+        // Injected by the controller from the security principal — never supplied by the model.
+        Object to = toolContext.getContext().get(OWNER_EMAIL);
+        if (to == null || to.toString().isBlank()) {
+            return "No authenticated owner email available — cannot send.";
+        }
+        // Demo only — no real email is sent; we just pretend and log it.
+        log.info("📧 (demo) sent email to {} — subject: \"{}\" — body: \"{}\"", to, subject, body);
+        return "Email sent to " + to;
+    }
 }

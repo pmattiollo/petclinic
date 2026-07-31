@@ -334,17 +334,17 @@ Knowing whether the agent is *thinking* or *waiting on you* — and when the las
 turn ended — is hard because the status JSON has no live signal. Resolved in
 priority order:
 1. **Hook state (authoritative):** a `Stop` / `UserPromptSubmit` hook
-   (`~/.claude/hooks/turn-state.sh`) writes `/tmp/claude-turn-<id>.state` that
-   marks boundaries reliably for *every* storage format. While `working`, the
-   fallback "N ago" clock is kept ticking so it keeps running through the window
-   right after you hit Enter — until this turn's first cost lands.
+  (`~/.claude/hooks/turn-state.sh`) writes `/tmp/claude-turn-<id>.state` that
+  marks boundaries reliably for *every* storage format. While `working`, the
+  fallback "N ago" clock is kept ticking so it keeps running through the window
+  right after you hit Enter — until this turn's first cost lands.
 2. **Transcript fallback:** `stop_reason != "tool_use"` + no trailing user
-   message ⇒ idle; age from the last assistant `timestamp`.
+  message ⇒ idle; age from the last assistant `timestamp`.
 3. **Cost-clock heuristic:** for Claude Code 2.1.x sessions whose `<id>.jsonl`
-   path doesn't exist, turn state is inferred purely from the **cost clock** —
-   cost rises while working, flat between turns. Flat ≥ `IDLE_GRACE` (3s) ⇒ idle;
-   flat ≥ `NEW_TURN_GAP` (30s) ⇒ genuinely new turn (so a mid-turn tool pause
-   doesn't split one turn in two).
+  path doesn't exist, turn state is inferred purely from the **cost clock** —
+  cost rises while working, flat between turns. Flat ≥ `IDLE_GRACE` (3s) ⇒ idle;
+  flat ≥ `NEW_TURN_GAP` (30s) ⇒ genuinely new turn (so a mid-turn tool pause
+  doesn't split one turn in two).
 
 ### Cross-terminal quota state
 `rate_limits` is **not a live feed** — it's a cache of the headers from *that

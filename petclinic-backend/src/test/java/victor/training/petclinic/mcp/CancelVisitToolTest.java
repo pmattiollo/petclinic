@@ -29,10 +29,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Transactional
 class CancelVisitToolTest {
 
-    @Autowired PetClinicMcp petClinicMcp;
-    @Autowired OwnerRepository ownerRepository;
-    @Autowired PetRepository petRepository;
-    @Autowired VisitRepository visitRepository;
+    @Autowired
+    PetClinicMcp petClinicMcp;
+    @Autowired
+    OwnerRepository ownerRepository;
+    @Autowired
+    PetRepository petRepository;
+    @Autowired
+    VisitRepository visitRepository;
 
     @AfterEach
     void clearAuth() {
@@ -71,8 +75,8 @@ class CancelVisitToolTest {
         authenticateAs(owner.getId());
 
         assertThatThrownBy(() -> petClinicMcp.cancelVisit(LocalDate.of(2020, 1, 1)))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("must be today or in the future");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be today or in the future");
     }
 
     @Test
@@ -80,8 +84,8 @@ class CancelVisitToolTest {
         authenticateAs(999_999);
 
         assertThatThrownBy(() -> petClinicMcp.cancelVisit(LocalDate.now().plusDays(1)))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Owner not found");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Owner not found");
     }
 
     @Test
@@ -91,12 +95,12 @@ class CancelVisitToolTest {
         authenticateAs(owner.getId());
 
         String result = petClinicMcp.createVisit(pet.getId(),
-            LocalDate.now().plusDays(7), LocalTime.of(10, 30), "Test visit");
+                LocalDate.now().plusDays(7), LocalTime.of(10, 30), "Test visit");
 
         assertThat(result).contains("Created visit").contains("Whiskers");
         assertThat(visitRepository.findByPetId(pet.getId()))
-            .extracting(Visit::getDescription)
-            .contains("Test visit");
+                .extracting(Visit::getDescription)
+                .contains("Test visit");
     }
 
     @Test
@@ -108,8 +112,8 @@ class CancelVisitToolTest {
 
         assertThatThrownBy(() -> petClinicMcp.createVisit(petOfOwner2.getId(),
                 LocalDate.now().plusDays(7), LocalTime.of(10, 30), "Attempt"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("does not belong to owner");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("does not belong to owner");
     }
 
     @Test
@@ -119,8 +123,8 @@ class CancelVisitToolTest {
 
         assertThatThrownBy(() -> petClinicMcp.createVisit(999_999,
                 LocalDate.now().plusDays(7), LocalTime.of(10, 30), "Visit"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Pet not found");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Pet not found");
     }
 
     @Test
@@ -129,9 +133,10 @@ class CancelVisitToolTest {
         Pet pet = owner.getPets().get(0);
         authenticateAs(owner.getId());
 
-        assertThatThrownBy(() -> petClinicMcp.createVisit(pet.getId(), LocalDate.of(2020, 1, 1), LocalTime.of(10, 30), "Old visit"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("must be today or in the future");
+        assertThatThrownBy(() -> petClinicMcp.createVisit(pet.getId(), LocalDate.of(2020, 1, 1), LocalTime.of(10, 30),
+                "Old visit"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be today or in the future");
     }
 
     @Test
@@ -139,30 +144,30 @@ class CancelVisitToolTest {
         authenticateAs(999_999);
 
         assertThatThrownBy(() -> petClinicMcp.listVisits())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Owner not found");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Owner not found");
     }
 
     private Owner ownerWithPet() {
         Pet pet = new Pet()
-            .setName("Whiskers")
-            .setBirthDate(LocalDate.of(2022, 3, 10))
-            .setType(petRepository.findPetTypes().get(0));
+                .setName("Whiskers")
+                .setBirthDate(LocalDate.of(2022, 3, 10))
+                .setType(petRepository.findPetTypes().get(0));
         Owner owner = new Owner()
-            .setFirstName("Test")
-            .setLastName("Owner_CVT")
-            .setAddress("1 Street")
-            .setCity("TestCity")
-            .setTelephone("0000000000");
+                .setFirstName("Test")
+                .setLastName("Owner_CVT")
+                .setAddress("1 Street")
+                .setCity("TestCity")
+                .setTelephone("0000000000");
         owner.addPet(pet);
         return ownerRepository.save(owner);
     }
 
     private static void authenticateAs(int ownerId) {
         var auth = new UsernamePasswordAuthenticationToken(
-            String.valueOf(ownerId),
-            null,
-            List.of(new SimpleGrantedAuthority("ROLE_MCP")));
+                String.valueOf(ownerId),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_MCP")));
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

@@ -46,8 +46,10 @@ def url_for(source: str, fmt: str = "svg", server: str = DEFAULT_SERVER) -> str:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     ap.add_argument("puml", help="Diagram source (.puml); '-' reads stdin")
     ap.add_argument("--format", default="svg", choices=("svg", "png", "txt"),
                     help="Render format (default: svg)")

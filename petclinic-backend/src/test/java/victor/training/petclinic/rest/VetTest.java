@@ -34,7 +34,7 @@ public class VetTest {
     MockMvc mockMvc;
 
     ObjectMapper mapper = new ObjectMapper()
-        .setSerializationInclusion(JsonInclude.Include.ALWAYS);
+            .setSerializationInclusion(JsonInclude.Include.ALWAYS);
 
     @Autowired
     VetRepository vetRepository;
@@ -52,11 +52,11 @@ public class VetTest {
 
     private VetDto callGet(int vetId) throws Exception {
         String responseJson = mockMvc.perform(get("/api/vets/" + vetId))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         return mapper.readValue(responseJson, VetDto.class);
     }
 
@@ -72,7 +72,7 @@ public class VetTest {
     @Test
     void getById_notFound() throws Exception {
         mockMvc.perform(get("/api/vets/99999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -84,7 +84,7 @@ public class VetTest {
         mockMvc.perform(post("/api/vets")
                 .content(mapper.writeValueAsString(newVet))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -96,7 +96,7 @@ public class VetTest {
         mockMvc.perform(post("/api/vets")
                 .content(mapper.writeValueAsString(newVet))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -107,7 +107,7 @@ public class VetTest {
         mockMvc.perform(put("/api/vets/" + vetId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         // assert the update took place
         VetDto updated = callGet(vetId);
@@ -117,15 +117,15 @@ public class VetTest {
     @Test
     void delete_ok() throws Exception {
         mockMvc.perform(delete("/api/vets/" + vetId))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         mockMvc.perform(get("/api/vets/" + vetId))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void delete_notFound() throws Exception {
         mockMvc.perform(delete("/api/vets/9999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 }

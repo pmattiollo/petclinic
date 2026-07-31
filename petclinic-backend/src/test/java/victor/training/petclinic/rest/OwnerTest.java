@@ -51,9 +51,9 @@ public class OwnerTest {
     MockMvc mockMvc;
 
     ObjectMapper mapper = new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .setDateFormat(new SimpleDateFormat("yyyy-MM-dd"))
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            .registerModule(new JavaTimeModule())
+            .setDateFormat(new SimpleDateFormat("yyyy-MM-dd"))
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     @Autowired
     OwnerRepository ownerRepository;
@@ -94,11 +94,11 @@ public class OwnerTest {
 
     private OwnerDto callGet(int ownerId) throws Exception {
         String responseJson = mockMvc.perform(get("/api/owners/" + ownerId))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         return mapper.readValue(responseJson, OwnerDto.class);
     }
 
@@ -114,7 +114,7 @@ public class OwnerTest {
     @Test
     void getById_notFound() throws Exception {
         mockMvc.perform(get("/api/owners/99999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -122,8 +122,8 @@ public class OwnerTest {
         long before = ownerRepository.count();
 
         mockMvc.perform(get("/api/owners/count"))
-            .andExpect(status().isOk())
-            .andExpect(content().string(String.valueOf(before)));
+                .andExpect(status().isOk())
+                .andExpect(content().string(String.valueOf(before)));
     }
 
     @Test
@@ -131,8 +131,8 @@ public class OwnerTest {
         List<OwnerDto> owners = search("/api/owners");
 
         assertThat(owners)
-            .extracting(OwnerDto::getId, OwnerDto::getFirstName, OwnerDto::getLastName)
-            .contains(Assertions.tuple(ownerId, "George", "Franklin"));
+                .extracting(OwnerDto::getId, OwnerDto::getFirstName, OwnerDto::getLastName)
+                .contains(Assertions.tuple(ownerId, "George", "Franklin"));
     }
 
     @Test
@@ -144,17 +144,17 @@ public class OwnerTest {
         List<OwnerDto> owners = search("/api/owners?lastName=Java");
 
         assertThat(owners)
-            .extracting(OwnerDto::getId, OwnerDto::getLastName)
-            .contains(Assertions.tuple(owner2Id, "JavaBeans"));
+                .extracting(OwnerDto::getId, OwnerDto::getLastName)
+                .contains(Assertions.tuple(owner2Id, "JavaBeans"));
     }
 
     private List<OwnerDto> search(String uriTemplate) throws Exception {
         String responseJson = mockMvc.perform(get(uriTemplate))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
         return mapper.readValue(responseJson, new TypeReference<List<OwnerDto>>() {
         });
@@ -175,7 +175,7 @@ public class OwnerTest {
         mockMvc.perform(put("/api/owners/" + ownerId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         // assert the update took place
         OwnerDto updated = callGet(ownerId);
@@ -191,7 +191,7 @@ public class OwnerTest {
         mockMvc.perform(put("/api/owners/" + ownerId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         // assert the update took place
         OwnerDto updated = callGet(ownerId);
@@ -206,22 +206,22 @@ public class OwnerTest {
         mockMvc.perform(put("/api/owners/" + ownerId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
     void delete_ok() throws Exception {
         mockMvc.perform(delete("/api/owners/" + ownerId))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         mockMvc.perform(get("/api/owners/" + ownerId))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void delete_notFound() throws Exception {
         mockMvc.perform(delete("/api/owners/9999"))
-            .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -237,28 +237,28 @@ public class OwnerTest {
         mockMvc.perform(post("/api/owners/" + ownerId + "/pets")
                 .content(mapper.writeValueAsString(newPet))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void getOwnerPet_ok() throws Exception {
         mockMvc.perform(get("/api/owners/" + ownerId + "/pets/" + petId))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andExpect(jsonPath("$.id").value(petId))
-            .andExpect(jsonPath("$.name").value("Rosy"));
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andExpect(jsonPath("$.id").value(petId))
+                .andExpect(jsonPath("$.name").value("Rosy"));
     }
 
     @Test
     void getOwnerPet_ownerNotFound() throws Exception {
         mockMvc.perform(get("/api/owners/99999/pets/" + petId))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void getOwnerPet_petNotFound() throws Exception {
         mockMvc.perform(get("/api/owners/" + ownerId + "/pets/99999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -275,7 +275,7 @@ public class OwnerTest {
         mockMvc.perform(put("/api/owners/" + ownerId + "/pets/" + petId)
                 .content(mapper.writeValueAsString(petDto))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
     }
 
     @Test
@@ -291,7 +291,7 @@ public class OwnerTest {
         mockMvc.perform(put("/api/owners/99999/pets/" + petId)
                 .content(mapper.writeValueAsString(petDto))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
     }
 
     @Test
@@ -307,7 +307,7 @@ public class OwnerTest {
         mockMvc.perform(put("/api/owners/" + ownerId + "/pets/99999")
                 .content(mapper.writeValueAsString(petDto))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>victor.training.agentic</groupId>
@@ -12,8 +12,8 @@
     <description>
         OpenRewrite recipes that reproduce, programmatically, refactorings we do by hand in this repo.
         Two flavours:
-          - InlineSingleUseLocalVariable : a full imperative recipe (needs data-flow, so it MUST be imperative)
-          - ListGetFirst                 : a Refaster template recipe (a simple before/after expression swap)
+            - InlineSingleUseLocalVariable : a full imperative recipe (needs data-flow, so it MUST be imperative)
+            - ListGetFirst                 : a Refaster template recipe (a simple before/after expression swap)
     </description>
 
     <properties>
@@ -37,7 +37,7 @@
                 <scope>import</scope>
             </dependency>
             <!-- Forces a single JUnit 5 platform/jupiter version across the whole test classpath
-                 (rewrite-test and junit-jupiter otherwise drag in mismatched platform jars). -->
+                (rewrite-test and junit-jupiter otherwise drag in mismatched platform jars). -->
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>

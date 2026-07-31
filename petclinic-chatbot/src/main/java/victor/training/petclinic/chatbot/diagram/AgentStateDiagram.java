@@ -41,89 +41,89 @@ import com.embabel.agent.api.annotation.Action;
  */
 public final class AgentStateDiagram {
 
-  private AgentStateDiagram() {
-  }
-
-  /** Render the PlantUML state diagram for the given {@code @Agent} class. */
-  public static String render(Class<?> agentClass) {
-    List<Method> actions = actionMethods(agentClass);
-
-    Set<Class<?>> produced = new LinkedHashSet<>();
-    for (Method m : actions) {
-      produced.add(m.getReturnType());
+    private AgentStateDiagram() {
     }
 
-    // Entry types: nested types of the agent used as @Action params but never produced.
-    Set<Class<?>> entryTypes = new LinkedHashSet<>();
-    for (Method m : actions) {
-      for (Parameter p : m.getParameters()) {
-        Class<?> type = p.getType();
-        if (!produced.contains(type) && isNestedDomainType(agentClass, type)) {
-          entryTypes.add(type);
+    /** Render the PlantUML state diagram for the given {@code @Agent} class. */
+    public static String render(Class<?> agentClass) {
+        List<Method> actions = actionMethods(agentClass);
+
+        Set<Class<?>> produced = new LinkedHashSet<>();
+        for (Method m : actions) {
+            produced.add(m.getReturnType());
         }
-      }
-    }
 
-    Set<Class<?>> states = new LinkedHashSet<>();
-    states.addAll(produced);
-    states.addAll(entryTypes);
-
-    // Stable, sorted state declarations.
-    Set<String> stateNames = new TreeSet<>();
-    for (Class<?> s : states) {
-      stateNames.add(s.getSimpleName());
-    }
-
-    // Transitions, with the start/goal markers, all sorted for determinism.
-    Set<String> transitions = new TreeSet<>();
-    for (Class<?> entry : entryTypes) {
-      transitions.add("[*] --> " + entry.getSimpleName());
-    }
-    for (Method m : actions) {
-      Class<?> returnType = m.getReturnType();
-      if (!states.contains(returnType)) {
-        continue; // defensive: a goal that produces a non-state type (not expected here)
-      }
-      String returnName = returnType.getSimpleName();
-      for (Parameter p : m.getParameters()) {
-        Class<?> type = p.getType();
-        if (states.contains(type)) {
-          transitions.add(type.getSimpleName() + " --> " + returnName + " : " + m.getName());
+        // Entry types: nested types of the agent used as @Action params but never produced.
+        Set<Class<?>> entryTypes = new LinkedHashSet<>();
+        for (Method m : actions) {
+            for (Parameter p : m.getParameters()) {
+                Class<?> type = p.getType();
+                if (!produced.contains(type) && isNestedDomainType(agentClass, type)) {
+                    entryTypes.add(type);
+                }
+            }
         }
-      }
-      if (m.isAnnotationPresent(AchievesGoal.class)) {
-        transitions.add(returnName + " --> [*]");
-      }
+
+        Set<Class<?>> states = new LinkedHashSet<>();
+        states.addAll(produced);
+        states.addAll(entryTypes);
+
+        // Stable, sorted state declarations.
+        Set<String> stateNames = new TreeSet<>();
+        for (Class<?> s : states) {
+            stateNames.add(s.getSimpleName());
+        }
+
+        // Transitions, with the start/goal markers, all sorted for determinism.
+        Set<String> transitions = new TreeSet<>();
+        for (Class<?> entry : entryTypes) {
+            transitions.add("[*] --> " + entry.getSimpleName());
+        }
+        for (Method m : actions) {
+            Class<?> returnType = m.getReturnType();
+            if (!states.contains(returnType)) {
+                continue; // defensive: a goal that produces a non-state type (not expected here)
+            }
+            String returnName = returnType.getSimpleName();
+            for (Parameter p : m.getParameters()) {
+                Class<?> type = p.getType();
+                if (states.contains(type)) {
+                    transitions.add(type.getSimpleName() + " --> " + returnName + " : " + m.getName());
+                }
+            }
+            if (m.isAnnotationPresent(AchievesGoal.class)) {
+                transitions.add(returnName + " --> [*]");
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("@startuml\n");
+        sb.append("' Generated from ").append(agentClass.getName()).append('\n');
+        sb.append("' DETERMINISTIC, OFFLINE: derived by reflection over @Action method signatures.\n");
+        sb.append("title ").append(agentClass.getSimpleName()).append('\n');
+        for (String state : stateNames) {
+            sb.append("state ").append(state).append('\n');
+        }
+        for (String transition : transitions) {
+            sb.append(transition).append('\n');
+        }
+        sb.append("@enduml\n");
+        return sb.toString();
     }
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("@startuml\n");
-    sb.append("' Generated from ").append(agentClass.getName()).append('\n');
-    sb.append("' DETERMINISTIC, OFFLINE: derived by reflection over @Action method signatures.\n");
-    sb.append("title ").append(agentClass.getSimpleName()).append('\n');
-    for (String state : stateNames) {
-      sb.append("state ").append(state).append('\n');
+    private static List<Method> actionMethods(Class<?> agentClass) {
+        List<Method> actions = new ArrayList<>();
+        for (Method m : agentClass.getDeclaredMethods()) {
+            if (m.isAnnotationPresent(Action.class)) {
+                actions.add(m);
+            }
+        }
+        return actions;
     }
-    for (String transition : transitions) {
-      sb.append(transition).append('\n');
-    }
-    sb.append("@enduml\n");
-    return sb.toString();
-  }
 
-  private static List<Method> actionMethods(Class<?> agentClass) {
-    List<Method> actions = new ArrayList<>();
-    for (Method m : agentClass.getDeclaredMethods()) {
-      if (m.isAnnotationPresent(Action.class)) {
-        actions.add(m);
-      }
+    /** A type is a blackboard/domain type if it is a nested type declared inside the agent class. */
+    private static boolean isNestedDomainType(Class<?> agentClass, Class<?> type) {
+        Class<?> enclosing = type.getEnclosingClass();
+        return enclosing != null && enclosing.equals(agentClass) && Modifier.isStatic(type.getModifiers());
     }
-    return actions;
-  }
-
-  /** A type is a blackboard/domain type if it is a nested type declared inside the agent class. */
-  private static boolean isNestedDomainType(Class<?> agentClass, Class<?> type) {
-    Class<?> enclosing = type.getEnclosingClass();
-    return enclosing != null && enclosing.equals(agentClass) && Modifier.isStatic(type.getModifiers());
-  }
 }

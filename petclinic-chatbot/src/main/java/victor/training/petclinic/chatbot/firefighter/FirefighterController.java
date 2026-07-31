@@ -22,17 +22,17 @@ import victor.training.petclinic.chatbot.firefighter.FirefighterAgent.IncidentRe
 @RestController
 class FirefighterController {
 
-  private final AgentPlatform agentPlatform;
+    private final AgentPlatform agentPlatform;
 
-  FirefighterController(AgentPlatform agentPlatform) {
-    this.agentPlatform = agentPlatform;
-  }
+    FirefighterController(AgentPlatform agentPlatform) {
+        this.agentPlatform = agentPlatform;
+    }
 
-  @GetMapping(value = "/firefighter", produces = "text/markdown")
-  String firefighter(
-      @RequestParam(defaultValue = "Routine health sweep of PetClinic services") String incident) {
-    return AgentInvocation.create(agentPlatform, IncidentReport.class)
-        .invoke(new Incident(incident))
-        .markdown();
-  }
+    @GetMapping(value = "/firefighter", produces = "text/markdown")
+    String firefighter(
+            @RequestParam(defaultValue = "Routine health sweep of PetClinic services") String incident) {
+        return AgentInvocation.create(agentPlatform, IncidentReport.class)
+                .invoke(new Incident(incident))
+                .markdown();
+    }
 }

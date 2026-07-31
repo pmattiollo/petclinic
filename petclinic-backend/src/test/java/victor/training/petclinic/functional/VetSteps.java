@@ -31,14 +31,14 @@ public class VetSteps {
     private void insertVet(String fullName, String... specialties) {
         String[] parts = fullName.split(" ", 2);
         Integer vetId = jdbc.queryForObject(
-            "INSERT INTO vets (first_name, last_name) VALUES (?, ?) RETURNING id",
-            Integer.class, parts[0], parts[1]);
+                "INSERT INTO vets (first_name, last_name) VALUES (?, ?) RETURNING id",
+                Integer.class, parts[0], parts[1]);
         for (String specialty : specialties) {
             Integer specialtyId = jdbc.queryForObject(
-                "SELECT id FROM specialties WHERE name = ?", Integer.class, specialty);
+                    "SELECT id FROM specialties WHERE name = ?", Integer.class, specialty);
             jdbc.update(
-                "INSERT INTO vet_specialties (vet_id, specialty_id) VALUES (?, ?)",
-                vetId, specialtyId);
+                    "INSERT INTO vet_specialties (vet_id, specialty_id) VALUES (?, ?)",
+                    vetId, specialtyId);
         }
         http.rememberId("vet:" + fullName, vetId);
     }

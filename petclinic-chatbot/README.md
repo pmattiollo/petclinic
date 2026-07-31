@@ -16,24 +16,24 @@ Responses are **streamed** to the browser as markdown. Uses **OpenAI only** — 
 ## Run
 
 1. **Start pgvector** — from this folder:
-   ```sh
-   docker compose up -d
-   ```
-   Brings up Postgres + pgvector on **:5433** (separate from the app DB).
+    ```sh
+    docker compose up -d
+    ```
+    Brings up Postgres + pgvector on **:5433** (separate from the app DB).
 2. **Start the PetClinic DB + backend** — from the repo root:
-   ```sh
-   ./start-database.sh    # embedded Postgres on :5432
-   ./start-backend.sh     # Spring Boot on :8080, exposes the MCP server
-   ```
+    ```sh
+    ./start-database.sh    # embedded Postgres on :5432
+    ./start-backend.sh     # Spring Boot on :8080, exposes the MCP server
+    ```
 3. **Start the chatbot** — from the repo root, with your OpenAI key:
-   ```sh
-   OPENAI_API_KEY=sk-… mvn -f petclinic-chatbot/pom.xml spring-boot:run
-   ```
-   App starts on **:8082**.
+    ```sh
+    OPENAI_API_KEY=sk-… mvn -f petclinic-chatbot/pom.xml spring-boot:run
+    ```
+    App starts on **:8082**.
 4. **Try it** — open <http://localhost:8082> and click an example prompt, or curl the streaming endpoint directly:
-   ```sh
-   curl "http://localhost:8082/george/assistant?q=My%20dog%20is%20limping"
-   ```
+    ```sh
+    curl "http://localhost:8082/george/assistant?q=My%20dog%20is%20limping"
+    ```
 
 ## Architecture
 
