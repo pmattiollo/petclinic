@@ -106,7 +106,7 @@ jobs:
             fi
           } > comment.md
           id=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
-                 --jq 'map(select(.body | startswith("<!-- architecture-preview -->"))) | .[0].id // empty')
+                --jq 'map(select(.body | startswith("<!-- architecture-preview -->"))) | .[0].id // empty')
           if [ -n "$id" ]; then
             gh api -X PATCH "repos/$REPO/issues/comments/$id" -F body=@comment.md --silent
           elif [ "$COUNT" != '0' ]; then

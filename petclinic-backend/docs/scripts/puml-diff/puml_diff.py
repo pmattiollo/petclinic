@@ -274,8 +274,10 @@ def diff(old: Diagram, new: Diagram) -> str:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     ap.add_argument("old", help="Previous snapshot (.puml)")
     ap.add_argument("new", help="Current snapshot (.puml)")
     ap.add_argument("--out", help="Write merged diagram here (default: stdout)")

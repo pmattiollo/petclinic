@@ -4,7 +4,7 @@
 .prompt.attack { color: #e5484d; }
 .prompt.attack::before { content: "😈 Send: "; }
 /* pre-canned prompt links: tight vertical rhythm, each on its own line. display:table shrinks the
-   anchor to its text width so only the text is clickable (not the whole line). */
+  anchor to its text width so only the text is clickable (not the whole line). */
 .prompt { display: table; margin: 2px 0; line-height: 1.3; cursor: pointer; }
 .prompt + br { display: none; } /* prompts are block-level already; drop the <br> spacers between them */
 /* light mode defaults */
@@ -30,7 +30,7 @@ html, body {
 }
 
 /* full-height column that fits the viewport EXACTLY — the page itself never scrolls; only the
-   message history scrolls internally (see .message-history overflow). */
+  message history scrolls internally (see .message-history overflow). */
 body {
     box-sizing: border-box;
     height: 100vh;
@@ -206,7 +206,7 @@ button { cursor: pointer; }
 }
 
 /* messages that have aged OUT of the model's memory window — dimmed so the demo shows what's
-   "forgotten" (still on screen, but no longer in the LLM's context). */
+  "forgotten" (still on screen, but no longer in the LLM's context). */
 .message.forgotten {
     opacity: .45;
 }

@@ -26,7 +26,7 @@ _OPERATOR_CHARS = set(";&|()<>")
 # value must not be mistaken for the subcommand (e.g. the `core.x=y` in
 # `git -c core.x=y push`). `-C` is handled separately because we capture its dir.
 _GIT_VALUE_OPTS = {"-c", "--git-dir", "--work-tree", "--namespace",
-                   "--super-prefix", "--config-env", "--exec-path"}
+                  "--super-prefix", "--config-env", "--exec-path"}
 
 # Transparent command wrappers that delegate to the real tool underneath.
 # The environment's PreToolUse hook rewrites `git push` -> `rtk git push`

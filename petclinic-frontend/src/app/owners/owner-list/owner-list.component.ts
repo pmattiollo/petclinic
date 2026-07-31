@@ -43,27 +43,27 @@ export class OwnerListComponent implements OnInit {
       console.log('inside search by last name starting with ' + (lastName));
       if (lastName === '')
       {
-      this.ownerService.getOwners()
-      .subscribe(
+        this.ownerService.getOwners()
+          .subscribe(
             (owners) => {
-             this.owners = owners;
+              this.owners = owners;
             });
       }
       if (lastName !== '')
       {
-      this.ownerService.searchOwners(lastName)
-      .subscribe(
-      (owners) => {
+        this.ownerService.searchOwners(lastName)
+          .subscribe(
+            (owners) => {
 
-       this.owners = owners;
-       console.log('this.owners ' + this.owners);
+              this.owners = owners;
+              console.log('this.owners ' + this.owners);
 
-       },
-       (error) =>
-       {
-         this.owners = null;
-       }
-      );
+            },
+            (error) =>
+            {
+              this.owners = null;
+            }
+          );
 
       }
   }

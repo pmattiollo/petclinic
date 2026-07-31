@@ -169,7 +169,7 @@ function render() {
     .on("mousemove", (ev, d) => {
       const path = d.ancestors().reverse().slice(1).map(n => n.data.name).join("/");
       tip.style("opacity", 1)
-         .html(`<b>${path}</b><br>Lines: ${d.data.loc}<br>cyclomatic ≈ ${d.data.complexity} (${(d.data.complexity / Math.max(1, d.data.loc)).toFixed(2)}/line)<br><i>click to open in IntelliJ</i>`);
+        .html(`<b>${path}</b><br>Lines: ${d.data.loc}<br>cyclomatic ≈ ${d.data.complexity} (${(d.data.complexity / Math.max(1, d.data.loc)).toFixed(2)}/line)<br><i>click to open in IntelliJ</i>`);
       const tipNode = tip.node();
       const tw = tipNode.offsetWidth, th = tipNode.offsetHeight;
       const pad = 8;

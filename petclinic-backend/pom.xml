@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>victor.training.agentic</groupId>
@@ -59,7 +59,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <!-- @WithSpan: lets us declare an explicit custom span (book-visit); the OTel
-             Java agent (v2.10.0, attached in start-backend.sh) instruments it at runtime. -->
+            Java agent (v2.10.0, attached in start-backend.sh) instruments it at runtime. -->
         <dependency>
             <groupId>io.opentelemetry.instrumentation</groupId>
             <artifactId>opentelemetry-instrumentation-annotations</artifactId>

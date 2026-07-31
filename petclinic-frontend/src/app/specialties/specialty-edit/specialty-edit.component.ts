@@ -30,7 +30,7 @@ export class SpecialtyEditComponent implements OnInit {
         this.onBack();
       },
       error => this.errorMessage = error as any);
- }
+  }
 
   onBack() {
     this.router.navigate(['/specialties']);

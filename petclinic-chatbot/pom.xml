@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <!-- Standalone module: no aggregator/parent pom at the petclinic repo root. -->
@@ -24,7 +24,7 @@
     <dependencyManagement>
         <dependencies>
             <!-- Embabel manages only its own modules (no Spring pin), so it inherits the
-                 spring-ai-bom below — keeping Spring AI on 1.1.7 across both stacks. -->
+                spring-ai-bom below — keeping Spring AI on 1.1.7 across both stacks. -->
             <dependency>
                 <groupId>com.embabel.agent</groupId>
                 <artifactId>embabel-agent-dependencies</artifactId>
@@ -44,7 +44,7 @@
 
     <dependencies>
         <!-- Spring MVC on virtual threads (spring.threads.virtual.enabled=true): one thread per request
-             end-to-end, so the per-user token ThreadLocal reaches the blocking MCP tool call. -->
+            end-to-end, so the per-user token ThreadLocal reaches the blocking MCP tool call. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -60,9 +60,9 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <!-- Observability: Actuator exposes /actuator/prometheus; with a MeterRegistry on the classpath,
-             Spring AI auto-records the GenAI metrics (gen_ai_client_token_usage_total,
-             gen_ai_client_operation_seconds*) — no extra code. micrometer-registry-prometheus renders
-             them in Prometheus text format for Grafana to scrape. -->
+            Spring AI auto-records the GenAI metrics (gen_ai_client_token_usage_total,
+            gen_ai_client_operation_seconds*) — no extra code. micrometer-registry-prometheus renders
+            them in Prometheus text format for Grafana to scrape. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -82,7 +82,7 @@
             <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
         <!-- LOCAL workshop profile (spring.profiles.active=local): serves chat + embeddings via
-             Ollama instead of OpenAI. Opt-in via application-local.properties; default stays OpenAI. -->
+            Ollama instead of OpenAI. Opt-in via application-local.properties; default stays OpenAI. -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-ollama</artifactId>
@@ -92,16 +92,16 @@
             <artifactId>spring-ai-advisors-vector-store</artifactId>
         </dependency>
         <!-- This module is an MCP *client*: provides McpClient / HttpClientSseClientTransport /
-             McpSyncClient / SyncMcpToolCallbackProvider to call the remote petclinic MCP server. -->
+            McpSyncClient / SyncMcpToolCallbackProvider to call the remote petclinic MCP server. -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-client</artifactId>
         </dependency>
 
         <!-- Embabel: GOAP agent platform. The starter pulls embabel-agent-platform-autoconfigure
-             (+ embabel-agent-api, which also ships FakeOperationContext for unit tests). The OpenAI
-             autoconfigure registers OpenAI models with Embabel's own model registry (reads
-             OPENAI_API_KEY, same key the Spring AI ChatClient uses). -->
+            (+ embabel-agent-api, which also ships FakeOperationContext for unit tests). The OpenAI
+            autoconfigure registers OpenAI models with Embabel's own model registry (reads
+            OPENAI_API_KEY, same key the Spring AI ChatClient uses). -->
         <dependency>
             <groupId>com.embabel.agent</groupId>
             <artifactId>embabel-agent-starter</artifactId>

@@ -15,7 +15,7 @@ backend — handy to demo or develop the frontend with no database/backend runni
 1. Stop the real backend.
 2. `./start.sh`
 3. Open the Angular app (http://localhost:4200). It talks to `:8080` as usual and now sees the
-   canned example data.
+    canned example data.
 
 ## Run
 

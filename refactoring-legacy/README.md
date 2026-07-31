@@ -41,11 +41,11 @@ That needs data-flow + multi-statement surgery, which is exactly what an **imper
 Inlines `T v = expr;` into its use **only** when all hold, so behaviour can never change:
 1. Single-variable declaration with an initializer.
 2. The initializer is a high-precedence expression (method call, `new`, field/array access, literal,
-   identifier, parenthesized) — safe to drop in without parentheses.
+    identifier, parenthesized) — safe to drop in without parentheses.
 3. The variable is **read exactly once**. Two+ reads (e.g. `save(type); … type.getId()`) are never
-   inlined — that would evaluate the initializer twice. Zero reads are left alone (dead code).
+    inlined — that would evaluate the initializer twice. Zero reads are left alone (dead code).
 4. That single read is in the **immediately following statement**, reached only through
-   side-effect-transparent nodes — so no reordering, and never inside a loop/lambda/conditional.
+    side-effect-transparent nodes — so no reordering, and never inside a loop/lambda/conditional.
 
 ## `ListGetFirst` — note
 

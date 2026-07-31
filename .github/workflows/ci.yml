@@ -38,8 +38,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           url=$(curl -sSfL -H "Authorization: Bearer $GH_TOKEN" \
-                 https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
-               | grep -o 'https://[^"]*linux_x64.tar.gz' | head -1)
+                https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+              | grep -o 'https://[^"]*linux_x64.tar.gz' | head -1)
           echo "Downloading $url"
           curl -sSfL "$url" | sudo tar -xz -C /usr/local/bin gitleaks
           gitleaks version

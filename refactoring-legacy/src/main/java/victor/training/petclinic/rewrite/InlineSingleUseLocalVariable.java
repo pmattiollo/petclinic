@@ -56,8 +56,8 @@ public class InlineSingleUseLocalVariable extends Recipe {
     @Override
     public String getDescription() {
         return "Replaces the single read of a local variable with its initializer and removes the " +
-               "declaration, but only when the variable is used exactly once so the initializer is " +
-               "never evaluated more than once. Variables used two or more times are left as-is.";
+                "declaration, but only when the variable is used exactly once so the initializer is " +
+                "never evaluated more than once. Variables used two or more times are left as-is.";
     }
 
     @Override
@@ -117,13 +117,13 @@ public class InlineSingleUseLocalVariable extends Recipe {
      */
     private static boolean isSafeToInline(Expression e) {
         return e instanceof J.MethodInvocation
-               || e instanceof J.NewClass
-               || e instanceof J.NewArray
-               || e instanceof J.FieldAccess
-               || e instanceof J.ArrayAccess
-               || e instanceof J.Identifier
-               || e instanceof J.Literal
-               || e instanceof J.Parentheses;
+                || e instanceof J.NewClass
+                || e instanceof J.NewArray
+                || e instanceof J.FieldAccess
+                || e instanceof J.ArrayAccess
+                || e instanceof J.Identifier
+                || e instanceof J.Literal
+                || e instanceof J.Parentheses;
     }
 
     /** Collect every read/write mention of {@code target} inside {@code scope}, excluding the declaration name. */
@@ -186,13 +186,13 @@ public class InlineSingleUseLocalVariable extends Recipe {
     /** Statements whose (relevant) sub-expressions run unconditionally exactly once when the statement runs. */
     private static boolean isUnconditionalStatement(Statement statement) {
         return statement instanceof J.Return
-               || statement instanceof J.Throw
-               || statement instanceof J.MethodInvocation
-               || statement instanceof J.NewClass
-               || statement instanceof J.Assignment
-               || statement instanceof J.AssignmentOperation
-               || statement instanceof J.Unary
-               || statement instanceof J.VariableDeclarations;
+                || statement instanceof J.Throw
+                || statement instanceof J.MethodInvocation
+                || statement instanceof J.NewClass
+                || statement instanceof J.Assignment
+                || statement instanceof J.AssignmentOperation
+                || statement instanceof J.Unary
+                || statement instanceof J.VariableDeclarations;
     }
 
     /**

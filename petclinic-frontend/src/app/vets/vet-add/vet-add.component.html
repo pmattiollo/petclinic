@@ -11,7 +11,7 @@
             <input type="text" class="form-control" id="firstName" [(ngModel)]="vet.firstName"  minlength="1" maxlength="30" pattern="^[a-zA-Z]*$"  required name="firstName" #firstName="ngModel"/>
             <span class="help-block" *ngIf="firstName.dirty && firstName.hasError('maxlength')">First Name may be only 30 characters long</span>
             <span class="help-block" *ngIf="firstName.dirty && firstName.hasError('minlength')">First Name must be at least 1 characters long</span>
-             <span class="help-block" *ngIf="firstName.dirty && firstName.hasError('pattern')">First Name may only consist of letters</span>
+            <span class="help-block" *ngIf="firstName.dirty && firstName.hasError('pattern')">First Name may only consist of letters</span>
             <span class="glyphicon form-control-feedback" [class.glyphicon-ok]="firstName.valid" [class.glyphicon-remove]="!firstName.valid" aria-hidden="true"></span>
             <span class="help-block" *ngIf="(vetForm.submitted && firstName.hasError('required')) || (firstName.dirty && firstName.hasError('required'))">First name is required</span>
           </div>
@@ -23,7 +23,7 @@
             <span class="glyphicon form-control-feedback" [class.glyphicon-ok]="lastName.valid" [class.glyphicon-remove]="!lastName.valid" aria-hidden="true"></span>
             <span class="help-block" *ngIf="lastName.dirty && lastName.hasError('maxlength')">Last Name may be only 30 characters long</span>
             <span class="help-block" *ngIf="lastName.dirty && lastName.hasError('minlength')">Last Name must be at least 1 characters long</span>
-             <span class="help-block" *ngIf="lastName.dirty && lastName.hasError('pattern')">Last Name may only consist of letters </span>
+            <span class="help-block" *ngIf="lastName.dirty && lastName.hasError('pattern')">Last Name may only consist of letters </span>
             <span class="help-block" *ngIf="(vetForm.submitted && lastName.hasError('required')) || (lastName.dirty && lastName.hasError('required'))">Last name is required</span>
           </div>
         </div>

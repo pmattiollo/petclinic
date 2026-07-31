@@ -12,7 +12,7 @@
             <span class="glyphicon form-control-feedback" [class.glyphicon-ok]="firstNameCtrl.valid" [class.glyphicon-remove]="!firstNameCtrl.valid" aria-hidden="true"></span>
             <span class="help-block" *ngIf="firstNameCtrl.dirty && firstNameCtrl.hasError('maxlength')">First Name may be only 30 characters long</span>
             <span class="help-block" *ngIf="firstNameCtrl.dirty && firstNameCtrl.hasError('minlength')">First Name must be at least 1 characters long</span>
-             <span class="help-block" *ngIf="firstNameCtrl.dirty && firstNameCtrl.hasError('pattern')">First Name may only consist of letters</span>
+            <span class="help-block" *ngIf="firstNameCtrl.dirty && firstNameCtrl.hasError('pattern')">First Name may only consist of letters</span>
             <span class="help-block" *ngIf="firstNameCtrl.dirty && firstNameCtrl.hasError('required')">First Name is required</span>
           </div>
         </div>

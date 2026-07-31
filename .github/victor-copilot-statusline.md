@@ -9,14 +9,14 @@ A rich one-line status bar for **GitHub Copilot CLI**. Example:
 Three ` | `-separated segments:
 
 1. **model · effort · context** — model name (the `claude-` prefix stripped),
-   reasoning effort, and **used/limit** context tokens. The used-token count
-   turns **yellow ≥65%** and **red ≥95%** of the window. The `(%)` is shown only
-   when the window isn't the full 1M.
+  reasoning effort, and **used/limit** context tokens. The used-token count
+  turns **yellow ≥65%** and **red ≥95%** of the window. The `(%)` is shown only
+  when the window isn't the full 1M.
 2. **AI Credits** — credits remaining + `(% left)`, followed by a colored
    **consumption-trend arrow** comparing how much credit is left against how much
    **working time** (Mon–Fri) is left in the billing month.
 3. **reset** — **working** days + hours until the monthly quota resets (weekends
-   excluded).
+  excluded).
 
 ---
 

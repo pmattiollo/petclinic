@@ -22,8 +22,8 @@ import java.util.List;
 @RecipeDescriptor(
     name = "Use `List#getFirst()` instead of `list.get(0)`",
     description = "Replaces `list.get(0)` with `list.getFirst()` (Java 21 SequencedCollection), which reads " +
-                  "more clearly. Note: on an empty list `get(0)` throws IndexOutOfBoundsException while " +
-                  "`getFirst()` throws NoSuchElementException — both signal \"no first element\"."
+                "more clearly. Note: on an empty list `get(0)` throws IndexOutOfBoundsException while " +
+                "`getFirst()` throws NoSuchElementException — both signal \"no first element\"."
 )
 public class ListGetFirst<T> {
 
