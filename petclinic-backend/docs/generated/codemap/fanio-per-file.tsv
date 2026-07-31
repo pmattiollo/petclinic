@@ -1,7 +1,7 @@
 file	fan_in	fan_out
 petclinic-backend/src/main/java/victor/training/petclinic/PetClinicApplication.java	0	0
 petclinic-backend/src/main/java/victor/training/petclinic/domain/Owner.java	5	1
-petclinic-backend/src/main/java/victor/training/petclinic/domain/Pet.java	9	4
+petclinic-backend/src/main/java/victor/training/petclinic/domain/Pet.java	9	3
 petclinic-backend/src/main/java/victor/training/petclinic/domain/PetType.java	6	0
 petclinic-backend/src/main/java/victor/training/petclinic/domain/Role.java	2	1
 petclinic-backend/src/main/java/victor/training/petclinic/domain/Specialty.java	6	0
@@ -42,7 +42,7 @@ petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestControll
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/OwnerDto.java	3	1
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/OwnerFieldsDto.java	2	0
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/OwnerPageDto.java	2	1
-petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetDto.java	5	2
+petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetDto.java	4	2
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetFieldsDto.java	2	1
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetTypeDto.java	5	0
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetTypeFieldsDto.java	2	0
