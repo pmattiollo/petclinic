@@ -1,8 +1,11 @@
 -- Order matters: an index built under the old collation cannot serve an ORDER BY under the
 -- new one, so the collation change must land before the indexes that rely on it.
-ALTER TABLE owners ALTER COLUMN last_name  TYPE varchar(30) COLLATE "en-US-x-icu";
-ALTER TABLE owners ALTER COLUMN first_name TYPE varchar(30) COLLATE "en-US-x-icu";
-ALTER TABLE owners ALTER COLUMN city       TYPE varchar(80) COLLATE "en-US-x-icu";
+-- The column type stays `text`: only the collation changes. Narrowing to varchar(n) would be an
+-- unrelated constraint the entity does not enforce (no @Size on Owner), so a longer name would
+-- pass bean validation and then fail in SQL.
+ALTER TABLE owners ALTER COLUMN last_name  TYPE text COLLATE "en-US-x-icu";
+ALTER TABLE owners ALTER COLUMN first_name TYPE text COLLATE "en-US-x-icu";
+ALTER TABLE owners ALTER COLUMN city       TYPE text COLLATE "en-US-x-icu";
 
 -- Covers name,asc (forward scan) and name,desc (backward scan of the same index).
 CREATE INDEX owners_last_first_idx ON owners (last_name, first_name, id);

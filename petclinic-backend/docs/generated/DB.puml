@@ -8,10 +8,10 @@ skinparam linetype ortho
 
 entity "owners" as owners {
 {field} id : int <<PK>>
-{field} first_name : varchar(30)
-{field} last_name : varchar(30)
+{field} first_name : text
+{field} last_name : text
 {field} address : text
-{field} city : varchar(80)
+{field} city : text
 {field} telephone : text
 }
 
