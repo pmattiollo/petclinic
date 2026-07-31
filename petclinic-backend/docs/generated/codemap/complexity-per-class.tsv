@@ -54,8 +54,8 @@ petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VetFieldsDto.
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VisitDto.java	victor.training.petclinic.rest.dto.VisitDto	0	0
 petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VisitFieldsDto.java	victor.training.petclinic.rest.dto.VisitFieldsDto	0	0
 petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ExceptionControllerAdvice.java	victor.training.petclinic.rest.error.ExceptionControllerAdvice	0	5
-petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorExtractor.java	victor.training.petclinic.rest.error.ValidationErrorExtractor	22	4
-petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorFieldExtractor.java	victor.training.petclinic.rest.error.ValidationErrorFieldExtractor	19	4
+petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorExtractor.java	victor.training.petclinic.rest.error.ValidationErrorExtractor	20	4
+petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorFieldExtractor.java	victor.training.petclinic.rest.error.ValidationErrorFieldExtractor	17	4
 petclinic-backend/src/main/java/victor/training/petclinic/security/BasicAuthenticationConfig.java	victor.training.petclinic.security.BasicAuthenticationConfig	0	3
 petclinic-backend/src/main/java/victor/training/petclinic/security/CorsConfig.java	victor.training.petclinic.security.CorsConfig	0	1
 petclinic-backend/src/main/java/victor/training/petclinic/security/DisableSecurityConfig.java	victor.training.petclinic.security.DisableSecurityConfig	0	1
