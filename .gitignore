@@ -92,3 +92,6 @@ rag-vector-store.json
 
 # playwright-cli scratch (browser skill)
 .playwright-cli/
+
+# Clone of the Code City generators (generate-codecity.sh) — a tool, not our source
+/.codecity-tool/
