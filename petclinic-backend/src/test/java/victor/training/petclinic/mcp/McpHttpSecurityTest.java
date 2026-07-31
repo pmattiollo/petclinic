@@ -42,6 +42,18 @@ class McpHttpSecurityTest {
     }
 
     @Test
+    void mcp_withMalformedBearerToken_stillPassesTheServiceGate() throws Exception {
+        // A token that is not a 3-part JWT yields no subject, so the call runs as the "mcp-service"
+        // identity instead of being rejected — the API key alone gates the transport.
+        mockMvc.perform(post("/mcp").header("X-API-Key", apiKey).header("Authorization", "Bearer not-a-jwt"))
+                .andExpect(result -> {
+                    if (result.getResponse().getStatus() == 401) {
+                        throw new AssertionError("Expected the API key to pass the service gate, got 401");
+                    }
+                });
+    }
+
+    @Test
     void mcp_withApiKey_passesTheServiceGate() throws Exception {
         // The API key authenticates the calling service; any non-401 proves it passed the gate (the
         // MCP endpoint's own response shape — e.g. 400 for an empty body — is not the point here).
