@@ -6,7 +6,7 @@ engineering techniques you can lift into your own projects.
 
 ## What this repo teaches
 
-- **Living architecture, kept honest by guardrail tests.** Diagrams and specs
+- **Living kept in sync architecture, kept honest by guardrail tests.** Diagrams and specs
   are *generated from the code*; ArchUnit + extractor tests fail the build when
   code and diagram drift apart. See [GUARDRAILS.md](GUARDRAILS.md).
 - **Snapshot now, diff at review.** Committed diagrams stay a clean picture of
