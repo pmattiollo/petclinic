@@ -3,19 +3,102 @@
   table-layout: fixed;
 }
 
-.owners-table th.mat-header-cell,
-.owners-table td.mat-cell {
+.owners-table th.mat-mdc-header-cell,
+.owners-table td.mat-mdc-cell {
   padding: 8px;
   border-top: 1px solid #ddd;
   text-align: left;
 }
 
-.owners-table tr.mat-header-row,
-.owners-table tr.mat-row {
+/* Fixed widths + ellipsis: a longer-than-expected address must not steal width from its
+   neighbours or wrap the row to a second line while the user is re-sorting the grid. */
+.owners-table .mat-column-name {
+  width: 18%;
+}
+
+.owners-table .mat-column-address {
+  width: 27%;
+}
+
+.owners-table .mat-column-city {
+  width: 18%;
+}
+
+.owners-table .mat-column-telephone {
+  width: 19%;
+}
+
+.owners-table .mat-column-pets {
+  width: 18%;
+}
+
+.owners-table td.mat-mdc-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pets stack one per line, so they clip per-name rather than as a single run of text */
+.owners-table td.mat-column-pets {
+  white-space: normal;
+}
+
+.owners-table td.mat-column-pets > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Material paints its own white header; restore the app's dark thead (Visits, Vets, ...) */
+.owners-table th.mat-mdc-header-cell {
+  background-color: #3c3834;
+  color: #f1f1f1;
+  font-size: 14px;
+  font-weight: bold;
+  border-top: none;
+  border-bottom: 2px solid #34302d;
+  vertical-align: bottom;
+}
+
+.owners-table tr.mat-mdc-header-row,
+.owners-table tr.mat-mdc-row {
   height: auto;
 }
 
-.owners-table .mat-sort-header-container {
+.owners-table ::ng-deep .mat-sort-header-container {
   align-items: center;
 }
 
+/* Material's arrow is drawn from tiny divs and reads as a smudge on the dark header:
+   replace it with a glyph, always visible so sortable columns need no hover to be found */
+.owners-table ::ng-deep .mat-sort-header-arrow {
+  display: none;
+}
+
+.owners-table ::ng-deep th.mat-sort-header .mat-sort-header-content::after {
+  content: ' \2195';
+  opacity: 0.5;
+  margin-left: 6px;
+}
+
+.owners-table ::ng-deep th[aria-sort='ascending'] .mat-sort-header-content::after {
+  content: ' \2191';
+  opacity: 1;
+}
+
+.owners-table ::ng-deep th[aria-sort='descending'] .mat-sort-header-content::after {
+  content: ' \2193';
+  opacity: 1;
+}
+
+/* Fill the paginator's empty left half instead of stranding the button below it */
+.owners-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.owners-footer mat-paginator {
+  background: transparent;
+}
