@@ -30,9 +30,9 @@ public class SpecialtyRestController {
 
     @GetMapping("/specialties")
     @ApiResponse(responseCode = "200", description = "OK",
-        content = @Content(mediaType = "application/json",
-            array = @ArraySchema(schema = @Schema(implementation = SpecialtyDto.class)),
-            examples = @ExampleObject(name = "sample", value = ApiExamples.SPECIALTIES)))
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = SpecialtyDto.class)),
+                    examples = @ExampleObject(name = "sample", value = ApiExamples.SPECIALTIES)))
     public List<SpecialtyDto> listSpecialties() {
         List<Specialty> allSpecialties = specialtyRepository.findAll();
         return specialtyMapper.toSpecialtyDtos(allSpecialties);
@@ -50,7 +50,7 @@ public class SpecialtyRestController {
         specialtyRepository.save(specialty);
         specialtyFeed.invalidate();
         return ResponseEntity.created(UriComponentsBuilder.fromPath("/api/specialties/{id}")
-                        .buildAndExpand(specialty.getId()).toUri())
+                .buildAndExpand(specialty.getId()).toUri())
                 .build();
     }
 

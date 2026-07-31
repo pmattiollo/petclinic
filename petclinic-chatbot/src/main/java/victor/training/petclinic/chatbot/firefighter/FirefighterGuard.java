@@ -34,106 +34,106 @@ import org.springframework.stereotype.Component;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE) // fresh recovery state per incident
 public class FirefighterGuard {
 
-  private static final int MAX_PER_SERVICE = 2;
-  private static final int MAX_TOTAL = 3;
+    private static final int MAX_PER_SERVICE = 2;
+    private static final int MAX_TOTAL = 3;
 
-  private final ProcessControl process;
+    private final ProcessControl process;
 
-  /** How many times each service has been (successfully) restarted. */
-  private final Map<Service, Integer> restartCounts = new EnumMap<>(Service.class);
-  /** Ordered log of every accepted action, for the escalation summary. */
-  private final List<String> actionLog = new ArrayList<>();
-  /** Highest-ordinal service restarted so far (the "frontier"); -1 means none yet. */
-  private int frontier = -1;
-  private boolean escalated;
+    /** How many times each service has been (successfully) restarted. */
+    private final Map<Service, Integer> restartCounts = new EnumMap<>(Service.class);
+    /** Ordered log of every accepted action, for the escalation summary. */
+    private final List<String> actionLog = new ArrayList<>();
+    /** Highest-ordinal service restarted so far (the "frontier"); -1 means none yet. */
+    private int frontier = -1;
+    private boolean escalated;
 
-  public FirefighterGuard(ProcessControl process) {
-    this.process = process;
-  }
-
-  /**
-   * Attempt to restart {@code service}, enforcing order + limits. Accepted restarts kill the port
-   * then relaunch the script (in that order). Refused requests are no-ops with a reason.
-   */
-  public RestartResult restart(Service service) {
-    if (escalated) {
-      String reason = service + " restart refused: already escalated (total restart cap of "
-          + MAX_TOTAL + " reached) — handing off to a human.";
-      log.warn("🚒 {}", reason);
-      return RestartResult.refused(service, reason);
-    }
-    if (service.ordinal() > frontier + 1) {
-      String reason = service + " restart refused: out of order — a predecessor still needs "
-          + "attention. Recovery order is DB → BE → FE → OTEL.";
-      log.warn("🚒 {}", reason);
-      return RestartResult.refused(service, reason);
-    }
-    int already = restartCounts.getOrDefault(service, 0);
-    if (already >= MAX_PER_SERVICE) {
-      String reason = service + " restart refused: reached the max of " + MAX_PER_SERVICE
-          + " restarts for this service.";
-      log.warn("🚒 {}", reason);
-      return RestartResult.refused(service, reason);
+    public FirefighterGuard(ProcessControl process) {
+        this.process = process;
     }
 
-    // Accepted — perform the REAL kill + relaunch via the (stubbed-in-test) ProcessControl.
-    process.kill(service.port());
-    process.start(service.script());
-    restartCounts.merge(service, 1, Integer::sum);
-    frontier = Math.max(frontier, service.ordinal());
+    /**
+     * Attempt to restart {@code service}, enforcing order + limits. Accepted restarts kill the port
+     * then relaunch the script (in that order). Refused requests are no-ops with a reason.
+     */
+    public RestartResult restart(Service service) {
+        if (escalated) {
+            String reason = service + " restart refused: already escalated (total restart cap of "
+                    + MAX_TOTAL + " reached) — handing off to a human.";
+            log.warn("🚒 {}", reason);
+            return RestartResult.refused(service, reason);
+        }
+        if (service.ordinal() > frontier + 1) {
+            String reason = service + " restart refused: out of order — a predecessor still needs "
+                    + "attention. Recovery order is DB → BE → FE → OTEL.";
+            log.warn("🚒 {}", reason);
+            return RestartResult.refused(service, reason);
+        }
+        int already = restartCounts.getOrDefault(service, 0);
+        if (already >= MAX_PER_SERVICE) {
+            String reason = service + " restart refused: reached the max of " + MAX_PER_SERVICE
+                    + " restarts for this service.";
+            log.warn("🚒 {}", reason);
+            return RestartResult.refused(service, reason);
+        }
 
-    int total = totalRestarts();
-    String note = "Restarted " + service + " (kill -9 :" + service.port() + " then "
-        + service.script() + ") — attempt " + restartCounts.get(service) + "/" + MAX_PER_SERVICE
-        + ", " + total + "/" + MAX_TOTAL + " total.";
-    actionLog.add(note);
-    log.info("🚒 {}", note);
+        // Accepted — perform the REAL kill + relaunch via the (stubbed-in-test) ProcessControl.
+        process.kill(service.port());
+        process.start(service.script());
+        restartCounts.merge(service, 1, Integer::sum);
+        frontier = Math.max(frontier, service.ordinal());
 
-    boolean tripped = false;
-    if (total >= MAX_TOTAL) {
-      escalated = true;
-      tripped = true;
-      log.warn("🚒 Total restart cap of {} reached — escalating, no further restarts.", MAX_TOTAL);
+        int total = totalRestarts();
+        String note = "Restarted " + service + " (kill -9 :" + service.port() + " then "
+                + service.script() + ") — attempt " + restartCounts.get(service) + "/" + MAX_PER_SERVICE
+                + ", " + total + "/" + MAX_TOTAL + " total.";
+        actionLog.add(note);
+        log.info("🚒 {}", note);
+
+        boolean tripped = false;
+        if (total >= MAX_TOTAL) {
+            escalated = true;
+            tripped = true;
+            log.warn("🚒 Total restart cap of {} reached — escalating, no further restarts.", MAX_TOTAL);
+        }
+        return RestartResult.accepted(service, note, tripped);
     }
-    return RestartResult.accepted(service, note, tripped);
-  }
 
-  /** True once the 3-total cap has tripped; no further restarts will be accepted. */
-  public boolean isEscalated() {
-    return escalated;
-  }
-
-  public int totalRestarts() {
-    return restartCounts.values().stream().mapToInt(Integer::intValue).sum();
-  }
-
-  public int restartsOf(Service service) {
-    return restartCounts.getOrDefault(service, 0);
-  }
-
-  /** Immutable copy of the accepted-action log (for reports/tests). */
-  public List<String> actions() {
-    return List.copyOf(actionLog);
-  }
-
-  /**
-   * A human-escalation summary describing every action taken so far, reacting to {@code incident}.
-   * Listing the actions explicitly (not via the LLM) keeps the audit trail deterministic.
-   */
-  public String escalationSummary(String incident) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("ESCALATION — human attention required.\n");
-    sb.append("Incident: ").append(incident == null ? "(unspecified)" : incident).append('\n');
-    sb.append("Total restarts: ").append(totalRestarts()).append('/').append(MAX_TOTAL);
-    sb.append(escalated ? " (cap reached)\n" : "\n");
-    sb.append("Actions taken (in order):\n");
-    if (actionLog.isEmpty()) {
-      sb.append("  - none\n");
-    } else {
-      for (int i = 0; i < actionLog.size(); i++) {
-        sb.append("  ").append(i + 1).append(". ").append(actionLog.get(i)).append('\n');
-      }
+    /** True once the 3-total cap has tripped; no further restarts will be accepted. */
+    public boolean isEscalated() {
+        return escalated;
     }
-    return sb.toString();
-  }
+
+    public int totalRestarts() {
+        return restartCounts.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
+    public int restartsOf(Service service) {
+        return restartCounts.getOrDefault(service, 0);
+    }
+
+    /** Immutable copy of the accepted-action log (for reports/tests). */
+    public List<String> actions() {
+        return List.copyOf(actionLog);
+    }
+
+    /**
+     * A human-escalation summary describing every action taken so far, reacting to {@code incident}.
+     * Listing the actions explicitly (not via the LLM) keeps the audit trail deterministic.
+     */
+    public String escalationSummary(String incident) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("ESCALATION — human attention required.\n");
+        sb.append("Incident: ").append(incident == null ? "(unspecified)" : incident).append('\n');
+        sb.append("Total restarts: ").append(totalRestarts()).append('/').append(MAX_TOTAL);
+        sb.append(escalated ? " (cap reached)\n" : "\n");
+        sb.append("Actions taken (in order):\n");
+        if (actionLog.isEmpty()) {
+            sb.append("  - none\n");
+        } else {
+            for (int i = 0; i < actionLog.size(); i++) {
+                sb.append("  ").append(i + 1).append(". ").append(actionLog.get(i)).append('\n');
+            }
+        }
+        return sb.toString();
+    }
 }

@@ -35,7 +35,7 @@ class BasicAuthenticationConfigTest {
     @Test
     void unauthenticated_isUnauthorized() throws Exception {
         mockMvc.perform(get("/api/owners"))
-            .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -43,6 +43,6 @@ class BasicAuthenticationConfigTest {
         String credentials = Base64.getEncoder().encodeToString("admin:admin".getBytes());
         mockMvc.perform(get("/api/owners")
                 .header("Authorization", "Basic " + credentials))
-            .andExpect(status().isOk());
+                .andExpect(status().isOk());
     }
 }

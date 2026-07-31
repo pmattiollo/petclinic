@@ -36,7 +36,7 @@ public class SpecialtyTest {
     MockMvc mockMvc;
 
     ObjectMapper mapper = new ObjectMapper()
-        .setSerializationInclusion(JsonInclude.Include.ALWAYS);
+            .setSerializationInclusion(JsonInclude.Include.ALWAYS);
 
     @Autowired
     SpecialtyRepository specialtyRepository;
@@ -58,11 +58,11 @@ public class SpecialtyTest {
 
     private SpecialtyDto callGet(int specialtyId) throws Exception {
         String responseJson = mockMvc.perform(get("/api/specialties/" + specialtyId))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         return mapper.readValue(responseJson, SpecialtyDto.class);
     }
 
@@ -77,22 +77,22 @@ public class SpecialtyTest {
     @Test
     void getById_notFound() throws Exception {
         mockMvc.perform(get("/api/specialties/99999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void getAll() throws Exception {
         String responseJson = mockMvc.perform(get("/api/specialties"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         SpecialtyDto[] specialties = mapper.readValue(responseJson, SpecialtyDto[].class);
 
         assertThat(specialties)
-            .extracting(SpecialtyDto::getId, SpecialtyDto::getName)
-            .contains(Assertions.tuple(specialtyId, "radiology"));
+                .extracting(SpecialtyDto::getId, SpecialtyDto::getName)
+                .contains(Assertions.tuple(specialtyId, "radiology"));
     }
 
     @Test
@@ -103,7 +103,7 @@ public class SpecialtyTest {
         mockMvc.perform(post("/api/specialties")
                 .content(mapper.writeValueAsString(newSpecialty))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -114,7 +114,7 @@ public class SpecialtyTest {
         mockMvc.perform(post("/api/specialties")
                 .content(mapper.writeValueAsString(newSpecialty))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -125,7 +125,7 @@ public class SpecialtyTest {
         mockMvc.perform(put("/api/specialties/" + specialtyId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         // assert the update took place
         SpecialtyDto updated = callGet(specialtyId);
@@ -140,7 +140,7 @@ public class SpecialtyTest {
         mockMvc.perform(put("/api/specialties/" + specialtyId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         SpecialtyDto updated = callGet(specialtyId);
         assertThat(updated.getDescription()).isEqualTo("Symptoms: limping. Guidance: keep the pet calm.");
@@ -154,30 +154,30 @@ public class SpecialtyTest {
         mockMvc.perform(put("/api/specialties/" + specialtyId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
     void delete_ok() throws Exception {
         mockMvc.perform(delete("/api/specialties/" + specialtyId))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         mockMvc.perform(get("/api/specialties/" + specialtyId))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void delete_notFound() throws Exception {
         mockMvc.perform(delete("/api/specialties/9999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void feed_returnsAllSpecialtiesWithEtag() throws Exception {
         String etag = mockMvc.perform(get("/api/specialties/feed"))
-            .andExpect(status().isOk())
-            .andExpect(header().exists(HttpHeaders.ETAG))
-            .andReturn().getResponse().getHeader(HttpHeaders.ETAG);
+                .andExpect(status().isOk())
+                .andExpect(header().exists(HttpHeaders.ETAG))
+                .andReturn().getResponse().getHeader(HttpHeaders.ETAG);
 
         assertThat(etag).isNotBlank();
     }
@@ -185,10 +185,10 @@ public class SpecialtyTest {
     @Test
     void feed_returns304WhenEtagMatches() throws Exception {
         String etag = mockMvc.perform(get("/api/specialties/feed"))
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getHeader(HttpHeaders.ETAG);
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getHeader(HttpHeaders.ETAG);
 
         mockMvc.perform(get("/api/specialties/feed").header(HttpHeaders.IF_NONE_MATCH, etag))
-            .andExpect(status().isNotModified());
+                .andExpect(status().isNotModified());
     }
 }

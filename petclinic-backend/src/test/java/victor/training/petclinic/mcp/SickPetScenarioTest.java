@@ -38,10 +38,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 class SickPetScenarioTest {
 
-    @Autowired PetClinicMcp petClinicMcp;
-    @Autowired OwnerRepository ownerRepository;
-    @Autowired PetRepository petRepository;
-    @Autowired VisitRepository visitRepository;
+    @Autowired
+    PetClinicMcp petClinicMcp;
+    @Autowired
+    OwnerRepository ownerRepository;
+    @Autowired
+    PetRepository petRepository;
+    @Autowired
+    VisitRepository visitRepository;
 
     @AfterEach
     void clearAuth() {
@@ -64,20 +68,20 @@ class SickPetScenarioTest {
 
         // step 3: the LLM calls create_visit for tomorrow at 08:00 (books directly, no elicitation)
         String result = petClinicMcp.createVisit(petId, tomorrow, LocalTime.of(8, 0),
-            "Mițică is sick");
+                "Mițică is sick");
 
         assertThat(result).contains("Created visit").contains("Mițică")
-            .contains(tomorrow.toString()).contains("08:00");
+                .contains(tomorrow.toString()).contains("08:00");
 
         // then: the visit is persisted for tomorrow at 08:00 local time
         List<Visit> visits = visitRepository.findByPetId(petId);
         assertThat(visits)
-            .singleElement()
-            .satisfies(v -> {
-                assertThat(v.getDate()).isEqualTo(tomorrow);
-                assertThat(v.getTime()).isEqualTo(LocalTime.of(8, 0));
-                assertThat(v.getDescription()).contains("sick");
-            });
+                .singleElement()
+                .satisfies(v -> {
+                    assertThat(v.getDate()).isEqualTo(tomorrow);
+                    assertThat(v.getTime()).isEqualTo(LocalTime.of(8, 0));
+                    assertThat(v.getDescription()).contains("sick");
+                });
     }
 
     /** Mimics the LLM parsing "- id=12 — Mițică (cat), born ..." out of the profile markdown. */
@@ -89,28 +93,28 @@ class SickPetScenarioTest {
 
     private Owner ownerWithCat(String catName) {
         PetType catType = petRepository.findPetTypes().stream()
-            .filter(t -> "cat".equalsIgnoreCase(t.getName()))
-            .findFirst()
-            .orElseGet(() -> petRepository.findPetTypes().get(0));
+                .filter(t -> "cat".equalsIgnoreCase(t.getName()))
+                .findFirst()
+                .orElseGet(() -> petRepository.findPetTypes().get(0));
         Pet cat = new Pet()
-            .setName(catName)
-            .setBirthDate(LocalDate.of(2021, 4, 15))
-            .setType(catType);
+                .setName(catName)
+                .setBirthDate(LocalDate.of(2021, 4, 15))
+                .setType(catType);
         Owner owner = new Owner()
-            .setFirstName("Victor")
-            .setLastName("Owner_SPS")
-            .setAddress("1 Cat Lane")
-            .setCity("Bucharest")
-            .setTelephone("0700000000");
+                .setFirstName("Victor")
+                .setLastName("Owner_SPS")
+                .setAddress("1 Cat Lane")
+                .setCity("Bucharest")
+                .setTelephone("0700000000");
         owner.addPet(cat);
         return ownerRepository.save(owner);
     }
 
     private static void authenticateAs(int ownerId) {
         var auth = new UsernamePasswordAuthenticationToken(
-            String.valueOf(ownerId),
-            null,
-            List.of(new SimpleGrantedAuthority("ROLE_MCP")));
+                String.valueOf(ownerId),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_MCP")));
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

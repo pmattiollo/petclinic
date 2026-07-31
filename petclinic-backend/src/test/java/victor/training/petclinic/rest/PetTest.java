@@ -42,9 +42,9 @@ public class PetTest {
     MockMvc mockMvc;
 
     ObjectMapper mapper = new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .setDateFormat(new SimpleDateFormat("yyyy-MM-dd"))
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            .registerModule(new JavaTimeModule())
+            .setDateFormat(new SimpleDateFormat("yyyy-MM-dd"))
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     @Autowired
     PetRepository petRepository;
     @Autowired
@@ -57,18 +57,17 @@ public class PetTest {
     final void before() {
         Owner owner = ownerRepository.save(TestData.anOwner());
         petId = petRepository.save(TestData.aPet()
-            .setOwner(owner)
-            .setType(petTypeRepository.save(new PetType().setName("cat")))
-        ).getId();
+                .setOwner(owner)
+                .setType(petTypeRepository.save(new PetType().setName("cat")))).getId();
     }
 
     private PetDto callGet(int petId1) throws Exception {
         String responseJson = mockMvc.perform(get("/api/pets/" + petId1))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         return mapper.readValue(responseJson, PetDto.class);
     }
 
@@ -85,22 +84,22 @@ public class PetTest {
     @Test
     void getById_notFound() throws Exception {
         mockMvc.perform(get("/api/pets/99999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void getAll() throws Exception {
         String responseJson = mockMvc.perform(get("/api/pets"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         PetDto[] pets = mapper.readValue(responseJson, PetDto[].class);
 
         assertThat(pets)
-            .extracting(PetDto::getId, PetDto::getName, p -> p.getType().getName(), PetDto::getBirthDate)
-            .contains(Assertions.tuple(petId, "Leo", "cat", BIRTH_DATE));
+                .extracting(PetDto::getId, PetDto::getName, p -> p.getType().getName(), PetDto::getBirthDate)
+                .contains(Assertions.tuple(petId, "Leo", "cat", BIRTH_DATE));
     }
 
     @Test
@@ -111,7 +110,7 @@ public class PetTest {
         mockMvc.perform(put("/api/pets/" + petId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isOk());
+                .andExpect(status().isOk());
 
         // assert the update took place
         PetDto updated = callGet(petId);
@@ -126,7 +125,7 @@ public class PetTest {
         mockMvc.perform(put("/api/pets/" + petId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -136,21 +135,21 @@ public class PetTest {
         mockMvc.perform(put("/api/pets/99999")
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void delete_ok() throws Exception {
         mockMvc.perform(delete("/api/pets/" + petId))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         mockMvc.perform(get("/api/pets/" + petId))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void delete_notFound() throws Exception {
         mockMvc.perform(delete("/api/pets/9999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 }

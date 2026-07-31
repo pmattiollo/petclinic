@@ -44,14 +44,14 @@ public class McpSecurity {
     @Order(Ordered.HIGHEST_PRECEDENCE)
     SecurityFilterChain mcpJwtChain(HttpSecurity http) throws Exception {
         return http
-            .securityMatcher("/mcp", "/mcp/**")
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-            .addFilterBefore(new McpAuthFilter(apiKey), UsernamePasswordAuthenticationFilter.class)
-            .httpBasic(AbstractHttpConfigurer::disable)
-            .formLogin(AbstractHttpConfigurer::disable)
-            .build();
+                .securityMatcher("/mcp", "/mcp/**")
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .addFilterBefore(new McpAuthFilter(apiKey), UsernamePasswordAuthenticationFilter.class)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .build();
     }
 
     /**
@@ -70,7 +70,7 @@ public class McpSecurity {
 
         @Override
         protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
-            throws ServletException, IOException {
+                throws ServletException, IOException {
             if (!apiKey.equals(req.getHeader("X-API-Key"))) {
                 res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid MCP API key");
                 return;
@@ -82,9 +82,9 @@ public class McpSecurity {
             }
             Object principal = subject != null ? subject : "mcp-service";
             var auth = new UsernamePasswordAuthenticationToken(
-                principal,
-                null,
-                List.of(new SimpleGrantedAuthority("ROLE_MCP")));
+                    principal,
+                    null,
+                    List.of(new SimpleGrantedAuthority("ROLE_MCP")));
             SecurityContextHolder.getContext().setAuthentication(auth);
             chain.doFilter(req, res);
         }
@@ -92,7 +92,8 @@ public class McpSecurity {
         private static String extractSubject(String jwt) {
             try {
                 String[] parts = jwt.split("\\.");
-                if (parts.length < 2) return null;
+                if (parts.length < 2)
+                    return null;
                 byte[] decoded = Base64.getUrlDecoder().decode(padBase64(parts[1]));
                 String payload = new String(decoded, StandardCharsets.UTF_8);
                 return new ObjectMapper().readTree(payload).path("sub").asText(null);

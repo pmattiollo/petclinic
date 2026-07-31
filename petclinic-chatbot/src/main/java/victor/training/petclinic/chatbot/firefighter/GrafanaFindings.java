@@ -7,11 +7,11 @@ package victor.training.petclinic.chatbot.firefighter;
  */
 public record GrafanaFindings(boolean available, String reason, String metricFinding, String logFinding) {
 
-  static GrafanaFindings unavailable(String reason) {
-    return new GrafanaFindings(false, reason, "unavailable", "unavailable");
-  }
+    static GrafanaFindings unavailable(String reason) {
+        return new GrafanaFindings(false, reason, "unavailable", "unavailable");
+    }
 
-  static GrafanaFindings available(String metricFinding, String logFinding) {
-    return new GrafanaFindings(true, "ok", metricFinding, logFinding);
-  }
+    static GrafanaFindings available(String metricFinding, String logFinding) {
+        return new GrafanaFindings(true, "ok", metricFinding, logFinding);
+    }
 }

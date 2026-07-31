@@ -19,25 +19,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class McpHttpSecurityTest {
 
-    static final String VALID_JWT =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" +
-        ".eyJzdWIiOiIxIiwibmFtZSI6Ikdlb3JnZSBGcmFua2xpbiIsImlhdCI6MTc0OTE2ODAwMCwiZXhwIjoxODEyMjQwMDAwfQ" +
-        ".Xk7mN3qR2vL8pY4sA6dW1eH0fT9bC5jOuQzEiWs";
+    static final String VALID_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" +
+            ".eyJzdWIiOiIxIiwibmFtZSI6Ikdlb3JnZSBGcmFua2xpbiIsImlhdCI6MTc0OTE2ODAwMCwiZXhwIjoxODEyMjQwMDAwfQ" +
+            ".Xk7mN3qR2vL8pY4sA6dW1eH0fT9bC5jOuQzEiWs";
 
-    @Autowired MockMvc mockMvc;
+    @Autowired
+    MockMvc mockMvc;
 
-    @Value("${petclinic.mcp.api-key}") String apiKey;
+    @Value("${petclinic.mcp.api-key}")
+    String apiKey;
 
     @Test
     void mcp_withoutApiKey_isUnauthorized() throws Exception {
         mockMvc.perform(get("/mcp"))
-            .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     void mcp_withWrongApiKey_isUnauthorized() throws Exception {
         mockMvc.perform(get("/mcp").header("X-API-Key", "not-the-key"))
-            .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -45,10 +46,10 @@ class McpHttpSecurityTest {
         // The API key authenticates the calling service; any non-401 proves it passed the gate (the
         // MCP endpoint's own response shape — e.g. 400 for an empty body — is not the point here).
         mockMvc.perform(post("/mcp").header("X-API-Key", apiKey).header("Authorization", "Bearer " + VALID_JWT))
-            .andExpect(result -> {
-                if (result.getResponse().getStatus() == 401) {
-                    throw new AssertionError("Expected the API key to pass the service gate, got 401");
-                }
-            });
+                .andExpect(result -> {
+                    if (result.getResponse().getStatus() == 401) {
+                        throw new AssertionError("Expected the API key to pass the service gate, got 401");
+                    }
+                });
     }
 }

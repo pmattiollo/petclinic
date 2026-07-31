@@ -31,9 +31,9 @@ public class VisitRestController {
 
     @GetMapping
     @ApiResponse(responseCode = "200", description = "OK",
-        content = @Content(mediaType = "application/json",
-            array = @ArraySchema(schema = @Schema(implementation = VisitDto.class)),
-            examples = @ExampleObject(name = "sample", value = ApiExamples.VISITS)))
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = VisitDto.class)),
+                    examples = @ExampleObject(name = "sample", value = ApiExamples.VISITS)))
     public List<VisitDto> listVisits() {
         List<Visit> visits = visitRepository.findAllWithPetAndOwner();
         return visitMapper.toVisitsDto(visits);
@@ -49,7 +49,7 @@ public class VisitRestController {
     public ResponseEntity<Void> addVisit(@RequestBody @Validated VisitDto visitDto) {
         int id = bookVisit(visitDto);
         return ResponseEntity.created(UriComponentsBuilder.fromPath("/api/visits/{id}")
-                        .buildAndExpand(id).toUri())
+                .buildAndExpand(id).toUri())
                 .build();
     }
 

@@ -98,6 +98,19 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.44.0</version>
+                <configuration>
+                    <java>
+                        <trimTrailingWhitespace/>
+                        <removeUnusedImports/>
+                        <endWithNewline/>
+                        <eclipse><file>${project.basedir}/../eclipse-formatter.xml</file></eclipse>
+                    </java>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

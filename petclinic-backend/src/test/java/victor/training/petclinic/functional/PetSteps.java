@@ -22,9 +22,9 @@ public class PetSteps {
     public void anOwnerExists(String fullName) {
         String[] parts = fullName.split(" ", 2);
         Integer ownerId = jdbc.queryForObject(
-            "INSERT INTO owners (first_name, last_name, address, city, telephone)" +
-                " VALUES (?, ?, 'addr', 'city', '0000000000') RETURNING id",
-            Integer.class, parts[0], parts[1]);
+                "INSERT INTO owners (first_name, last_name, address, city, telephone)" +
+                        " VALUES (?, ?, 'addr', 'city', '0000000000') RETURNING id",
+                Integer.class, parts[0], parts[1]);
         http.rememberId("owner:" + fullName, ownerId);
     }
 
@@ -32,17 +32,17 @@ public class PetSteps {
     public void iEnrollAPet(String typeName, String petName, String birthDate, String fullName) {
         int ownerId = http.idOf("owner:" + fullName);
         Integer typeId = jdbc.queryForObject(
-            "SELECT id FROM types WHERE name = ?", Integer.class, typeName);
+                "SELECT id FROM types WHERE name = ?", Integer.class, typeName);
 
         String body = """
-            {"name":"%s","birthDate":"%s","type":{"id":%d,"name":"%s"}}
-            """.formatted(petName, birthDate, typeId, typeName);
+                {"name":"%s","birthDate":"%s","type":{"id":%d,"name":"%s"}}
+                """.formatted(petName, birthDate, typeId, typeName);
 
         http.setLastResponse(RestAssured.given()
-            .baseUri(http.baseUri())
-            .contentType(ContentType.JSON)
-            .body(body)
-            .post("/api/owners/" + ownerId + "/pets"));
+                .baseUri(http.baseUri())
+                .contentType(ContentType.JSON)
+                .body(body)
+                .post("/api/owners/" + ownerId + "/pets"));
     }
 
     @Then("owner {string} has {int} pet named {string} of type {string}")

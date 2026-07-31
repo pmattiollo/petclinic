@@ -59,11 +59,11 @@ public class PetTypeTest {
 
     private PetTypeDto callGet(int petTypeId) throws Exception {
         String responseJson = mockMvc.perform(get("/api/pettypes/" + petTypeId))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         return mapper.readValue(responseJson, PetTypeDto.class);
     }
 
@@ -80,24 +80,24 @@ public class PetTypeTest {
     @WithMockUser(roles = "VET_ADMIN")
     void getPetType_notFound() throws Exception {
         mockMvc.perform(get("/api/pettypes/99999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     @WithMockUser(roles = "VET_ADMIN")
     void getAllPetTypesSuccessAsOwnerAdmin() throws Exception {
         String responseJson = mockMvc.perform(get("/api/pettypes"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         PetTypeDto[] petTypes = mapper.readValue(responseJson, PetTypeDto[].class);
 
         assertThat(petTypes).hasSizeGreaterThanOrEqualTo(1);
         assertThat(petTypes)
-            .extracting(PetTypeDto::getId, PetTypeDto::getName)
-            .contains(Assertions.tuple(petTypeId, "cat"));
+                .extracting(PetTypeDto::getId, PetTypeDto::getName)
+                .contains(Assertions.tuple(petTypeId, "cat"));
     }
 
     @Test
@@ -109,10 +109,10 @@ public class PetTypeTest {
         String locationHeader = mockMvc.perform(post("/api/pettypes")
                 .content(mapper.writeValueAsString(newPetType))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isCreated())
-            .andReturn()
-            .getResponse()
-            .getHeader("Location");
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getHeader("Location");
 
         var newId = Integer.parseInt(locationHeader.substring(locationHeader.lastIndexOf('/') + 1));
 
@@ -129,7 +129,7 @@ public class PetTypeTest {
         mockMvc.perform(post("/api/pettypes")
                 .content(mapper.writeValueAsString(newPetType))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
@@ -141,7 +141,7 @@ public class PetTypeTest {
         mockMvc.perform(put("/api/pettypes/" + petTypeId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         // Verify the update took place
         PetTypeDto updated = callGet(petTypeId);
@@ -157,25 +157,25 @@ public class PetTypeTest {
         mockMvc.perform(put("/api/pettypes/" + petTypeId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
     @WithMockUser(roles = "VET_ADMIN")
     void deletePetType_ok() throws Exception {
         mockMvc.perform(delete("/api/pettypes/" + petTypeId))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         // Verify it was deleted
         mockMvc.perform(get("/api/pettypes/" + petTypeId))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     @WithMockUser(roles = "VET_ADMIN")
     void deletePetType_notFound() throws Exception {
         mockMvc.perform(delete("/api/pettypes/99999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -185,14 +185,14 @@ public class PetTypeTest {
         // create an owner and pet that references the petType
         Owner owner = ownerRepository.save(TestData.anOwner());
         Pet pet = TestData.aPet()
-            .setOwner(owner)
-            .setType(petTypeRepository.findById(petTypeId).orElseThrow());
+                .setOwner(owner)
+                .setType(petTypeRepository.findById(petTypeId).orElseThrow());
         petRepository.save(pet);
 
         mockMvc.perform(delete("/api/pettypes/" + petTypeId))
-            .andExpect(status().isInternalServerError())
-            .andExpect(result -> assertThat(result.getResponse().getContentAsString()
-                .contains("PetType is in use by existing pets and cannot be deleted")).isTrue());
+                .andExpect(status().isInternalServerError())
+                .andExpect(result -> assertThat(result.getResponse().getContentAsString()
+                        .contains("PetType is in use by existing pets and cannot be deleted")).isTrue());
     }
 
 }

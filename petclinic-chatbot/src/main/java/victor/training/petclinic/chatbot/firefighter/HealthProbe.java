@@ -26,65 +26,65 @@ import org.springframework.web.client.RestClient;
 @Component
 public class HealthProbe {
 
-  private final RestClient http = RestClient.builder().build();
-  private final Duration timeout = Duration.ofMillis(800);
+    private final RestClient http = RestClient.builder().build();
+    private final Duration timeout = Duration.ofMillis(800);
 
-  /** Liveness of a single service: Actuator {@code status} when available, else a TCP check. */
-  public ServiceHealth check(Service service) {
-    if (service.healthPath().isPresent()) {
-      return checkActuator(service);
+    /** Liveness of a single service: Actuator {@code status} when available, else a TCP check. */
+    public ServiceHealth check(Service service) {
+        if (service.healthPath().isPresent()) {
+            return checkActuator(service);
+        }
+        return checkTcp(service);
     }
-    return checkTcp(service);
-  }
 
-  private ServiceHealth checkActuator(Service service) {
-    String url = service.baseUrl() + service.healthPath().orElseThrow();
-    try {
-      @SuppressWarnings("unchecked")
-      Map<String, Object> body = http.get().uri(url).retrieve().body(Map.class);
-      String status = body == null ? "UNKNOWN" : String.valueOf(body.get("status"));
-      boolean up = "UP".equalsIgnoreCase(status);
-      return new ServiceHealth(service, up, "actuator:" + status);
-    } catch (RuntimeException e) {
-      log.debug("actuator probe failed for {}: {}", service, e.toString());
-      return new ServiceHealth(service, false, "actuator:unreachable");
+    private ServiceHealth checkActuator(Service service) {
+        String url = service.baseUrl() + service.healthPath().orElseThrow();
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = http.get().uri(url).retrieve().body(Map.class);
+            String status = body == null ? "UNKNOWN" : String.valueOf(body.get("status"));
+            boolean up = "UP".equalsIgnoreCase(status);
+            return new ServiceHealth(service, up, "actuator:" + status);
+        } catch (RuntimeException e) {
+            log.debug("actuator probe failed for {}: {}", service, e.toString());
+            return new ServiceHealth(service, false, "actuator:unreachable");
+        }
     }
-  }
 
-  private ServiceHealth checkTcp(Service service) {
-    try (Socket socket = new Socket()) {
-      socket.connect(new InetSocketAddress("localhost", service.port()), (int) timeout.toMillis());
-      return new ServiceHealth(service, true, "tcp:open");
-    } catch (IOException e) {
-      return new ServiceHealth(service, false, "tcp:closed");
+    private ServiceHealth checkTcp(Service service) {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress("localhost", service.port()), (int) timeout.toMillis());
+            return new ServiceHealth(service, true, "tcp:open");
+        } catch (IOException e) {
+            return new ServiceHealth(service, false, "tcp:closed");
+        }
     }
-  }
 
-  /**
-   * A few key BE Actuator metrics (JVM memory + HTTP request count). Returns "unavailable" values
-   * on any error rather than failing the flow.
-   */
-  public MetricsSnapshot readMetrics() {
-    String used = readMetric(Service.BE, "jvm.memory.used");
-    String requests = readMetric(Service.BE, "http.server.requests");
-    return new MetricsSnapshot(Map.of(
-        "jvm.memory.used", used,
-        "http.server.requests", requests));
-  }
-
-  private String readMetric(Service service, String name) {
-    String url = service.baseUrl() + "/actuator/metrics/" + name;
-    try {
-      @SuppressWarnings("unchecked")
-      Map<String, Object> body = http.get().uri(url).retrieve().body(Map.class);
-      if (body == null) {
-        return "unavailable";
-      }
-      Object measurements = body.get("measurements");
-      return measurements == null ? "unavailable" : String.valueOf(measurements);
-    } catch (RuntimeException e) {
-      log.debug("metric {} unavailable: {}", name, e.toString());
-      return "unavailable";
+    /**
+     * A few key BE Actuator metrics (JVM memory + HTTP request count). Returns "unavailable" values
+     * on any error rather than failing the flow.
+     */
+    public MetricsSnapshot readMetrics() {
+        String used = readMetric(Service.BE, "jvm.memory.used");
+        String requests = readMetric(Service.BE, "http.server.requests");
+        return new MetricsSnapshot(Map.of(
+                "jvm.memory.used", used,
+                "http.server.requests", requests));
     }
-  }
+
+    private String readMetric(Service service, String name) {
+        String url = service.baseUrl() + "/actuator/metrics/" + name;
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = http.get().uri(url).retrieve().body(Map.class);
+            if (body == null) {
+                return "unavailable";
+            }
+            Object measurements = body.get("measurements");
+            return measurements == null ? "unavailable" : String.valueOf(measurements);
+        } catch (RuntimeException e) {
+            log.debug("metric {} unavailable: {}", name, e.toString());
+            return "unavailable";
+        }
+    }
 }

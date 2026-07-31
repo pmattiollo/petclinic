@@ -28,10 +28,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 class ListVisitsToolTest {
 
-    @Autowired PetClinicMcp petClinicMcp;
-    @Autowired OwnerRepository ownerRepository;
-    @Autowired PetRepository petRepository;
-    @Autowired VisitRepository visitRepository;
+    @Autowired
+    PetClinicMcp petClinicMcp;
+    @Autowired
+    OwnerRepository ownerRepository;
+    @Autowired
+    PetRepository petRepository;
+    @Autowired
+    VisitRepository visitRepository;
 
     @AfterEach
     void clearAuth() {
@@ -42,20 +46,20 @@ class ListVisitsToolTest {
     void lists_visits_of_authenticated_owner() {
         PetType firstType = petRepository.findPetTypes().get(0);
         Pet pet = new Pet()
-            .setName("Rex")
-            .setBirthDate(LocalDate.of(2020, 1, 1))
-            .setType(firstType);
+                .setName("Rex")
+                .setBirthDate(LocalDate.of(2020, 1, 1))
+                .setType(firstType);
         Owner owner = new Owner()
-            .setFirstName("Tdd")
-            .setLastName("Tester")
-            .setAddress("1 Test Way")
-            .setCity("Testville")
-            .setTelephone("0000000000");
+                .setFirstName("Tdd")
+                .setLastName("Tester")
+                .setAddress("1 Test Way")
+                .setCity("Testville")
+                .setTelephone("0000000000");
         owner.addPet(pet);
         // addVisit keeps both sides of the association in sync, so listVisits can navigate pet.getVisits().
         pet.addVisit(new Visit()
-            .setDate(LocalDate.of(2026, 5, 24))
-            .setDescription("Annual checkup"));
+                .setDate(LocalDate.of(2026, 5, 24))
+                .setDescription("Annual checkup"));
         ownerRepository.save(owner);
 
         authenticateAs(owner.getId());
@@ -63,15 +67,15 @@ class ListVisitsToolTest {
         List<PetClinicMcp.VisitView> visits = petClinicMcp.listVisits();
 
         assertThat(visits)
-            .extracting(PetClinicMcp.VisitView::description)
-            .contains("Annual checkup");
+                .extracting(PetClinicMcp.VisitView::description)
+                .contains("Annual checkup");
     }
 
     private static void authenticateAs(int ownerId) {
         var auth = new UsernamePasswordAuthenticationToken(
-            String.valueOf(ownerId),
-            null,
-            List.of(new SimpleGrantedAuthority("ROLE_MCP")));
+                String.valueOf(ownerId),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_MCP")));
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

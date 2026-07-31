@@ -13,18 +13,18 @@ import org.springframework.context.event.EventListener;
 @EnableCaching // backs the cached @GetMapping("/api/specialties/feed") so polling clients don't hit the DB
 public class PetClinicApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(PetClinicApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(PetClinicApplication.class, args);
+    }
 
-	@EventListener
-	void started(WebServerInitializedEvent event) {
-		System.out.println("✅ started petclinic-backend on port " + event.getWebServer().getPort());
-	}
+    @EventListener
+    void started(WebServerInitializedEvent event) {
+        System.out.println("✅ started petclinic-backend on port " + event.getWebServer().getPort());
+    }
 
-	@Bean
-	@ConfigurationProperties(prefix = "openapi")
-	OpenAPI customOpenAPI() {
-		return new OpenAPI();
-	}
+    @Bean
+    @ConfigurationProperties(prefix = "openapi")
+    OpenAPI customOpenAPI() {
+        return new OpenAPI();
+    }
 }

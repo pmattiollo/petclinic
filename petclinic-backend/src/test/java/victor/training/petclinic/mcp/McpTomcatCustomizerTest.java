@@ -24,8 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureEmbeddedDatabase(provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY)
 class McpTomcatCustomizerTest {
 
-    @Autowired ServletWebServerApplicationContext context;
-    @Autowired WebServerFactoryCustomizer<TomcatServletWebServerFactory> disableSoLinger;
+    @Autowired
+    ServletWebServerApplicationContext context;
+    @Autowired
+    WebServerFactoryCustomizer<TomcatServletWebServerFactory> disableSoLinger;
 
     @Test
     void customizer_bean_is_registered() {

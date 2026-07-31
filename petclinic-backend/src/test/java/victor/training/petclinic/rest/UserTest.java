@@ -42,7 +42,7 @@ public class UserTest {
         mockMvc.perform(post("/api/users")
                 .content(mapper.writeValueAsString(newUser))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -56,7 +56,7 @@ public class UserTest {
         mockMvc.perform(post("/api/users")
                 .content(mapper.writeValueAsString(newUser))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -71,6 +71,6 @@ public class UserTest {
         mockMvc.perform(post("/api/users")
                 .content(mapper.writeValueAsString(newUser))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is5xxServerError());
+                .andExpect(status().is5xxServerError());
     }
 }

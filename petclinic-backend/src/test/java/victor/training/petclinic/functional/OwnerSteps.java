@@ -26,30 +26,30 @@ public class OwnerSteps {
     @When("I register an owner with first name {string}, last name {string}, address {string}, city {string}, telephone {string}")
     public void iRegisterAnOwner(String firstName, String lastName, String address, String city, String telephone) {
         String body = """
-            {"firstName":"%s","lastName":"%s","address":"%s","city":"%s","telephone":"%s"}
-            """.formatted(firstName, lastName, address, city, telephone);
+                {"firstName":"%s","lastName":"%s","address":"%s","city":"%s","telephone":"%s"}
+                """.formatted(firstName, lastName, address, city, telephone);
 
         http.setLastResponse(RestAssured.given()
-            .baseUri(http.baseUri())
-            .contentType(ContentType.JSON)
-            .body(body)
-            .post("/api/owners"));
+                .baseUri(http.baseUri())
+                .contentType(ContentType.JSON)
+                .body(body)
+                .post("/api/owners"));
     }
 
     @When("I POST to {string} the JSON:")
     public void iPostJson(String path, String body) {
         http.setLastResponse(RestAssured.given()
-            .baseUri(http.baseUri())
-            .contentType(ContentType.JSON)
-            .body(body)
-            .post(path));
+                .baseUri(http.baseUri())
+                .contentType(ContentType.JSON)
+                .body(body)
+                .post(path));
     }
 
     @Then("the owner is searchable by last name {string}")
     public void theOwnerIsSearchableByLastName(String lastName) {
         var response = RestAssured.given()
-            .baseUri(http.baseUri())
-            .get("/api/owners?lastName=" + lastName);
+                .baseUri(http.baseUri())
+                .get("/api/owners?lastName=" + lastName);
         assertThat(response.statusCode()).isEqualTo(200);
         List<String> lastNames = response.jsonPath().getList("lastName", String.class);
         assertThat(lastNames).contains(lastName);
@@ -59,9 +59,8 @@ public class OwnerSteps {
     public void theFollowingOwnersExist(DataTable table) {
         for (Map<String, String> row : table.asMaps()) {
             jdbc.update(
-                "INSERT INTO owners (first_name, last_name, address, city, telephone) VALUES (?, ?, ?, ?, ?)",
-                row.get("firstName"), row.get("lastName"), "addr", "city", "0000000000"
-            );
+                    "INSERT INTO owners (first_name, last_name, address, city, telephone) VALUES (?, ?, ?, ?, ?)",
+                    row.get("firstName"), row.get("lastName"), "addr", "city", "0000000000");
         }
     }
 
@@ -81,14 +80,14 @@ public class OwnerSteps {
     public void anOwnerWithAPet(String fullName, String typeName, String petName, String birthDate) {
         String[] parts = fullName.split(" ", 2);
         Integer ownerId = jdbc.queryForObject(
-            "INSERT INTO owners (first_name, last_name, address, city, telephone)" +
-                " VALUES (?, ?, 'addr', 'city', '0000000000') RETURNING id",
-            Integer.class, parts[0], parts[1]);
+                "INSERT INTO owners (first_name, last_name, address, city, telephone)" +
+                        " VALUES (?, ?, 'addr', 'city', '0000000000') RETURNING id",
+                Integer.class, parts[0], parts[1]);
         Integer typeId = jdbc.queryForObject(
-            "SELECT id FROM types WHERE name = ?", Integer.class, typeName);
+                "SELECT id FROM types WHERE name = ?", Integer.class, typeName);
         jdbc.update(
-            "INSERT INTO pets (name, birth_date, type_id, owner_id) VALUES (?, ?, ?, ?)",
-            petName, LocalDate.parse(birthDate), typeId, ownerId);
+                "INSERT INTO pets (name, birth_date, type_id, owner_id) VALUES (?, ?, ?, ?)",
+                petName, LocalDate.parse(birthDate), typeId, ownerId);
         http.rememberId("owner:" + fullName, ownerId);
     }
 

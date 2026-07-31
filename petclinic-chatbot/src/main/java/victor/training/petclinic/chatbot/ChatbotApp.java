@@ -15,19 +15,19 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling // drives RagIngestion's every-3s poll of the backend specialty feed
 public class ChatbotApp {
 
-  public static void main(String[] args) {
-    SpringApplication.run(ChatbotApp.class, args);
-  }
+    public static void main(String[] args) {
+        SpringApplication.run(ChatbotApp.class, args);
+    }
 
-  @EventListener
-  void started(WebServerInitializedEvent event) {
-    System.out.println("✅ started petclinic-chatbot on port " + event.getWebServer().getPort());
-  }
+    @EventListener
+    void started(WebServerInitializedEvent event) {
+        System.out.println("✅ started petclinic-chatbot on port " + event.getWebServer().getPort());
+    }
 
-  @Bean
-  SimpleVectorStore vectorStore(EmbeddingModel embeddingModel) {
-    // In-memory vector store — no Postgres/Docker needed to run the workshop.
-    // RagIngestion persists it to disk so embeddings survive restarts (no re-embedding cost).
-    return SimpleVectorStore.builder(embeddingModel).build();
-  }
+    @Bean
+    SimpleVectorStore vectorStore(EmbeddingModel embeddingModel) {
+        // In-memory vector store — no Postgres/Docker needed to run the workshop.
+        // RagIngestion persists it to disk so embeddings survive restarts (no re-embedding cost).
+        return SimpleVectorStore.builder(embeddingModel).build();
+    }
 }

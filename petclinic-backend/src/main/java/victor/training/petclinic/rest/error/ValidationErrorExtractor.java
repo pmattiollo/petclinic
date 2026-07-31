@@ -53,7 +53,7 @@ public final class ValidationErrorExtractor {
         }
         // split camelCase and dots into words
         String single = path.replace('.', ' ')
-            .replaceAll("([a-z])([A-Z])", "$1 $2");
+                .replaceAll("([a-z])([A-Z])", "$1 $2");
         single = single.trim();
         if (single.isEmpty()) {
             return "Value";
@@ -68,7 +68,8 @@ public final class ValidationErrorExtractor {
     }
 
     private static String capitalizeFirst(String s) {
-        if (s == null || s.isEmpty()) return s;
+        if (s == null || s.isEmpty())
+            return s;
         return Character.toUpperCase(s.charAt(0)) + (s.length() > 1 ? s.substring(1) : "");
     }
 }

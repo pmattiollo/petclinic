@@ -33,9 +33,9 @@ public class PetTypeRestController {
 
     @GetMapping(produces = "application/json")
     @ApiResponse(responseCode = "200", description = "OK",
-        content = @Content(mediaType = "application/json",
-            array = @ArraySchema(schema = @Schema(implementation = PetTypeDto.class)),
-            examples = @ExampleObject(name = "sample", value = ApiExamples.PET_TYPES)))
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = PetTypeDto.class)),
+                    examples = @ExampleObject(name = "sample", value = ApiExamples.PET_TYPES)))
     public List<PetTypeDto> listPetTypes() {
         List<PetType> petTypes = new ArrayList<>(petTypeRepository.findAll());
         return petTypeMapper.toPetTypeDtos(petTypes);
@@ -52,14 +52,14 @@ public class PetTypeRestController {
         PetType type = petTypeMapper.toPetType(petTypeFieldsDto);
         petTypeRepository.save(type);
         URI createdUri = UriComponentsBuilder.fromPath("/api/pettypes/{id}")
-            .buildAndExpand(type.getId()).toUri();
+                .buildAndExpand(type.getId()).toUri();
         return ResponseEntity.created(createdUri).build();
     }
 
     @PreAuthorize("hasRole(@roles.VET_ADMIN)")
     @PutMapping("/{petTypeId}")
     public void updatePetType(@PathVariable int petTypeId,
-                              @RequestBody @Validated PetTypeDto petTypeDto) {
+            @RequestBody @Validated PetTypeDto petTypeDto) {
         PetType currentPetType = petTypeRepository.findById(petTypeId).orElseThrow();
         currentPetType.setName(petTypeDto.getName());
         petTypeRepository.save(currentPetType);

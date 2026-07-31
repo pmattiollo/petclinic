@@ -21,13 +21,14 @@ import static org.mockito.Mockito.when;
 @AutoConfigureEmbeddedDatabase(provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY)
 class CallVetAmbulanceToolTest {
 
-    @Autowired PetClinicMcp petClinicMcp;
+    @Autowired
+    PetClinicMcp petClinicMcp;
 
     @Test
     void dispatches_ambulance_when_owner_accepts_and_provides_address() {
         McpSyncRequestContext context = elicitingContext(
-            new StructuredElicitResult<>(ElicitResult.Action.ACCEPT,
-                new PetClinicMcp.AmbulanceAddressInput("110 Sesame Street"), null));
+                new StructuredElicitResult<>(ElicitResult.Action.ACCEPT,
+                        new PetClinicMcp.AmbulanceAddressInput("110 Sesame Street"), null));
 
         String result = petClinicMcp.callVetAmbulance(context);
 
@@ -37,7 +38,7 @@ class CallVetAmbulanceToolTest {
     @Test
     void declined_request_does_not_dispatch() {
         McpSyncRequestContext context = elicitingContext(
-            new StructuredElicitResult<>(ElicitResult.Action.DECLINE, null, null));
+                new StructuredElicitResult<>(ElicitResult.Action.DECLINE, null, null));
 
         String result = petClinicMcp.callVetAmbulance(context);
 
@@ -47,7 +48,7 @@ class CallVetAmbulanceToolTest {
     @Test
     void cancelled_request_does_not_dispatch() {
         McpSyncRequestContext context = elicitingContext(
-            new StructuredElicitResult<>(ElicitResult.Action.CANCEL, null, null));
+                new StructuredElicitResult<>(ElicitResult.Action.CANCEL, null, null));
 
         String result = petClinicMcp.callVetAmbulance(context);
 
@@ -57,29 +58,29 @@ class CallVetAmbulanceToolTest {
     @Test
     void blank_address_is_rejected() {
         McpSyncRequestContext context = elicitingContext(
-            new StructuredElicitResult<>(ElicitResult.Action.ACCEPT,
-                new PetClinicMcp.AmbulanceAddressInput("   "), null));
+                new StructuredElicitResult<>(ElicitResult.Action.ACCEPT,
+                        new PetClinicMcp.AmbulanceAddressInput("   "), null));
 
         assertThatThrownBy(() -> petClinicMcp.callVetAmbulance(context))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("address is required");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("address is required");
     }
 
     @Test
     void null_structured_content_is_rejected() {
         McpSyncRequestContext context = elicitingContext(
-            new StructuredElicitResult<>(ElicitResult.Action.ACCEPT, null, null));
+                new StructuredElicitResult<>(ElicitResult.Action.ACCEPT, null, null));
 
         assertThatThrownBy(() -> petClinicMcp.callVetAmbulance(context))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("address is required");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("address is required");
     }
 
     @Test
     void null_context_means_no_elicitation_support() {
         assertThatThrownBy(() -> petClinicMcp.callVetAmbulance(null))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("elicitation");
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("elicitation");
     }
 
     @Test
@@ -88,8 +89,8 @@ class CallVetAmbulanceToolTest {
         when(context.elicitEnabled()).thenReturn(false);
 
         assertThatThrownBy(() -> petClinicMcp.callVetAmbulance(context))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("elicitation");
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("elicitation");
     }
 
     @SuppressWarnings("unchecked")

@@ -21,13 +21,14 @@ public class SpecialtyFeed {
     private final SpecialtyRepository specialtyRepository;
 
     /** Lean projection — exactly what a RAG/sync client needs, decoupled from {@code SpecialtyDto}. */
-    public record Item(Integer id, String name, String description) {}
+    public record Item(Integer id, String name, String description) {
+    }
 
     @Cacheable("specialtyFeed")
     public List<Item> load() {
         return specialtyRepository.findAll().stream()
-            .map(this::toItem)
-            .toList();
+                .map(this::toItem)
+                .toList();
     }
 
     @CacheEvict(value = "specialtyFeed", allEntries = true)

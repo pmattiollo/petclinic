@@ -76,20 +76,20 @@ public class Owner {
 
     public Optional<Pet> getPetById(int petId) {
         return pets.stream()
-            .filter(p -> p.getId().equals(petId))
-            .findFirst();
+                .filter(p -> p.getId().equals(petId))
+                .findFirst();
     }
 
     @Override
     public String toString() {
         return new ToStringCreator(this)
 
-            .append("id", id)
-            .append("lastName", lastName)
-            .append("firstName", firstName)
-            .append("address", address)
-            .append("city", city)
-            .append("telephone", telephone)
-            .toString();
+                .append("id", id)
+                .append("lastName", lastName)
+                .append("firstName", firstName)
+                .append("address", address)
+                .append("city", city)
+                .append("telephone", telephone)
+                .toString();
     }
 }

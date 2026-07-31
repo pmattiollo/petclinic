@@ -44,8 +44,8 @@ public class VisitTest {
     MockMvc mockMvc;
 
     ObjectMapper mapper = new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     @Autowired
     VisitRepository visitRepository;
@@ -65,8 +65,8 @@ public class VisitTest {
     final void before() {
         Owner owner = ownerRepository.save(TestData.anOwner());
         Pet pet = TestData.aPet()
-            .setOwner(owner)
-            .setType(petTypeRepository.save(new PetType().setName("dog")));
+                .setOwner(owner)
+                .setType(petTypeRepository.save(new PetType().setName("dog")));
         petRepository.save(pet);
         petId = pet.getId();
 
@@ -80,11 +80,11 @@ public class VisitTest {
 
     private VisitDto callGet(int visitId) throws Exception {
         String responseJson = mockMvc.perform(get("/api/visits/" + visitId))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         return mapper.readValue(responseJson, VisitDto.class);
     }
 
@@ -100,41 +100,41 @@ public class VisitTest {
     @Test
     void getById_notFound() throws Exception {
         mockMvc.perform(get("/api/visits/99999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void getAll() throws Exception {
         String responseJson = mockMvc.perform(get("/api/visits"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         VisitDto[] visits = mapper.readValue(responseJson, VisitDto[].class);
 
         assertThat(visits)
-            .extracting(VisitDto::getId, VisitDto::getDescription)
-            .contains(Assertions.tuple(visitId, "rabies shot"));
+                .extracting(VisitDto::getId, VisitDto::getDescription)
+                .contains(Assertions.tuple(visitId, "rabies shot"));
     }
 
     @Test
     void getAll_returnsEnrichedFields() throws Exception {
         String responseJson = mockMvc.perform(get("/api/visits"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType("application/json"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
         VisitDto[] visits = mapper.readValue(responseJson, VisitDto[].class);
 
         VisitDto created = Arrays.stream(visits)
-            .filter(v -> v.getId() == visitId)
-            .findFirst()
-            .orElseThrow();
+                .filter(v -> v.getId() == visitId)
+                .findFirst()
+                .orElseThrow();
 
         Owner owner = ownerRepository.findById(petRepository.findById(petId).orElseThrow().getOwner().getId())
-            .orElseThrow();
+                .orElseThrow();
         Pet pet = petRepository.findById(petId).orElseThrow();
 
         assertThat(created.getPetName()).isEqualTo(pet.getName());
@@ -153,7 +153,7 @@ public class VisitTest {
         mockMvc.perform(post("/api/visits")
                 .content(mapper.writeValueAsString(newVisit))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -164,22 +164,22 @@ public class VisitTest {
         mockMvc.perform(put("/api/visits/" + visitId)
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().is4xxClientError());
+                .andExpect(status().is4xxClientError());
     }
 
     @Test
     void delete_ok() throws Exception {
         mockMvc.perform(delete("/api/visits/" + visitId))
-            .andExpect(status().is2xxSuccessful());
+                .andExpect(status().is2xxSuccessful());
 
         mockMvc.perform(get("/api/visits/" + visitId))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void delete_notFound() throws Exception {
         mockMvc.perform(delete("/api/visits/9999"))
-            .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -192,10 +192,10 @@ public class VisitTest {
         mockMvc.perform(post("/api/visits")
                 .content(mapper.writeValueAsString(newVisit))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isCreated());
+                .andExpect(status().isCreated());
 
         assertThat(visitRepository.findAll())
-            .anyMatch(v -> "annual checkup".equals(v.getDescription()));
+                .anyMatch(v -> "annual checkup".equals(v.getDescription()));
     }
 
     @Test
@@ -207,7 +207,7 @@ public class VisitTest {
         mockMvc.perform(put("/api/visits/" + visitId)
                 .content(mapper.writeValueAsString(update))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isOk());
+                .andExpect(status().isOk());
 
         Visit updated = visitRepository.findById(visitId).orElseThrow();
         assertThat(updated.getDescription()).isEqualTo("updated description");

@@ -45,16 +45,21 @@ import victor.training.petclinic.rest.dto.VisitFieldsDto;
 @Transactional
 class OwnerCreateTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired OwnerRepository ownerRepository;
-    @Autowired PetRepository petRepository;
-    @Autowired PetTypeRepository petTypeRepository;
-    @Autowired VisitRepository visitRepository;
+    @Autowired
+    MockMvc mockMvc;
+    @Autowired
+    OwnerRepository ownerRepository;
+    @Autowired
+    PetRepository petRepository;
+    @Autowired
+    PetTypeRepository petTypeRepository;
+    @Autowired
+    VisitRepository visitRepository;
 
     private final ObjectMapper mapper = new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .setDateFormat(new SimpleDateFormat("yyyy-MM-dd"))
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            .registerModule(new JavaTimeModule())
+            .setDateFormat(new SimpleDateFormat("yyyy-MM-dd"))
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     private int ownerId;
     private int petId;
@@ -92,8 +97,8 @@ class OwnerCreateTest {
         mockMvc.perform(post("/api/owners")
                 .content(mapper.writeValueAsString(dto))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isCreated())
-            .andExpect(header().exists("Location"));
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"));
 
         assertThat(ownerRepository.findByLastNameStartingWith("Tesla")).isNotEmpty();
     }
@@ -110,7 +115,7 @@ class OwnerCreateTest {
         mockMvc.perform(post("/api/owners")
                 .content(mapper.writeValueAsString(dto))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -126,8 +131,8 @@ class OwnerCreateTest {
         mockMvc.perform(post("/api/owners/" + ownerId + "/pets")
                 .content(mapper.writeValueAsString(dto))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isCreated())
-            .andExpect(header().exists("Location"));
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"));
     }
 
     @Test
@@ -139,11 +144,11 @@ class OwnerCreateTest {
         mockMvc.perform(post("/api/owners/" + ownerId + "/pets/" + petId + "/visits")
                 .content(mapper.writeValueAsString(dto))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isCreated())
-            .andExpect(header().exists("Location"));
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"));
 
         assertThat(visitRepository.findByPetId(petId))
-            .extracting(v -> v.getDescription())
-            .contains("Routine checkup");
+                .extracting(v -> v.getDescription())
+                .contains("Routine checkup");
     }
 }

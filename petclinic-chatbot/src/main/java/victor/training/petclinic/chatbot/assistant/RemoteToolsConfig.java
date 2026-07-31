@@ -35,21 +35,21 @@ class RemoteToolsConfig {
 
     @Bean
     McpSyncClient petclinicMcpClient(
-        @Value("${petclinic.chatbot.mcp.url}") String url,
-        @Value("${petclinic.chatbot.mcp.api-key}") String apiKey) {
-        McpSyncHttpClientRequestCustomizer perRequestHeaders =
-            (builder, method, endpoint, body, context) -> injectAuthHeaders(builder, apiKey);
+            @Value("${petclinic.chatbot.mcp.url}") String url,
+            @Value("${petclinic.chatbot.mcp.api-key}") String apiKey) {
+        McpSyncHttpClientRequestCustomizer perRequestHeaders = (builder, method, endpoint, body,
+                context) -> injectAuthHeaders(builder, apiKey);
         var transport = HttpClientStreamableHttpTransport.builder(url)
-            .endpoint("/mcp")
-            .httpRequestCustomizer(perRequestHeaders)
-            .build();
+                .endpoint("/mcp")
+                .httpRequestCustomizer(perRequestHeaders)
+                .build();
         try {
             var client = McpClient.sync(transport).build();
             client.initialize(); // the chatbot is useless without its tools => refuse to start if the backend is down.
             return client;
         } catch (Exception e) {
             throw new RuntimeException(
-                "The petclinic MCP server at " + url + " is unreachable — start the backend first.", e);
+                    "The petclinic MCP server at " + url + " is unreachable — start the backend first.", e);
         }
     }
 

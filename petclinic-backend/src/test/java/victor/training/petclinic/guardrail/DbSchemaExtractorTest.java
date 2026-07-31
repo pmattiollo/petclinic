@@ -78,14 +78,16 @@ class DbSchemaExtractorTest {
         while (cur != null && !Files.exists(cur.resolve(".git"))) {
             cur = cur.getParent();
         }
-        if (cur == null) throw new IllegalStateException("project root (.git) not found");
+        if (cur == null)
+            throw new IllegalStateException("project root (.git) not found");
         return cur;
     }
 
     private static String locatePgDump() {
         try {
             Process p = new ProcessBuilder("pg_dump", "--version").redirectErrorStream(true).start();
-            if (p.waitFor() == 0) return "pg_dump";
+            if (p.waitFor() == 0)
+                return "pg_dump";
         } catch (Exception ignored) {
         }
         for (String c : List.of(
@@ -93,7 +95,8 @@ class DbSchemaExtractorTest {
                 "/opt/homebrew/opt/libpq/bin/pg_dump",
                 "/usr/local/opt/libpq/bin/pg_dump",
                 "/usr/bin/pg_dump")) {
-            if (Files.exists(Path.of(c))) return c;
+            if (Files.exists(Path.of(c)))
+                return c;
         }
         return null;
     }

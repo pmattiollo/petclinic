@@ -22,7 +22,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 /** Boots the app against the local dev Postgres reached through the latency proxy started by petclinic-database.
  *  Skipped on machines without the proxy on localhost:15432 (e.g. CI). */
 @SpringBootTest
@@ -30,30 +29,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(JUnitPerfInterceptor.class)
 @EnabledIf("latencyProxyReachable")
 class OwnerSearchThroughLatencyProxyTest {
-  private static final int PROXY_PORT = 15432;
+    private static final int PROXY_PORT = 15432;
 
-  @SuppressWarnings("unused")
-  static boolean latencyProxyReachable() {
-    try (var s = new Socket("localhost", PROXY_PORT)) {
-      return true;
-    } catch (IOException e) {
-      return false;
+    @SuppressWarnings("unused")
+    static boolean latencyProxyReachable() {
+        try (var s = new Socket("localhost", PROXY_PORT)) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
-  }
 
-  @DynamicPropertySource
-  static void datasource(DynamicPropertyRegistry r) {
-    r.add("spring.datasource.url", () -> "jdbc:postgresql://localhost:" + PROXY_PORT + "/petclinic");
-  }
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry r) {
+        r.add("spring.datasource.url", () -> "jdbc:postgresql://localhost:" + PROXY_PORT + "/petclinic");
+    }
 
-  @Autowired MockMvc mockMvc;
+    @Autowired
+    MockMvc mockMvc;
 
-  @Test
-  @JUnitPerfTest(threads = 4, durationMs = 5_000, warmUpMs = 1_000)
-  @JUnitPerfTestRequirement(percentiles = "95:200,99:500", executionsPerSec = 20)
-  void ownerSearchThroughProxy() throws Exception {
-    mockMvc.perform(get("/api/owners"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(10))));
-  }
+    @Test
+    @JUnitPerfTest(threads = 4, durationMs = 5_000, warmUpMs = 1_000)
+    @JUnitPerfTestRequirement(percentiles = "95:200,99:500", executionsPerSec = 20)
+    void ownerSearchThroughProxy() throws Exception {
+        mockMvc.perform(get("/api/owners"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(10))));
+    }
 }

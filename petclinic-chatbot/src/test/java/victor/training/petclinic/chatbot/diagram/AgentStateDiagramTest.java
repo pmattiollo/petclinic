@@ -19,51 +19,51 @@ import victor.training.petclinic.chatbot.triage.PetTriageAgent;
  */
 class AgentStateDiagramTest {
 
-  /** Committed output directory for the generated diagrams. */
-  private static final Path DIAGRAMS_DIR = Path.of("docs", "diagrams");
+    /** Committed output directory for the generated diagrams. */
+    private static final Path DIAGRAMS_DIR = Path.of("docs", "diagrams");
 
-  @Test
-  void triageDiagram() throws IOException {
-    String puml = AgentStateDiagram.render(PetTriageAgent.class);
-    writeDiagram("triage.puml", puml);
+    @Test
+    void triageDiagram() throws IOException {
+        String puml = AgentStateDiagram.render(PetTriageAgent.class);
+        writeDiagram("triage.puml", puml);
 
-    assertThat(puml).startsWith("@startuml").endsWith("@enduml\n");
-    // Entry state + the two assessments derivable from the symptom.
-    assertThat(puml).contains("[*] --> OwnerSymptom");
-    assertThat(puml).contains("OwnerSymptom --> UrgencyAssessment : assessUrgency");
-    assertThat(puml).contains("OwnerSymptom --> SpecialtyRecommendation : recommendSpecialty");
-    // Cost is computed from the two assessments, then the goal report ends the flow.
-    assertThat(puml).contains("CostEstimate");
-    assertThat(puml).contains("SpecialtyRecommendation --> CostEstimate : estimateCost");
-    assertThat(puml).contains("UrgencyAssessment --> CostEstimate : estimateCost");
-    assertThat(puml).contains("CostEstimate --> TriageReport : report");
-    assertThat(puml).contains("TriageReport --> [*]");
-    // OperationContext is an injected service — must NOT become a state/transition.
-    assertThat(puml).doesNotContain("OperationContext");
-  }
+        assertThat(puml).startsWith("@startuml").endsWith("@enduml\n");
+        // Entry state + the two assessments derivable from the symptom.
+        assertThat(puml).contains("[*] --> OwnerSymptom");
+        assertThat(puml).contains("OwnerSymptom --> UrgencyAssessment : assessUrgency");
+        assertThat(puml).contains("OwnerSymptom --> SpecialtyRecommendation : recommendSpecialty");
+        // Cost is computed from the two assessments, then the goal report ends the flow.
+        assertThat(puml).contains("CostEstimate");
+        assertThat(puml).contains("SpecialtyRecommendation --> CostEstimate : estimateCost");
+        assertThat(puml).contains("UrgencyAssessment --> CostEstimate : estimateCost");
+        assertThat(puml).contains("CostEstimate --> TriageReport : report");
+        assertThat(puml).contains("TriageReport --> [*]");
+        // OperationContext is an injected service — must NOT become a state/transition.
+        assertThat(puml).doesNotContain("OperationContext");
+    }
 
-  @Test
-  void firefighterDiagram() throws IOException {
-    String puml = AgentStateDiagram.render(FirefighterAgent.class);
-    writeDiagram("firefighter.puml", puml);
+    @Test
+    void firefighterDiagram() throws IOException {
+        String puml = AgentStateDiagram.render(FirefighterAgent.class);
+        writeDiagram("firefighter.puml", puml);
 
-    assertThat(puml).startsWith("@startuml").endsWith("@enduml\n");
-    // Entry incident -> health -> metrics/grafana -> recover -> report chain.
-    assertThat(puml).contains("[*] --> Incident");
-    assertThat(puml).contains("Incident --> HealthSnapshot : assessHealth");
-    assertThat(puml).contains("HealthSnapshot --> MetricsSnapshot : readMetrics");
-    assertThat(puml).contains("HealthSnapshot --> GrafanaFindings : queryGrafana");
-    assertThat(puml).contains("GrafanaFindings --> RecoveryOutcome : recover");
-    assertThat(puml).contains("RecoveryOutcome --> IncidentReport : report");
-    assertThat(puml).contains("IncidentReport --> [*]");
-    // Injected services (HealthProbe, GrafanaClient, OperationContext) must NOT appear.
-    assertThat(puml).doesNotContain("HealthProbe");
-    assertThat(puml).doesNotContain("GrafanaClient");
-    assertThat(puml).doesNotContain("OperationContext");
-  }
+        assertThat(puml).startsWith("@startuml").endsWith("@enduml\n");
+        // Entry incident -> health -> metrics/grafana -> recover -> report chain.
+        assertThat(puml).contains("[*] --> Incident");
+        assertThat(puml).contains("Incident --> HealthSnapshot : assessHealth");
+        assertThat(puml).contains("HealthSnapshot --> MetricsSnapshot : readMetrics");
+        assertThat(puml).contains("HealthSnapshot --> GrafanaFindings : queryGrafana");
+        assertThat(puml).contains("GrafanaFindings --> RecoveryOutcome : recover");
+        assertThat(puml).contains("RecoveryOutcome --> IncidentReport : report");
+        assertThat(puml).contains("IncidentReport --> [*]");
+        // Injected services (HealthProbe, GrafanaClient, OperationContext) must NOT appear.
+        assertThat(puml).doesNotContain("HealthProbe");
+        assertThat(puml).doesNotContain("GrafanaClient");
+        assertThat(puml).doesNotContain("OperationContext");
+    }
 
-  private static void writeDiagram(String fileName, String content) throws IOException {
-    Files.createDirectories(DIAGRAMS_DIR);
-    Files.writeString(DIAGRAMS_DIR.resolve(fileName), content, StandardCharsets.UTF_8);
-  }
+    private static void writeDiagram(String fileName, String content) throws IOException {
+        Files.createDirectories(DIAGRAMS_DIR);
+        Files.writeString(DIAGRAMS_DIR.resolve(fileName), content, StandardCharsets.UTF_8);
+    }
 }

@@ -17,46 +17,46 @@ import com.nimbusds.jwt.JWTParser;
  */
 record OwnerJwtPrincipal(Integer id, String name, String email, String token) {
 
-  /** Parse the {@code Authorization: Bearer <jwt>} header into a principal; {@code null} if absent/bad. */
-  static OwnerJwtPrincipal fromBearerHeader(String authorizationHeader) {
-    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      return null;
+    /** Parse the {@code Authorization: Bearer <jwt>} header into a principal; {@code null} if absent/bad. */
+    static OwnerJwtPrincipal fromBearerHeader(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        return fromJwt(authorizationHeader.substring("Bearer ".length()).trim());
     }
-    return fromJwt(authorizationHeader.substring("Bearer ".length()).trim());
-  }
 
-  static OwnerJwtPrincipal fromJwt(String token) {
-    try {
-      JWTClaimsSet claims = JWTParser.parse(token).getJWTClaimsSet();
-      Integer id = parseIdOrNull(claims.getSubject()); // owner id — what the backend resolves the owner from
-      String name = claims.getStringClaim("name");
-      String email = claims.getStringClaim("email");
-      if (name == null && email == null) {
-        return null;
-      }
-      // keep the raw token so RemoteToolsConfig can propagate it to the MCP server for THIS user's calls
-      return new OwnerJwtPrincipal(id, orEmpty(name), orEmpty(email), token);
-    } catch (ParseException | RuntimeException e) {
-      return null;
+    static OwnerJwtPrincipal fromJwt(String token) {
+        try {
+            JWTClaimsSet claims = JWTParser.parse(token).getJWTClaimsSet();
+            Integer id = parseIdOrNull(claims.getSubject()); // owner id — what the backend resolves the owner from
+            String name = claims.getStringClaim("name");
+            String email = claims.getStringClaim("email");
+            if (name == null && email == null) {
+                return null;
+            }
+            // keep the raw token so RemoteToolsConfig can propagate it to the MCP server for THIS user's calls
+            return new OwnerJwtPrincipal(id, orEmpty(name), orEmpty(email), token);
+        } catch (ParseException | RuntimeException e) {
+            return null;
+        }
     }
-  }
 
-  /** The {@code sub} claim is the numeric owner id; tolerate it being absent or non-numeric. */
-  private static Integer parseIdOrNull(String subject) {
-    if (subject == null) {
-      return null;
+    /** The {@code sub} claim is the numeric owner id; tolerate it being absent or non-numeric. */
+    private static Integer parseIdOrNull(String subject) {
+        if (subject == null) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(subject.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
-    try {
-      return Integer.valueOf(subject.trim());
-    } catch (NumberFormatException e) {
-      return null;
-    }
-  }
 
-  private static String orEmpty(String s) {
-    if (s == null) {
-      return "";
+    private static String orEmpty(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s;
     }
-    return s;
-  }
 }

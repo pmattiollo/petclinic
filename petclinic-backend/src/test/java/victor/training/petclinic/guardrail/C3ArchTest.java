@@ -37,8 +37,8 @@ class C3ArchTest {
     private static final String BASE_PKG = "victor.training.petclinic";
     // Stable human C1/C2; !includes the code-coupled C3 fragment (docs/c4model.c3.dsl),
     // which the parser merges in, so the checks below see the whole composed workspace.
-    private static final Path DSL_FILE   = Paths.get("docs/c4model.dsl");
-    private static final Path VIEWS_DIR  = Paths.get("docs/generated/c4views");
+    private static final Path DSL_FILE = Paths.get("docs/c4model.dsl");
+    private static final Path VIEWS_DIR = Paths.get("docs/generated/c4views");
     private static final String BACKEND_CONTAINER = "Backend";
 
     private static Workspace workspace;
@@ -59,23 +59,24 @@ class C3ArchTest {
         patternByComponent = new LinkedHashMap<>();
         for (Component comp : backend.getComponents()) {
             String pattern = comp.getTagsAsSet().stream()
-                .filter(t -> t.startsWith("pkg:"))
-                .map(t -> t.substring(4).trim())
-                .findFirst()
-                .orElse(null);
+                    .filter(t -> t.startsWith("pkg:"))
+                    .map(t -> t.substring(4).trim())
+                    .findFirst()
+                    .orElse(null);
             assertThat(pattern)
-                .as("Component '%s' must declare a `pkg:<pattern>` tag in the DSL", comp.getName())
-                .isNotBlank();
+                    .as("Component '%s' must declare a `pkg:<pattern>` tag in the DSL", comp.getName())
+                    .isNotBlank();
             patternByComponent.put(comp, pattern);
         }
 
         classes = new ClassFileImporter()
-            .withImportOption(new ImportOption.DoNotIncludeTests())
-            .importPackages(BASE_PKG);
+                .withImportOption(new ImportOption.DoNotIncludeTests())
+                .importPackages(BASE_PKG);
     }
 
     private static Component resolveComponent(String fullyQualifiedPackage) {
-        if (!fullyQualifiedPackage.startsWith(BASE_PKG + ".")) return null;
+        if (!fullyQualifiedPackage.startsWith(BASE_PKG + "."))
+            return null;
         String relative = fullyQualifiedPackage.substring(BASE_PKG.length() + 1);
         Component best = null;
         int bestLen = -1;
@@ -83,8 +84,8 @@ class C3ArchTest {
             String pattern = e.getValue();
             String prefix = pattern.endsWith(".**") ? pattern.substring(0, pattern.length() - 3) : pattern;
             boolean matches = pattern.endsWith(".**")
-                ? relative.equals(prefix) || relative.startsWith(prefix + ".")
-                : relative.equals(prefix);
+                    ? relative.equals(prefix) || relative.startsWith(prefix + ".")
+                    : relative.equals(prefix);
             if (matches && prefix.length() > bestLen) {
                 best = e.getKey();
                 bestLen = prefix.length();
@@ -98,27 +99,31 @@ class C3ArchTest {
         Set<String> orphans = new TreeSet<>();
         for (JavaClass jc : classes) {
             String pkg = jc.getPackageName();
-            if (!pkg.startsWith(BASE_PKG) || pkg.equals(BASE_PKG)) continue;
-            if (resolveComponent(pkg) == null) orphans.add(pkg);
+            if (!pkg.startsWith(BASE_PKG) || pkg.equals(BASE_PKG))
+                continue;
+            if (resolveComponent(pkg) == null)
+                orphans.add(pkg);
         }
         assertThat(orphans)
-            .as("Code packages not matched by any component's `package` pattern in %s", DSL_FILE)
-            .isEmpty();
+                .as("Code packages not matched by any component's `package` pattern in %s", DSL_FILE)
+                .isEmpty();
     }
 
     @Test
     void everyDeclaredComponentPatternMatchesAtLeastOneCodePackage() {
         Set<String> codePackages = new TreeSet<>();
-        for (JavaClass jc : classes) codePackages.add(jc.getPackageName());
+        for (JavaClass jc : classes)
+            codePackages.add(jc.getPackageName());
 
         Set<String> phantom = new TreeSet<>();
         for (Map.Entry<Component, String> e : patternByComponent.entrySet()) {
             boolean hasMatch = codePackages.stream().anyMatch(p -> resolveComponent(p) == e.getKey());
-            if (!hasMatch) phantom.add(e.getKey().getName() + " (" + e.getValue() + ")");
+            if (!hasMatch)
+                phantom.add(e.getKey().getName() + " (" + e.getValue() + ")");
         }
         assertThat(phantom)
-            .as("Components declared in %s but no code package matches their `package` pattern", DSL_FILE)
-            .isEmpty();
+                .as("Components declared in %s but no code package matches their `package` pattern", DSL_FILE)
+                .isEmpty();
     }
 
     @Test
@@ -133,10 +138,12 @@ class C3ArchTest {
         Set<String> actualEdges = new TreeSet<>();
         for (JavaClass jc : classes) {
             Component srcComp = resolveComponent(jc.getPackageName());
-            if (srcComp == null) continue;
+            if (srcComp == null)
+                continue;
             for (Dependency dep : jc.getDirectDependenciesFromSelf()) {
                 Component dstComp = resolveComponent(dep.getTargetClass().getPackageName());
-                if (dstComp == null || dstComp == srcComp) continue;
+                if (dstComp == null || dstComp == srcComp)
+                    continue;
                 actualEdges.add(srcComp.getName() + " -> " + dstComp.getName());
             }
         }
@@ -147,11 +154,11 @@ class C3ArchTest {
         phantomInDsl.removeAll(actualEdges);
 
         assertThat(missingInDsl)
-            .as("Code has component dependencies not declared in %s — add them as `src -> dst \"uses\"`", DSL_FILE)
-            .isEmpty();
+                .as("Code has component dependencies not declared in %s — add them as `src -> dst \"uses\"`", DSL_FILE)
+                .isEmpty();
         assertThat(phantomInDsl)
-            .as("DSL declares component dependencies absent from the code — remove them from %s", DSL_FILE)
-            .isEmpty();
+                .as("DSL declares component dependencies absent from the code — remove them from %s", DSL_FILE)
+                .isEmpty();
     }
 
     @Test
@@ -161,12 +168,12 @@ class C3ArchTest {
         for (Diagram diagram : new C4PlantUMLExporter().export(workspace)) {
             String definition = diagram.getDefinition();
             assertThat(emptyRelLabel.matcher(definition).find())
-                .as("Diagram '%s' contains Rel(src, dst, \"\", ...) with an empty-string label. "
-                    + "IntelliJ's bundled PlantUML 1.2026.2 crashes rendering empty Rel labels "
-                    + "(IllegalArgumentException in XDimension2D). Give every component edge in %s "
-                    + "a non-empty description, e.g. `src -> dst \"uses\"`.",
-                    diagram.getKey(), DSL_FILE)
-                .isFalse();
+                    .as("Diagram '%s' contains Rel(src, dst, \"\", ...) with an empty-string label. "
+                            + "IntelliJ's bundled PlantUML 1.2026.2 crashes rendering empty Rel labels "
+                            + "(IllegalArgumentException in XDimension2D). Give every component edge in %s "
+                            + "a non-empty description, e.g. `src -> dst \"uses\"`.",
+                            diagram.getKey(), DSL_FILE)
+                    .isFalse();
             Files.writeString(VIEWS_DIR.resolve(diagram.getKey() + ".puml"), definition);
 
             SourceStringReader reader = new SourceStringReader(definition);

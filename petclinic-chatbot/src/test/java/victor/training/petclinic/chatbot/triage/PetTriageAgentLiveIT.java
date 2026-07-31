@@ -29,23 +29,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EnabledIfEnvironmentVariable(named = "OPENAI_API_KEY", matches = ".+")
 class PetTriageAgentLiveIT {
 
-  @SpringBootConfiguration
-  @EnableAutoConfiguration
-  @EnableAgents
-  @Import(PetTriageAgent.class)
-  static class LiveApp {
-  }
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @EnableAgents
+    @Import(PetTriageAgent.class)
+    static class LiveApp {
+    }
 
-  @Autowired
-  AgentPlatform agentPlatform;
+    @Autowired
+    AgentPlatform agentPlatform;
 
-  @Test
-  void runs_the_full_multi_step_plan_against_a_real_llm() {
-    TriageReport report = AgentInvocation.create(agentPlatform, TriageReport.class)
-        .invoke(new OwnerSymptom("my dog Leo is limping and won't put weight on his leg after a fall"));
+    @Test
+    void runs_the_full_multi_step_plan_against_a_real_llm() {
+        TriageReport report = AgentInvocation.create(agentPlatform, TriageReport.class)
+                .invoke(new OwnerSymptom("my dog Leo is limping and won't put weight on his leg after a fall"));
 
-    assertThat(report).isNotNull();
-    assertThat(report.markdown()).isNotBlank();
-    System.out.println("\n=== Embabel TriageReport ===\n" + report.markdown() + "\n============================\n");
-  }
+        assertThat(report).isNotNull();
+        assertThat(report.markdown()).isNotBlank();
+        System.out.println("\n=== Embabel TriageReport ===\n" + report.markdown() + "\n============================\n");
+    }
 }

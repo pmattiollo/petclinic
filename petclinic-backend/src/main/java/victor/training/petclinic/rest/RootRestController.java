@@ -14,9 +14,9 @@ public class RootRestController {
     @Value("#{servletContext.contextPath}")
     private String servletContextPath;
 
-	@RequestMapping("/")
-	public void redirectToSwagger(HttpServletResponse response) throws IOException {
-		response.sendRedirect(servletContextPath + "/swagger-ui/index.html");
-	}
+    @RequestMapping("/")
+    public void redirectToSwagger(HttpServletResponse response) throws IOException {
+        response.sendRedirect(servletContextPath + "/swagger-ui/index.html");
+    }
 
 }

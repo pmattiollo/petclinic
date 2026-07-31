@@ -32,10 +32,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class CreateVisitToolTest {
 
-    @Autowired PetClinicMcp petClinicMcp;
-    @Autowired OwnerRepository ownerRepository;
-    @Autowired PetRepository petRepository;
-    @Autowired VisitRepository visitRepository;
+    @Autowired
+    PetClinicMcp petClinicMcp;
+    @Autowired
+    OwnerRepository ownerRepository;
+    @Autowired
+    PetRepository petRepository;
+    @Autowired
+    VisitRepository visitRepository;
 
     private int ownerId;
     private int petId;
@@ -44,15 +48,15 @@ class CreateVisitToolTest {
     @BeforeEach
     void setUp() {
         Pet pet = new Pet()
-            .setName("Rex")
-            .setBirthDate(LocalDate.of(2020, 1, 1))
-            .setType(petRepository.findPetTypes().get(0));
+                .setName("Rex")
+                .setBirthDate(LocalDate.of(2020, 1, 1))
+                .setType(petRepository.findPetTypes().get(0));
         Owner owner = new Owner()
-            .setFirstName("Tdd")
-            .setLastName("Creator")
-            .setAddress("1 Test Way")
-            .setCity("Testville")
-            .setTelephone("0000000000");
+                .setFirstName("Tdd")
+                .setLastName("Creator")
+                .setAddress("1 Test Way")
+                .setCity("Testville")
+                .setTelephone("0000000000");
         owner.addPet(pet);
         ownerRepository.save(owner);
         ownerId = owner.getId();
@@ -70,37 +74,37 @@ class CreateVisitToolTest {
         String result = petClinicMcp.createVisit(petId, future, LocalTime.of(10, 30), "Vaccination");
 
         assertThat(result).contains("Created visit").contains("Rex")
-            .contains(future.toString()).contains("10:30");
+                .contains(future.toString()).contains("10:30");
         assertThat(visitRepository.findByPetId(petId))
-            .extracting(v -> v.getDescription())
-            .contains("Vaccination");
+                .extracting(v -> v.getDescription())
+                .contains("Vaccination");
     }
 
     @Test
     void unknown_pet_is_rejected() {
         assertThatThrownBy(() -> petClinicMcp.createVisit(999_999, future, LocalTime.of(10, 30), "Checkup"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Pet not found");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Pet not found");
     }
 
     @Test
     void pet_of_another_owner_is_rejected() {
         Pet otherPet = new Pet()
-            .setName("Bella")
-            .setBirthDate(LocalDate.of(2021, 2, 2))
-            .setType(petRepository.findPetTypes().get(0));
+                .setName("Bella")
+                .setBirthDate(LocalDate.of(2021, 2, 2))
+                .setType(petRepository.findPetTypes().get(0));
         Owner other = new Owner()
-            .setFirstName("Other")
-            .setLastName("Owner")
-            .setAddress("9 Elsewhere")
-            .setCity("Faraway")
-            .setTelephone("0000000000");
+                .setFirstName("Other")
+                .setLastName("Owner")
+                .setAddress("9 Elsewhere")
+                .setCity("Faraway")
+                .setTelephone("0000000000");
         other.addPet(otherPet);
         ownerRepository.save(other);
 
         assertThatThrownBy(() -> petClinicMcp.createVisit(otherPet.getId(), future, LocalTime.of(10, 30), "Checkup"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("does not belong to owner");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("does not belong to owner");
     }
 
     @Test
@@ -108,8 +112,8 @@ class CreateVisitToolTest {
         LocalDate past = LocalDate.now().minusDays(1);
 
         assertThatThrownBy(() -> petClinicMcp.createVisit(petId, past, LocalTime.of(10, 30), "Checkup"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("must be today or in the future");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("must be today or in the future");
     }
 
     @Test
@@ -120,11 +124,11 @@ class CreateVisitToolTest {
         }
 
         // One more must be rejected as service abuse.
-        assertThatThrownBy(() ->
-            petClinicMcp.createVisit(petId, future.plusDays(100), LocalTime.of(9, 0), "One too many"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("already has the maximum")
-            .hasMessageContaining(String.valueOf(PetClinicMcp.MAX_UPCOMING_VISITS_PER_PET));
+        assertThatThrownBy(
+                () -> petClinicMcp.createVisit(petId, future.plusDays(100), LocalTime.of(9, 0), "One too many"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("already has the maximum")
+                .hasMessageContaining(String.valueOf(PetClinicMcp.MAX_UPCOMING_VISITS_PER_PET));
     }
 
     @Test
@@ -135,15 +139,15 @@ class CreateVisitToolTest {
         LocalTime pastTime = LocalTime.now().minusHours(1).withSecond(0).withNano(0);
 
         assertThatThrownBy(() -> petClinicMcp.createVisit(petId, today, pastTime, "Checkup"))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Visit time must be in the future");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Visit time must be in the future");
     }
 
     private static void authenticateAs(int ownerId) {
         var auth = new UsernamePasswordAuthenticationToken(
-            String.valueOf(ownerId),
-            null,
-            List.of(new SimpleGrantedAuthority("ROLE_MCP")));
+                String.valueOf(ownerId),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_MCP")));
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 }

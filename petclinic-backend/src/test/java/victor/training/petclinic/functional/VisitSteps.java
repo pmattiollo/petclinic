@@ -24,15 +24,15 @@ public class VisitSteps {
     public void anOwnerWithAPet(String fullName, String typeName, String petName) {
         String[] parts = fullName.split(" ", 2);
         Integer ownerId = jdbc.queryForObject(
-            "INSERT INTO owners (first_name, last_name, address, city, telephone)" +
-                " VALUES (?, ?, 'addr', 'city', '0000000000') RETURNING id",
-            Integer.class, parts[0], parts[1]);
+                "INSERT INTO owners (first_name, last_name, address, city, telephone)" +
+                        " VALUES (?, ?, 'addr', 'city', '0000000000') RETURNING id",
+                Integer.class, parts[0], parts[1]);
         Integer typeId = jdbc.queryForObject(
-            "SELECT id FROM types WHERE name = ?", Integer.class, typeName);
+                "SELECT id FROM types WHERE name = ?", Integer.class, typeName);
         Integer petId = jdbc.queryForObject(
-            "INSERT INTO pets (name, birth_date, type_id, owner_id)" +
-                " VALUES (?, DATE '2020-01-01', ?, ?) RETURNING id",
-            Integer.class, petName, typeId, ownerId);
+                "INSERT INTO pets (name, birth_date, type_id, owner_id)" +
+                        " VALUES (?, DATE '2020-01-01', ?, ?) RETURNING id",
+                Integer.class, petName, typeId, ownerId);
         http.rememberId("owner:" + fullName, ownerId);
         http.rememberId("pet:" + petName, petId);
     }
@@ -41,14 +41,14 @@ public class VisitSteps {
     public void iScheduleAVisit(String petName, String date, String description) {
         int petId = http.idOf("pet:" + petName);
         String body = """
-            {"petId":%d,"date":"%s","description":"%s"}
-            """.formatted(petId, date, description);
+                {"petId":%d,"date":"%s","description":"%s"}
+                """.formatted(petId, date, description);
 
         http.setLastResponse(RestAssured.given()
-            .baseUri(http.baseUri())
-            .contentType(ContentType.JSON)
-            .body(body)
-            .post("/api/visits"));
+                .baseUri(http.baseUri())
+                .contentType(ContentType.JSON)
+                .body(body)
+                .post("/api/visits"));
     }
 
     @Then("{string} has {int} visit with description {string}")
@@ -57,7 +57,7 @@ public class VisitSteps {
         var response = RestAssured.given().baseUri(http.baseUri()).get("/api/visits");
         assertThat(response.statusCode()).isEqualTo(200);
         var matching = response.jsonPath().getList(
-            "findAll { it.petId == " + petId + " && it.description == '" + description + "' }");
+                "findAll { it.petId == " + petId + " && it.description == '" + description + "' }");
         assertThat(matching).hasSize(expectedCount);
     }
 
@@ -65,8 +65,8 @@ public class VisitSteps {
     public void aVisitForOnDescribedAs(String petName, String date, String description) {
         int petId = http.idOf("pet:" + petName);
         Integer visitId = jdbc.queryForObject(
-            "INSERT INTO visits (pet_id, visit_date, description) VALUES (?, ?, ?) RETURNING id",
-            Integer.class, petId, LocalDate.parse(date), description);
+                "INSERT INTO visits (pet_id, visit_date, description) VALUES (?, ?, ?) RETURNING id",
+                Integer.class, petId, LocalDate.parse(date), description);
         http.rememberId("visit:current", visitId);
     }
 
@@ -77,18 +77,18 @@ public class VisitSteps {
         assertThat(existing.statusCode()).isEqualTo(200);
 
         String body = """
-            {"id":%d,"petId":%d,"date":"%s","description":"%s"}
-            """.formatted(
+                {"id":%d,"petId":%d,"date":"%s","description":"%s"}
+                """.formatted(
                 visitId,
                 existing.jsonPath().getInt("petId"),
                 existing.jsonPath().getString("date"),
                 newDescription);
 
         http.setLastResponse(RestAssured.given()
-            .baseUri(http.baseUri())
-            .contentType(ContentType.JSON)
-            .body(body)
-            .put("/api/visits/" + visitId));
+                .baseUri(http.baseUri())
+                .contentType(ContentType.JSON)
+                .body(body)
+                .put("/api/visits/" + visitId));
     }
 
     @Then("the visit's description is {string}")

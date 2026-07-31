@@ -35,9 +35,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureEmbeddedDatabase(provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY)
 class McpStreamableIdentityTest {
 
-    @LocalServerPort int port;
+    @LocalServerPort
+    int port;
 
-    @Value("${petclinic.mcp.api-key}") String apiKey;
+    @Value("${petclinic.mcp.api-key}")
+    String apiKey;
 
     @Test
     void owner1_bearer_header_yields_owner1_profile_over_the_wire() {
@@ -61,28 +63,28 @@ class McpStreamableIdentityTest {
      */
     private String readOwnerProfileAs(String jwt) {
         var transport = HttpClientStreamableHttpTransport.builder("http://localhost:" + port)
-            .endpoint("/mcp")
-            .httpRequestCustomizer((builder, method, uri, body, ctx) -> builder
-                .header("X-API-Key", apiKey)
-                .header("Authorization", "Bearer " + jwt))
-            .build();
+                .endpoint("/mcp")
+                .httpRequestCustomizer((builder, method, uri, body, ctx) -> builder
+                        .header("X-API-Key", apiKey)
+                        .header("Authorization", "Bearer " + jwt))
+                .build();
         try (McpSyncClient client = McpClient.sync(transport).build()) {
             client.initialize();
             CallToolResult result = client.callTool(
-                CallToolRequest.builder().name("get_owner_profile").arguments(Map.of()).build());
+                    CallToolRequest.builder().name("get_owner_profile").arguments(Map.of()).build());
             assertThat(result.isError()).isNotEqualTo(Boolean.TRUE);
             return result.content().stream()
-                .filter(c -> c instanceof TextContent)
-                .map(c -> ((TextContent) c).text())
-                .reduce("", String::concat);
+                    .filter(c -> c instanceof TextContent)
+                    .map(c -> ((TextContent) c).text())
+                    .reduce("", String::concat);
         }
     }
 
     /** A JWT the backend accepts: it base64-decodes the payload (no signature check) and reads {@code sub}. */
     private static String jwtForOwner(int ownerId) {
         return base64Url("{\"alg\":\"HS256\",\"typ\":\"JWT\"}")
-            + "." + base64Url("{\"sub\":\"" + ownerId + "\"}")
-            + ".sig";
+                + "." + base64Url("{\"sub\":\"" + ownerId + "\"}")
+                + ".sig";
     }
 
     private static String base64Url(String json) {
