@@ -90,3 +90,6 @@ rag-vector-store.json
 # Review-time architecture delta (scripts/architecture-diff.sh) — regenerate, never commit
 /pr-diff/
 /.vscode/settings.json
+
+# Clone of the Code City generators (generate-codecity.sh) — a tool, not our source
+/.codecity-tool/
