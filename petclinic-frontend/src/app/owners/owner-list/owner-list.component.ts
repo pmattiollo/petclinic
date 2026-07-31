@@ -1,15 +1,15 @@
-import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import {OwnerService} from '../owner.service';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {OwnerPageSize, OwnerQuery, OwnerService, OwnerSort} from '../owner.service';
 import {Owner} from '../owner';
 import {ActivatedRoute, Router} from '@angular/router';
-import {MatSort, Sort} from '@angular/material/sort';
-import {MatPaginator, PageEvent} from '@angular/material/paginator';
+import {Sort} from '@angular/material/sort';
+import {PageEvent} from '@angular/material/paginator';
 import {Subscription} from 'rxjs';
 import {finalize} from 'rxjs/operators';
 
-const DEFAULT_PAGE_SIZE = 10;
-const PAGE_SIZE_OPTIONS = [5, 10, 20];
-const DEFAULT_SORT = 'name,asc';
+const DEFAULT_PAGE_SIZE: OwnerPageSize = 10;
+const PAGE_SIZE_OPTIONS: OwnerPageSize[] = [5, 10, 20];
+const DEFAULT_SORT: OwnerSort = 'name,asc';
 
 @Component({
   selector: 'app-owner-list',
@@ -25,16 +25,19 @@ export class OwnerListComponent implements OnInit, OnDestroy {
   owners: Owner[] = [];
   totalElements = 0;
   pageIndex = 0;
-  pageSize = DEFAULT_PAGE_SIZE;
-  sort = DEFAULT_SORT;
-  sortActive = 'name';
-  sortDirection: 'asc' | 'desc' = 'asc';
+  pageSize: OwnerPageSize = DEFAULT_PAGE_SIZE;
+  sort: OwnerSort = DEFAULT_SORT;
   isOwnersDataReceived = false;
 
-  @ViewChild(MatSort) matSort: MatSort;
-  @ViewChild(MatPaginator) matPaginator: MatPaginator;
-
   private queryParamsSubscription: Subscription;
+
+  get sortActive(): string {
+    return this.sort.split(',')[0];
+  }
+
+  get sortDirection(): 'asc' | 'desc' {
+    return this.sort.split(',')[1] === 'desc' ? 'desc' : 'asc';
+  }
 
   constructor(
     private router: Router,
@@ -47,12 +50,8 @@ export class OwnerListComponent implements OnInit, OnDestroy {
     this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
       this.lastName = params.lastName ?? '';
       this.pageIndex = params.page ? Number(params.page) : 0;
-      this.pageSize = params.size && PAGE_SIZE_OPTIONS.includes(Number(params.size))
-        ? Number(params.size) : DEFAULT_PAGE_SIZE;
+      this.pageSize = PAGE_SIZE_OPTIONS.find(option => option === Number(params.size)) ?? DEFAULT_PAGE_SIZE;
       this.sort = params.sort ?? DEFAULT_SORT;
-      const [active, direction] = this.sort.split(',');
-      this.sortActive = active;
-      this.sortDirection = direction as 'asc' | 'desc';
       this.loadOwners();
     });
   }
@@ -73,6 +72,10 @@ export class OwnerListComponent implements OnInit, OnDestroy {
       page => {
         this.owners = page.content;
         this.totalElements = page.totalElements;
+        // Render what the server actually paged by, not what we asked for - the server clamps
+        // the size too, and the paginator must never disagree with the rows on screen.
+        this.pageIndex = page.number;
+        this.pageSize = page.size as OwnerPageSize;
       },
       error => this.errorMessage = error as any);
   }
@@ -92,7 +95,9 @@ export class OwnerListComponent implements OnInit, OnDestroy {
   }
 
   onSortChange(sortState: Sort) {
-    const sort = sortState.direction ? `${sortState.active},${sortState.direction}` : DEFAULT_SORT;
+    const sort = sortState.direction
+      ? `${sortState.active},${sortState.direction}` as OwnerSort
+      : DEFAULT_SORT;
     // Sorting always returns to page 1 - see searchByLastName for the rationale.
     this.navigate({sort, page: 0});
   }
@@ -100,14 +105,14 @@ export class OwnerListComponent implements OnInit, OnDestroy {
   onPageChange(pageEvent: PageEvent) {
     if (pageEvent.pageSize !== this.pageSize) {
       // Changing the page size always returns to page 1 - see searchByLastName for the rationale.
-      this.navigate({size: pageEvent.pageSize, page: 0});
+      this.navigate({size: pageEvent.pageSize as OwnerPageSize, page: 0});
     } else {
       // Only the paginator's own next/previous/goto navigation carries the page index through.
       this.navigate({page: pageEvent.pageIndex});
     }
   }
 
-  private navigate(changes: { lastName?: string; page?: number; size?: number; sort?: string }) {
+  private navigate(changes: OwnerQuery) {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {

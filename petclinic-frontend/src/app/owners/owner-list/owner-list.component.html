@@ -22,7 +22,7 @@
 
     </form>
 
-    <div *ngIf="isOwnersDataReceived && owners.length === 0">No owners with LastName starting with "{{lastName}}"</div>
+    <div *ngIf="isOwnersDataReceived && totalElements === 0">No owners with LastName starting with "{{lastName}}"</div>
     <div class="table-responsive" id="ownersTable" *ngIf="owners.length > 0">
       <table mat-table [dataSource]="owners" matSort [matSortActive]="sortActive" [matSortDirection]="sortDirection"
              matSortDisableClear (matSortChange)="onSortChange($event)" class="table table-striped owners-table">
@@ -60,14 +60,17 @@
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
+    </div>
 
-      <mat-paginator [length]="totalElements" [pageIndex]="pageIndex" [pageSize]="pageSize"
+    <!-- Outside the table's *ngIf: an empty search result must still offer a way to add an owner -->
+    <div class="owners-footer" *ngIf="isOwnersDataReceived">
+      <button class="btn btn-default" (click)="addOwner()">Add Owner</button>
+      <!-- Keyed on totalElements, not on the rows shown: a deep link past the last page returns
+           no rows, and hiding the paginator there would strand the user with no way back. -->
+      <mat-paginator *ngIf="totalElements > 0"
+                     [length]="totalElements" [pageIndex]="pageIndex" [pageSize]="pageSize"
                      [pageSizeOptions]="pageSizeOptions" (page)="onPageChange($event)">
       </mat-paginator>
-
-      <div>
-        <button *ngIf="isOwnersDataReceived" class="btn btn-default" (click)="addOwner()">Add Owner</button>
-      </div>
     </div>
   </div>
 </div>

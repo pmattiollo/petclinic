@@ -6,15 +6,18 @@ import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { catchError } from 'rxjs/operators';
 import { HandleError, HttpErrorHandler } from '../error.service';
+import { operations } from '../generated/api-types';
 
-export interface OwnerQuery {
-  lastName?: string;
-  page?: number;
-  size?: number;
-  sort?: string;
-}
+// Taken from the generated contract, so the whitelist of page sizes and sort keys is enforced
+// at compile time instead of being restated by hand on the client.
+export type OwnerQuery = NonNullable<operations['listOwners']['parameters']['query']>;
 
-const EMPTY_OWNER_PAGE: OwnerPage = { content: [], totalElements: 0, totalPages: 0, number: 0, size: 10 };
+export type OwnerPageSize = NonNullable<OwnerQuery['size']>;
+export type OwnerSort = NonNullable<OwnerQuery['sort']>;
+
+// A fresh instance per failed call: the fallback's `content` is assigned straight into a
+// component, so a shared array would be mutable state leaking between callers.
+const emptyOwnerPage = (): OwnerPage => ({content: [], totalElements: 0, totalPages: 0, number: 0, size: 10});
 
 @Injectable()
 export class OwnerService {
@@ -45,7 +48,7 @@ export class OwnerService {
     }
     return this.http
       .get<OwnerPage>(this.entityUrl, { params })
-      .pipe(catchError(this.handlerError('getOwners', EMPTY_OWNER_PAGE)));
+      .pipe(catchError(this.handlerError('getOwners', emptyOwnerPage())));
   }
 
   getOwnerById(ownerId: number): Observable<Owner> {
