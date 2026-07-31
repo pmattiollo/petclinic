@@ -37,9 +37,11 @@ export class ActivatedRouteStub {
   private subject = new BehaviorSubject(this.testParams);
   params = this.subject.asObservable();
 
-  // ActivatedRoute.queryParams is Observable - aliases the same stream as `params` for stubs
-  // that only ever set `testParams`, so existing specs keep working unchanged.
-  queryParams = this.subject.asObservable();
+  // ActivatedRoute.queryParams is a separate Observable from `params` in the real router, so it
+  // gets its own subject here: a spec must be able to say "path param id=5, no query params",
+  // and a component reading the wrong one must fail rather than silently see the same object.
+  private querySubject = new BehaviorSubject(this.testQueryParams);
+  queryParams = this.querySubject.asObservable();
 
   // Test parameters
   // tslint:disable-next-line:variable-name
@@ -53,12 +55,23 @@ export class ActivatedRouteStub {
     this.subject.next(params);
   }
 
-  // ActivatedRoute.snapshot.params
+  // tslint:disable-next-line:variable-name
+  private _testQueryParams: {} = {};
+  get testQueryParams() {
+    return this._testQueryParams;
+  }
+
+  set testQueryParams(params: {}) {
+    this._testQueryParams = params;
+    this.querySubject.next(params);
+  }
+
+  // ActivatedRoute.snapshot
   // Note: this must NOT go through the `testParams` setter - that setter also emits through
-  // the `subject` shared by `params`/`queryParams`, and any consumer already subscribed to
-  // those streams (e.g. a component's ngOnInit) would receive an unwanted extra emission
-  // every time something merely reads `.snapshot` (as `routerLink` does internally).
+  // `subject`, and any consumer already subscribed to `params` (e.g. a component's ngOnInit)
+  // would receive an unwanted extra emission every time something merely reads `.snapshot`
+  // (as `routerLink` does internally).
   get snapshot() {
-    return {params: {id: 1}};
+    return {params: {id: 1}, queryParams: this._testQueryParams};
   }
 }

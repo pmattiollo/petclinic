@@ -83,7 +83,7 @@ describe('OwnerListComponent', () => {
       .and.returnValue(of(testOwnerPage));
 
     activatedRoute = fixture.debugElement.injector.get(ActivatedRoute) as any;
-    activatedRoute.testParams = {};
+    activatedRoute.testQueryParams = {};
 
     router = TestBed.inject(Router);
     navigateSpy = spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
@@ -100,7 +100,7 @@ describe('OwnerListComponent', () => {
   });
 
   it('should load owners using the route query params', () => {
-    activatedRoute.testParams = {lastName: 'Fra', page: '2', size: '20', sort: 'city,desc'};
+    activatedRoute.testQueryParams = {lastName: 'Fra', page: '2', size: '20', sort: 'city,desc'};
 
     fixture.detectChanges();
 
@@ -108,7 +108,7 @@ describe('OwnerListComponent', () => {
   });
 
   it('should fall back to the default page size for an unsupported size query param', () => {
-    activatedRoute.testParams = {size: '1000'};
+    activatedRoute.testQueryParams = {size: '1000'};
 
     fixture.detectChanges();
 
