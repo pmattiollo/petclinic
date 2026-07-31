@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -154,7 +155,7 @@ class OwnerPagingSortingTest {
 
         // Walk every page (size is capped to 5/10/20) rather than assuming everything fits in one
         // page, since the seed data coexists with these owners under the shared `name,asc` sort.
-        List<String> ordered = new java.util.ArrayList<>();
+        List<String> ordered = new ArrayList<>();
         for (int page = 0; ordered.size() < names.size(); page++) {
             OwnerPageDto pageDto = callList("?lastName=&size=20&sort=name,asc&page=" + page);
             if (pageDto.getContent().isEmpty()) {
