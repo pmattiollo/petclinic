@@ -1,6 +1,5 @@
 package victor.training.petclinic.repository;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -11,8 +10,7 @@ import victor.training.petclinic.domain.Owner;
 
 public interface OwnerRepository extends Repository<Owner, Integer> {
 
-    List<Owner> findByLastNameStartingWith(String lastName);
-
+    // Deliberately paged-only: an unbounded overload is the query this feature exists to remove.
     Page<Owner> findByLastNameStartingWith(String lastName, Pageable pageable);
 
     Optional<Owner> findById(int id);
