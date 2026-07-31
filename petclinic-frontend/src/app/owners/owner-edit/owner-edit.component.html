@@ -32,7 +32,7 @@
               id="firstName"
               [(ngModel)]="owner.firstName"
               minlength="1"
-              maxlength="30" 
+              maxlength="30"
               pattern="^[a-zA-Z]*$"
               required
               name="firstName"
@@ -80,7 +80,7 @@
               [(ngModel)]="owner.lastName"
               name="lastName"
               minlength="1"
-              maxlength="30" 
+              maxlength="30"
               pattern="^[a-zA-Z]*$"
               required
               #lastName="ngModel"
@@ -126,7 +126,7 @@
               id="address"
               [(ngModel)]="owner.address"
               name="address"
-              maxlength="255"  
+              maxlength="255"
               required
               #address="ngModel"
             />
@@ -161,7 +161,7 @@
               id="city"
               [(ngModel)]="owner.city"
               name="city"
-              maxlength="80" 
+              maxlength="80"
               required
               #city="ngModel"
             />
@@ -230,7 +230,7 @@
             >
           </div>
         </div>
-  
+
         <div class="form-group">
           <div class="col-sm-offset-2 col-sm-10">
             <button class="btn btn-default" (click)="gotoOwnerDetail(owner)">
@@ -248,4 +248,3 @@
       </form>
     </div>
   </div>
-  

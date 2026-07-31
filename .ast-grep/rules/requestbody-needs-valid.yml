@@ -1,0 +1,21 @@
+# CLAUDE.md: "@Validated on @RequestBody". An unvalidated request body silently
+# skips every Bean Validation constraint declared on the DTO.
+id: requestbody-needs-valid
+language: java
+severity: error
+message: "@RequestBody without @Valid/@Validated — DTO constraints are not enforced"
+files:
+  - "petclinic-backend/src/main/**/*.java"
+rule:
+  kind: formal_parameter
+  has:
+    kind: modifiers
+    has:
+      pattern: "@RequestBody"
+  not:
+    has:
+      kind: modifiers
+      has:
+        any:
+          - pattern: "@Valid"
+          - pattern: "@Validated"

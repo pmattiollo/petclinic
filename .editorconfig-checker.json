@@ -1,0 +1,15 @@
+{
+  "//": "editorconfig-checker — enforces .editorconfig, which nothing else in this repo reads.",
+  "//1": "Indentation checks are OFF for now: 707 of the 760 initial violations were indentation,",
+  "//2": "and re-indenting code is a formatter's job. Turn them on once a Java/TS formatter owns layout.",
+  "Exclude": [
+    "docs/generated/",
+    "src/app/generated/",
+    "openapi\\.yaml$",
+    "\\.puml$"
+  ],
+  "Disable": {
+    "Indentation": true,
+    "IndentSize": true
+  }
+}

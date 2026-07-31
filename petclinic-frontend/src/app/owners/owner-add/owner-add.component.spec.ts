@@ -64,7 +64,7 @@ describe('OwnerAddComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  
+
 
   it('back button routing', async() => {
     let buttons = fixture.debugElement.queryAll(By.css('button'));
@@ -74,7 +74,7 @@ describe('OwnerAddComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/owners']);
   });
 
- 
+
   it('add owner', async(() => {
     let buttons = fixture.debugElement.queryAll(By.css('button'));
     let addOwnerButton = buttons[1].nativeElement;
