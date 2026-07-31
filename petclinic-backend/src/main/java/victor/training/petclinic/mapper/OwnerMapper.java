@@ -21,7 +21,6 @@ public interface OwnerMapper {
 
     List<OwnerDto> toOwnerDtoCollection(List<Owner> ownerCollection);
 
-    @Mapping(target = "content", source = "content")
     OwnerPageDto toOwnerPageDto(Page<Owner> page);
 
 }

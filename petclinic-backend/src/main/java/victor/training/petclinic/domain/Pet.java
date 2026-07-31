@@ -51,8 +51,10 @@ public class Pet {
     @JoinColumn(name = "owner_id")
     private Owner owner;
 
+    // Sized for pets-per-page, not owners-per-page: a page of 20 owners easily holds more than
+    // 20 pets, and a batch smaller than that turns one round-trip back into several.
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.LAZY)
-    @BatchSize(size = 20)
+    @BatchSize(size = 100)
     private Set<Visit> visits = new HashSet<>();
 
     public List<Visit> getVisitsSortedByDate() {

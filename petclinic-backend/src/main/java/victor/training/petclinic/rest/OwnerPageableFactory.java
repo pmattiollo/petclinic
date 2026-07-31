@@ -27,10 +27,9 @@ public class OwnerPageableFactory {
         Sort.Order.asc("lastName"), Sort.Order.asc("firstName"), Sort.Order.asc("id"));
     private static final Sort NAME_DESC = Sort.by(
         Sort.Order.desc("lastName"), Sort.Order.desc("firstName"), Sort.Order.desc("id"));
-    private static final Sort CITY_ASC = Sort.by(
-        Sort.Order.asc("city"), Sort.Order.asc("lastName"), Sort.Order.asc("firstName"), Sort.Order.asc("id"));
-    private static final Sort CITY_DESC = Sort.by(
-        Sort.Order.desc("city"), Sort.Order.asc("lastName"), Sort.Order.asc("firstName"), Sort.Order.asc("id"));
+    // The city direction is the client's; the name stays ascending in both - hence NAME_ASC reused.
+    private static final Sort CITY_ASC = Sort.by(Sort.Order.asc("city")).and(NAME_ASC);
+    private static final Sort CITY_DESC = Sort.by(Sort.Order.desc("city")).and(NAME_ASC);
 
     public Pageable toPageable(int page, int size, String sort) {
         int clampedPage = Math.max(page, 0);
