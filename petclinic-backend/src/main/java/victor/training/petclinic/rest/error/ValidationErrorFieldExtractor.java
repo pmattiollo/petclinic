@@ -51,9 +51,8 @@ public final class ValidationErrorFieldExtractor {
         return String.join(" ", parts);
     }
 
+    // Only called when the message starts with a non-empty field name, so it is never null or empty.
     private static String capitalizeFirst(String s) {
-        if (s == null || s.isEmpty())
-            return s;
         return Character.toUpperCase(s.charAt(0)) + (s.length() > 1 ? s.substring(1) : "");
     }
 }

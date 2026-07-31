@@ -60,6 +60,30 @@ class ValidationErrorFieldExtractorTest {
         assertThat(errors).containsExactly("City (value: Paris)");
     }
 
+    @Test
+    void extract_singleLetterMessage_isCapitalized() {
+        List<String> errors = extractWith("x", "x", 1);
+        assertThat(errors).containsExactly("X (value: 1)");
+    }
+
+    @Test
+    void extract_nullField_usesValueDefault() {
+        List<String> errors = extractWith(null, "must not be null", 42);
+        assertThat(errors).containsExactly("Value must not be null (value: 42)");
+    }
+
+    @Test
+    void extract_emptyField_usesValueDefault() {
+        List<String> errors = extractWith("", "must not be null", 42);
+        assertThat(errors).containsExactly("Value must not be null (value: 42)");
+    }
+
+    @Test
+    void extract_punctuationOnlyField_usesValueDefault() {
+        List<String> errors = extractWith(".", "must not be null", 42);
+        assertThat(errors).containsExactly("Value must not be null (value: 42)");
+    }
+
     private List<String> extractWith(String field, String message, Object rejectedValue) {
         FieldError fe = mock(FieldError.class);
         when(fe.getField()).thenReturn(field);

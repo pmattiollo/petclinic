@@ -57,6 +57,12 @@ class ValidationErrorExtractorTest {
     }
 
     @Test
+    void extract_singleLetterMessage_isCapitalized() {
+        List<String> errors = extractWith("x", "x", 1);
+        assertThat(errors).containsExactly("X (value: 1)");
+    }
+
+    @Test
     void extract_nullPath_usesValueDefault() {
         List<String> errors = extractWith(null, "must not be null", 42);
         assertThat(errors).containsExactly("Value must not be null (value: 42)");

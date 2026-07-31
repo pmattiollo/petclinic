@@ -11,11 +11,15 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.http.MediaType;
+import victor.training.petclinic.domain.Specialty;
 import victor.training.petclinic.domain.Vet;
 import victor.training.petclinic.repository.VetRepository;
+import victor.training.petclinic.rest.dto.SpecialtyDto;
 import victor.training.petclinic.rest.dto.VetDto;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -85,6 +89,28 @@ public class VetTest {
                 .content(mapper.writeValueAsString(newVet))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void create_withSpecialties_resolvesThemByName() throws Exception {
+        SpecialtyDto radiology = new SpecialtyDto();
+        radiology.setName("radiology");
+        VetDto newVet = new VetDto();
+        newVet.setFirstName("Linda");
+        newVet.setLastName("Douglas");
+        newVet.setSpecialties(List.of(radiology));
+
+        mockMvc.perform(post("/api/vets")
+                .content(mapper.writeValueAsString(newVet))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isCreated());
+
+        Vet created = vetRepository.findAll().stream()
+                .filter(v -> "Douglas".equals(v.getLastName()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(created.getSpecialties()).extracting(Specialty::getName).containsExactly("radiology");
+        assertThat(created.getSpecialties()).allSatisfy(s -> assertThat(s.getId()).isNotNull());
     }
 
     @Test
