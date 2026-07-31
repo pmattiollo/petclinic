@@ -29,7 +29,7 @@ export class OwnerEditComponent implements OnInit {
   }
 
   onSubmit(owner: Owner) {
-    const that = this;  
+    const that = this;
     const ownerId = this.route.snapshot.params.id;
     this.ownerService.updateOwner(ownerId , owner).subscribe(
       (res) => this.gotoOwnerDetail(owner),

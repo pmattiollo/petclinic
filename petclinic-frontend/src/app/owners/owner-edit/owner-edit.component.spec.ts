@@ -69,7 +69,7 @@ describe('OwnerEditComponent', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
   });
 
- 
+
   it('update owner', async(() => {
     let buttons = fixture.debugElement.queryAll(By.css('button'));
     let updateOwnerButton = buttons[1].nativeElement;
