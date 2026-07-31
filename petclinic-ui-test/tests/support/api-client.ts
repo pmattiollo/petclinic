@@ -80,12 +80,6 @@ export class ApiClient {
     return response.data;
   }
 
-  static getFullNames(owners: OwnerDto[]): string[] {
-    return owners
-      .map(owner => `${owner.firstName} ${owner.lastName}`.trim())
-      .filter(name => name.length > 0);
-  }
-
   /** The owners grid renders the Name column as "Last, First" (see owner-list.component.html). */
   static getDisplayNames(owners: OwnerDto[]): string[] {
     return owners
@@ -110,13 +104,15 @@ export class ApiClient {
     return displayName.substring(0, comma).trim();
   }
 
+  /**
+   * A real 2-letter prefix, so the search test keeps exercising `LIKE 'prefix%'` (and the
+   * `owners_last_name_pattern_idx` behind it) rather than an exact-name lookup.
+   */
   static choosePrefixFrom(owners: OwnerDto[]): string {
     for (const owner of owners) {
-      if (owner.lastName && owner.lastName.trim()) {
-        // Use the whole last name (not just a short prefix) so the match stays within a
-        // single page even against seed data with several similarly-named owners - a short
-        // 2-letter prefix can match more owners than the default page size shows.
-        return owner.lastName.trim();
+      const lastName = owner.lastName?.trim();
+      if (lastName && lastName.length >= 2) {
+        return lastName.slice(0, 2);
       }
     }
     throw new Error('No owners available to derive search prefix');

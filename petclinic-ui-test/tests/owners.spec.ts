@@ -53,9 +53,10 @@ test.describe('Owners Page', () => {
     const someOwners = await apiClient.fetchOwners();
     const prefix = ApiClient.choosePrefixFrom(someOwners);
 
-    // Fetch filtered owners from API (walking every page, so the expected set is complete)
-    const expectedFilteredOwners = await apiClient.fetchOwnersByPrefix(prefix);
-    const expectedFilteredFullNames = ApiClient.getDisplayNames(expectedFilteredOwners);
+    // The grid shows one page, so compare against the API's first page of matches - not the
+    // full walk, which a 2-letter prefix can easily push past a single page.
+    const expectedFirstPage = await apiClient.fetchOwnersPage({lastName: prefix});
+    const expectedFilteredFullNames = ApiClient.getDisplayNames(expectedFirstPage.content);
 
     // Open the owners page
     const ownersPage = new OwnersPage(page);
@@ -77,10 +78,8 @@ test.describe('Owners Page', () => {
       expect(lastName.toLowerCase()).toMatch(new RegExp(`^${prefix.toLowerCase()}`));
     }
 
-    // Verify exact match with API results
-    expect(ApiClient.sorted(actualFilteredFullNames)).toEqual(
-      ApiClient.sorted(expectedFilteredFullNames)
-    );
+    // Verify exact match with the API's first page, in the same (name ascending) order
+    expect(actualFilteredFullNames).toEqual(expectedFilteredFullNames);
   });
 
   test('paginates through owners and can change page size', async ({ page }) => {

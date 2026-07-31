@@ -16,9 +16,10 @@ Given('at least one owner exists', async function (this: PlaywrightWorld) {
   if (!withLastName) {
     throw new Error('No owner with a usable last name found; cannot run owner-search scenario');
   }
-  // Use the whole last name (not just a couple of letters) so the match stays within the
-  // default page size even against seed data with several similarly-named owners.
-  this.searchPrefix = withLastName.lastName;
+  // "One name part": the first two letters of a real owner's last name - keeps the step
+  // exercising `LIKE 'prefix%'` rather than an exact-name lookup.
+  this.searchPrefix = withLastName.lastName.slice(0, 2);
+  // The grid shows one page, so the expectation is the API's own first page of matches.
   const {data: matchesPage} = await axios.get(`${API_BASE}/owners`, {
     params: {lastName: this.searchPrefix},
     timeout: 10_000,
