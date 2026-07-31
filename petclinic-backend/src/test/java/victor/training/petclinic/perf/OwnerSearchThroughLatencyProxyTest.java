@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.net.Socket;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -52,8 +51,10 @@ class OwnerSearchThroughLatencyProxyTest {
   @JUnitPerfTest(threads = 4, durationMs = 5_000, warmUpMs = 1_000)
   @JUnitPerfTestRequirement(percentiles = "95:200,99:500", executionsPerSec = 20)
   void ownerSearchThroughProxy() throws Exception {
+    // totalElements, not content: a page caps at `size`, so asserting >= 10 rows on a page of 10
+    // would only restate the page size instead of proving the seed came back.
     mockMvc.perform(get("/api/owners"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.content", hasSize(greaterThanOrEqualTo(10))));
+        .andExpect(jsonPath("$.totalElements", greaterThanOrEqualTo(10)));
   }
 }
