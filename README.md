@@ -22,7 +22,9 @@ engineering techniques you can lift into your own projects.
 - **[Code City](https://victorrentea.github.io/petclinic/petclinic-backend/docs/generated/codemap/codecity.html)** —
   a 3D view of the codebase (size = LOC, height = complexity, colour = churn)
   across Classes / Packages / Modules lenses, with commits/committers mined from
-  git history.
+  git history. The generators are a tool of their own —
+  [victorrentea/code-city](https://github.com/victorrentea/code-city), point it at any
+  Java repo; `./generate-codecity.sh` runs it on this one.
 - **E2E traces → sequence diagrams.** Tempo/OpenTelemetry spans from a browser
   run are replayed into a PlantUML sequence diagram.
 - **MCP server** hosted by the backend at `/mcp` (Spring AI) — tools/resources
@@ -119,7 +121,9 @@ From the https://github.com/victorrentea/petclinic repo…
 - get the mechanism that generates `DomainModel.puml` from code.
 - adopt the database migrations scripts technique
 - get the mechanism to auto-build `DB.puml` from the incremental DB scripts.
-- run the Code City 3D visualization on the sources of my projec XYZ. 
+- run the Code City 3D visualization on the sources of my project XYZ, using
+  https://github.com/victorrentea/code-city (`git clone` it, then
+  `./generate.sh <my-repo>` and open the `codecity.html` it writes).
 - copy the idea to keep the backend Java in sync with `openapi.yaml`, and the frontend `api-types.ts` - prove that a change in a backend Dto fails the FE build, ran automatically prepush and on CI.
 - get the way agent is kept in a loop to fix CI its push broke.
 - get how to run critical tests before every push and again remotely in CI.
