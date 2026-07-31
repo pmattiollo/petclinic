@@ -250,10 +250,10 @@
   /* Identity header above the metrics: class name (bold) / folder / package.
      The class + package used to live in a top-center #classTitle banner; that
      banner is gone and its info now lives here, inside the metrics panel. */
+  /* No rule of its own: the metrics list below already draws one (and it is the only
+     divider a district hover gets), so a border here made two hairlines in a row. */
   #hover .idhdr {
-    margin: 0 0 6px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    margin: 0 0 4px;
   }
   #hover .idhdr .cls {
     display: block;
@@ -635,6 +635,14 @@
       <input id="colorLog" type="checkbox" aria-label="log colour ramp"> lg
     </label>
 
+    <span class="knob">Zoom to</span>
+    <div class="filterRow" title="Drill into one package — the same scope shift-clicking a floor gives you">
+      <input id="scopePick" type="text" spellcheck="false" autocomplete="off"
+             list="allPackages" placeholder="whole city">
+      <datalist id="allPackages"></datalist>
+      <button id="scopePickClear" type="button" title="back to the whole city" hidden>&times;</button>
+    </div>
+
     <span class="knob">Packages</span>
     <select id="pkgLabelMode" aria-label="package label style">
       <option value="floating">floating tags</option>
@@ -698,7 +706,7 @@ const REPO_ABS = "/private/tmp/claude-501/-Users-victorrentea-workspace-petclini
 const BUILD_CMD = "# 1. The generators (this page was made by them):\ngit clone https://github.com/victorrentea/code-city ~/code-city\n\n# 2. Point them at any git repo of Java sources \u2014 that's the whole configuration.\n~/code-city/generate.sh ~/workspace/your-repo\n\n# 3. Open the city (macOS `open`; Linux `xdg-open`; Windows `start`).\nopen ~/workspace/your-repo/.codecity/codecity.html\n";
 const HAS_CHANGES = true;  // any file in the current git change set?
 const CHANGE_SOURCE = {"kind": "commit", "label": "commit: 56a1ae7", "detail": "test: cover the new-code gaps failing the SonarCloud quality gate", "tooltip": "test: cover the new-code gaps failing the SonarCloud quality gate\n\nNew-code coverage was 64.4% against an 80% threshold: 8 uncovered lines and\n8 uncovered conditions across five files.\n\n- ExceptionControllerAdvice.handleConstraintViolation had no test; add one\n  asserting the ProblemDetail shape (title, type, timestamp, errors).\n- McpSecurity.extractSubject never saw a non-JWT bearer token; add a case\n  proving such a call still passes the service gate as \"mcp-service\".\n- VetRestController.updateSpecialties was only ever reached with an empty\n  specialty list; add a create-with-specialties test that resolves by name.\n- ValidationErrorFieldExtractor.humanizePath fell back to \"Value\" for null,\n  empty and punctuation-only field names, all untested; add the three cases.\n\nThe null/empty guard in both capitalizeFirst methods was unreachable: their\nonly caller passes a message already proven to start with a non-empty field\nname. Delete the dead guard rather than write a test that cannot exist.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>", "url": "https://github.com/victorrentea/petclinic/commit/56a1ae7fd8da0366a1fad4a4547483580d89f11b"};  // what that change set is a diff OF (PR / commit / working tree)
-const COMMIT_CHOICES = [{"short": "56a1ae7", "subject": "test: cover the new-code gaps failing the SonarCloud quality gate", "when": "3 hours ago", "url": "https://github.com/victorrentea/petclinic/commit/56a1ae7fd8da0366a1fad4a4547483580d89f11b", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorExtractor.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorFieldExtractor.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest", "victor.training.petclinic.rest.error"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error"]}, {"short": "1f3a632", "subject": "style: satisfy .editorconfig everywhere, then turn the indentation checks on", "when": "15 hours ago", "url": "https://github.com/victorrentea/petclinic/commit/1f3a6321c9b101cde1daf1a605621b8fb1b91077", "files": ["refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/ListGetFirst.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rewrite"], "dirs": [".", "refactoring-legacy", "refactoring-legacy/src", "refactoring-legacy/src/main", "refactoring-legacy/src/main/java", "refactoring-legacy/src/main/java/victor", "refactoring-legacy/src/main/java/victor/training", "refactoring-legacy/src/main/java/victor/training/petclinic", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite"]}, {"short": "0c5acce", "subject": "style: adopt the Eclipse JDT formatter across the three Java modules", "when": "15 hours ago", "url": "https://github.com/victorrentea/petclinic/commit/0c5acce3e299c8e1d6fa20f8873e0e356b201564", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/PetClinicApplication.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Owner.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Role.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/User.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Vet.java", "petclinic-backend/src/main/java/victor/training/petclinic/mcp/McpSecurity.java", "petclinic-backend/src/main/java/victor/training/petclinic/mcp/PetClinicMcp.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/UserRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/ApiExamples.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/OwnerRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/RootRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyFeed.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/UserRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/OwnerDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetTypeFieldsDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/SpecialtyDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VetDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VisitDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ExceptionControllerAdvice.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorExtractor.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorFieldExtractor.java", "petclinic-backend/src/main/java/victor/training/petclinic/security/BasicAuthenticationConfig.java", "petclinic-backend/src/main/java/victor/training/petclinic/security/CorsConfig.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/ChatbotApp.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/Assistant.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/ChatHistory.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/JudgeGuard.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/LocalTools.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/OwnerJwtPrincipal.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/RagIngestion.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/RemoteToolsConfig.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/SecurityConfig.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/TokenCostMeter.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/diagram/AgentStateDiagram.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterAgent.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterController.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterGuard.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/GrafanaClient.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/GrafanaFindings.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/HealthProbe.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/MetricsSnapshot.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/ProcessControl.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/RealProcessControl.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/RestartResult.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/Service.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/ServiceHealth.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/PetTriageAgent.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/TriageController.java", "petclinic-database/src/main/java/ro/victorrentea/petclinic/db/NetworkLatencyProxy.java", "petclinic-database/src/main/java/ro/victorrentea/petclinic/db/PostgresLauncher.java"], "districts": ["ro", "ro.victorrentea", "ro.victorrentea.petclinic", "ro.victorrentea.petclinic.db", "victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.chatbot", "victor.training.petclinic.chatbot.assistant", "victor.training.petclinic.chatbot.diagram", "victor.training.petclinic.chatbot.firefighter", "victor.training.petclinic.chatbot.triage", "victor.training.petclinic.domain", "victor.training.petclinic.mcp", "victor.training.petclinic.repository", "victor.training.petclinic.rest", "victor.training.petclinic.rest.dto", "victor.training.petclinic.rest.error", "victor.training.petclinic.security"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/domain", "petclinic-backend/src/main/java/victor/training/petclinic/mcp", "petclinic-backend/src/main/java/victor/training/petclinic/repository", "petclinic-backend/src/main/java/victor/training/petclinic/rest", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error", "petclinic-backend/src/main/java/victor/training/petclinic/security", "petclinic-chatbot", "petclinic-chatbot/src", "petclinic-chatbot/src/main", "petclinic-chatbot/src/main/java", "petclinic-chatbot/src/main/java/victor", "petclinic-chatbot/src/main/java/victor/training", "petclinic-chatbot/src/main/java/victor/training/petclinic", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/diagram", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage", "petclinic-database", "petclinic-database/src", "petclinic-database/src/main", "petclinic-database/src/main/java", "petclinic-database/src/main/java/ro", "petclinic-database/src/main/java/ro/victorrentea", "petclinic-database/src/main/java/ro/victorrentea/petclinic", "petclinic-database/src/main/java/ro/victorrentea/petclinic/db"]}, {"short": "a5d03cb", "subject": "Rename module petclinic-refactor-recipes -> refactoring-legacy", "when": "5 days ago", "url": "https://github.com/victorrentea/petclinic/commit/a5d03cba4bdd39a5df9cd3431cd21cbf013798f0", "files": ["refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/ListGetFirst.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rewrite"], "dirs": [".", "refactoring-legacy", "refactoring-legacy/src", "refactoring-legacy/src/main", "refactoring-legacy/src/main/java", "refactoring-legacy/src/main/java/victor", "refactoring-legacy/src/main/java/victor/training", "refactoring-legacy/src/main/java/victor/training/petclinic", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite"]}, {"short": "c8023d3", "subject": "Add petclinic-refactor-recipes: inline single-use local variable (+ Refaster get(0)->getFirst)", "when": "7 days ago", "url": "https://github.com/victorrentea/petclinic/commit/c8023d38afc8344a8fca59f1e4ade3c0813441c0", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "31eb10e", "subject": "refactor(docs+domain): reflection-based domain diagram, ERD polish, group docs/scripts", "when": "3 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/31eb10e26e8817647f2ca7cf42af41ed981ef871", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/domain/Owner.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Pet.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/PetType.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Role.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Specialty.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/User.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Vet.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Visit.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/OwnerMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/PetMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/PetTypeMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/SpecialtyMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/UserMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/VetMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/VisitMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mcp/PetClinicMcp.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/OwnerRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/PetRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/PetTypeRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/SpecialtyRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/UserRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/VetRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/VisitRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/OwnerRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyFeed.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/UserRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.domain", "victor.training.petclinic.mapper", "victor.training.petclinic.mcp", "victor.training.petclinic.repository", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/domain", "petclinic-backend/src/main/java/victor/training/petclinic/mapper", "petclinic-backend/src/main/java/victor/training/petclinic/mcp", "petclinic-backend/src/main/java/victor/training/petclinic/repository", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "b121c26", "subject": "refactor(devtools): make WireMock an optional frontend-only tool", "when": "4 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/b121c263ff25d5b1163340e0caf0022f2637dced", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/ApiExamples.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "5987eaf", "subject": "feat(openapi): hard-code response examples in Java for every GET-list endpoint", "when": "4 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/5987eaf146312a5649b37905a5baeaf18daf3710", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/ApiExamples.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/OwnerRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "dde92c9", "subject": "feat(backend): add explicit book-visit span on POST /api/visits", "when": "5 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/dde92c945a5ce291f2674d58c3e0bb1029d4db7b", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "798fb4b", "subject": "fix(cors): allow any localhost port in dev", "when": "5 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/798fb4b6d8332cfdae9d07358a0388f42b77adb6", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/security/CorsConfig.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.security"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/security"]}];   // recent commits that touched rendered code; empty unless the diff came from history
+const COMMIT_CHOICES = [{"short": "56a1ae7", "subject": "test: cover the new-code gaps failing the SonarCloud quality gate", "when": "4 hours ago", "url": "https://github.com/victorrentea/petclinic/commit/56a1ae7fd8da0366a1fad4a4547483580d89f11b", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorExtractor.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorFieldExtractor.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest", "victor.training.petclinic.rest.error"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error"]}, {"short": "1f3a632", "subject": "style: satisfy .editorconfig everywhere, then turn the indentation checks on", "when": "17 hours ago", "url": "https://github.com/victorrentea/petclinic/commit/1f3a6321c9b101cde1daf1a605621b8fb1b91077", "files": ["refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/ListGetFirst.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rewrite"], "dirs": [".", "refactoring-legacy", "refactoring-legacy/src", "refactoring-legacy/src/main", "refactoring-legacy/src/main/java", "refactoring-legacy/src/main/java/victor", "refactoring-legacy/src/main/java/victor/training", "refactoring-legacy/src/main/java/victor/training/petclinic", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite"]}, {"short": "0c5acce", "subject": "style: adopt the Eclipse JDT formatter across the three Java modules", "when": "17 hours ago", "url": "https://github.com/victorrentea/petclinic/commit/0c5acce3e299c8e1d6fa20f8873e0e356b201564", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/PetClinicApplication.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Owner.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Role.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/User.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Vet.java", "petclinic-backend/src/main/java/victor/training/petclinic/mcp/McpSecurity.java", "petclinic-backend/src/main/java/victor/training/petclinic/mcp/PetClinicMcp.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/UserRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/ApiExamples.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/OwnerRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/RootRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyFeed.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/UserRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/OwnerDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/PetTypeFieldsDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/SpecialtyDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VetDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto/VisitDto.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ExceptionControllerAdvice.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorExtractor.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error/ValidationErrorFieldExtractor.java", "petclinic-backend/src/main/java/victor/training/petclinic/security/BasicAuthenticationConfig.java", "petclinic-backend/src/main/java/victor/training/petclinic/security/CorsConfig.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/ChatbotApp.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/Assistant.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/ChatHistory.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/JudgeGuard.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/LocalTools.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/OwnerJwtPrincipal.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/RagIngestion.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/RemoteToolsConfig.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/SecurityConfig.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant/TokenCostMeter.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/diagram/AgentStateDiagram.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterAgent.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterController.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/FirefighterGuard.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/GrafanaClient.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/GrafanaFindings.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/HealthProbe.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/MetricsSnapshot.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/ProcessControl.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/RealProcessControl.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/RestartResult.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/Service.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter/ServiceHealth.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/PetTriageAgent.java", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage/TriageController.java", "petclinic-database/src/main/java/ro/victorrentea/petclinic/db/NetworkLatencyProxy.java", "petclinic-database/src/main/java/ro/victorrentea/petclinic/db/PostgresLauncher.java"], "districts": ["ro", "ro.victorrentea", "ro.victorrentea.petclinic", "ro.victorrentea.petclinic.db", "victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.chatbot", "victor.training.petclinic.chatbot.assistant", "victor.training.petclinic.chatbot.diagram", "victor.training.petclinic.chatbot.firefighter", "victor.training.petclinic.chatbot.triage", "victor.training.petclinic.domain", "victor.training.petclinic.mcp", "victor.training.petclinic.repository", "victor.training.petclinic.rest", "victor.training.petclinic.rest.dto", "victor.training.petclinic.rest.error", "victor.training.petclinic.security"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/domain", "petclinic-backend/src/main/java/victor/training/petclinic/mcp", "petclinic-backend/src/main/java/victor/training/petclinic/repository", "petclinic-backend/src/main/java/victor/training/petclinic/rest", "petclinic-backend/src/main/java/victor/training/petclinic/rest/dto", "petclinic-backend/src/main/java/victor/training/petclinic/rest/error", "petclinic-backend/src/main/java/victor/training/petclinic/security", "petclinic-chatbot", "petclinic-chatbot/src", "petclinic-chatbot/src/main", "petclinic-chatbot/src/main/java", "petclinic-chatbot/src/main/java/victor", "petclinic-chatbot/src/main/java/victor/training", "petclinic-chatbot/src/main/java/victor/training/petclinic", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/assistant", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/diagram", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/firefighter", "petclinic-chatbot/src/main/java/victor/training/petclinic/chatbot/triage", "petclinic-database", "petclinic-database/src", "petclinic-database/src/main", "petclinic-database/src/main/java", "petclinic-database/src/main/java/ro", "petclinic-database/src/main/java/ro/victorrentea", "petclinic-database/src/main/java/ro/victorrentea/petclinic", "petclinic-database/src/main/java/ro/victorrentea/petclinic/db"]}, {"short": "a5d03cb", "subject": "Rename module petclinic-refactor-recipes -> refactoring-legacy", "when": "5 days ago", "url": "https://github.com/victorrentea/petclinic/commit/a5d03cba4bdd39a5df9cd3431cd21cbf013798f0", "files": ["refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/InlineSingleUseLocalVariable.java", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite/ListGetFirst.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rewrite"], "dirs": [".", "refactoring-legacy", "refactoring-legacy/src", "refactoring-legacy/src/main", "refactoring-legacy/src/main/java", "refactoring-legacy/src/main/java/victor", "refactoring-legacy/src/main/java/victor/training", "refactoring-legacy/src/main/java/victor/training/petclinic", "refactoring-legacy/src/main/java/victor/training/petclinic/rewrite"]}, {"short": "c8023d3", "subject": "Add petclinic-refactor-recipes: inline single-use local variable (+ Refaster get(0)->getFirst)", "when": "7 days ago", "url": "https://github.com/victorrentea/petclinic/commit/c8023d38afc8344a8fca59f1e4ade3c0813441c0", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "31eb10e", "subject": "refactor(docs+domain): reflection-based domain diagram, ERD polish, group docs/scripts", "when": "3 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/31eb10e26e8817647f2ca7cf42af41ed981ef871", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/domain/Owner.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Pet.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/PetType.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Role.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Specialty.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/User.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Vet.java", "petclinic-backend/src/main/java/victor/training/petclinic/domain/Visit.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/OwnerMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/PetMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/PetTypeMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/SpecialtyMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/UserMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/VetMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mapper/VisitMapper.java", "petclinic-backend/src/main/java/victor/training/petclinic/mcp/PetClinicMcp.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/OwnerRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/PetRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/PetTypeRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/SpecialtyRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/UserRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/VetRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/repository/VisitRepository.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/OwnerRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyFeed.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/UserRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.domain", "victor.training.petclinic.mapper", "victor.training.petclinic.mcp", "victor.training.petclinic.repository", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/domain", "petclinic-backend/src/main/java/victor/training/petclinic/mapper", "petclinic-backend/src/main/java/victor/training/petclinic/mcp", "petclinic-backend/src/main/java/victor/training/petclinic/repository", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "b121c26", "subject": "refactor(devtools): make WireMock an optional frontend-only tool", "when": "4 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/b121c263ff25d5b1163340e0caf0022f2637dced", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/ApiExamples.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "5987eaf", "subject": "feat(openapi): hard-code response examples in Java for every GET-list endpoint", "when": "4 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/5987eaf146312a5649b37905a5baeaf18daf3710", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/ApiExamples.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/OwnerRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/PetTypeRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/SpecialtyRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VetRestController.java", "petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "dde92c9", "subject": "feat(backend): add explicit book-visit span on POST /api/visits", "when": "5 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/dde92c945a5ce291f2674d58c3e0bb1029d4db7b", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/rest/VisitRestController.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.rest"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/rest"]}, {"short": "798fb4b", "subject": "fix(cors): allow any localhost port in dev", "when": "5 weeks ago", "url": "https://github.com/victorrentea/petclinic/commit/798fb4b6d8332cfdae9d07358a0388f42b77adb6", "files": ["petclinic-backend/src/main/java/victor/training/petclinic/security/CorsConfig.java"], "districts": ["victor", "victor.training", "victor.training.petclinic", "victor.training.petclinic.security"], "dirs": [".", "petclinic-backend", "petclinic-backend/src", "petclinic-backend/src/main", "petclinic-backend/src/main/java", "petclinic-backend/src/main/java/victor", "petclinic-backend/src/main/java/victor/training", "petclinic-backend/src/main/java/victor/training/petclinic", "petclinic-backend/src/main/java/victor/training/petclinic/security"]}];   // recent commits that touched rendered code; empty unless the diff came from history
 
 // The active COLOR metric's p95 scale max, mirrored out of rebuildCity so the
 // hover tooltip's colour-scale marker can place this building on the ramp.
@@ -798,6 +806,9 @@ const changeCountEl = document.getElementById("changeCount");
 const filterInput = document.getElementById("pkgFilter");
 const filterClearBtn = document.getElementById("pkgFilterClear");
 const filterCountEl = document.getElementById("pkgFilterCount");
+const scopeInput = document.getElementById("scopePick");
+const scopeClearBtn = document.getElementById("scopePickClear");
+const scopeList = document.getElementById("allPackages");
 if (packageOpt && !PACKAGES.length) packageOpt.disabled = true;   // no package data → option greyed
 if (moduleOpt && MODULES.length < 2) moduleOpt.disabled = true;   // <2 modules → nothing to compare
 // "show everything" is the default; the highlight/hide modes only make sense when
@@ -923,33 +934,62 @@ function filteredDataset() {
   return data;
 }
 // Wettel's original CodeCity plate is a landscape rectangle, not a square: a wide
-// city reads better on a 16:9 screen and can be taken in whole from a low, far
-// camera. Keep the ground *area* of the old 900x900 square so footprints — and
-// therefore the height scale — stay comparable.
+// city reads better on a 16:9 screen and can be taken in whole from a low, far camera.
+//
+// The plate's AREA is the size of the codebase. A fixed plate made every repo look the
+// same size — Spring Framework (600k lines) and PetClinic (4k) both filled the same
+// ground, so the tiles just got smaller and the two cities were incomparable. Ground
+// area now grows with total lines at a fixed density, so a *file* of a given size gets
+// the same footprint in any repo, and Spring's plate is the ~12x wider thing it is.
+// Rendering cost is unchanged: same buildings, bigger coordinates.
 const cityAspect = 1.6;
-const citySize = 900;                                        // side of the equivalent square
-const cityW = Math.round(citySize * Math.sqrt(cityAspect));  // 1138 across
-const cityD = Math.round(citySize / Math.sqrt(cityAspect));  // 712 deep
+const LINES_PER_UNIT2 = 0.0064;   // ≈ PetClinic's density: keeps its 900x900-equivalent plate
+const MIN_CITY_SIDE = 420;        // a handful of files still deserves a plate, not a coin
+const totalLines = FILES.reduce((sum, f) => sum + (Number(f.lines) || 0), 0);
+const citySize = Math.max(MIN_CITY_SIDE, Math.round(Math.sqrt(totalLines / LINES_PER_UNIT2)));
+const cityW = Math.round(citySize * Math.sqrt(cityAspect));  // PetClinic: 1138 across
+const cityD = Math.round(citySize / Math.sqrt(cityAspect));  // PetClinic: 712 deep
 const cityRadius = Math.hypot(cityW, cityD) / 2;             // half-diagonal: shadow + camera fit
+// Everything written ON the plate scales with it, or a big city's package names would
+// be unreadable specks by the time the camera has pulled back far enough to frame it.
+// ...and everything drawn ON the plate scales with the size of ONE TILE, not with the
+// plate: streets, package-name bands and heights stay in proportion to the buildings,
+// so a 5000-file city looks like a 90-file one seen from higher up — which is exactly
+// what it is. Scaling them with the plate instead made Spring's package names taller
+// than its towers. `cityUnit` is recomputed per rebuild, because a filter changes how
+// many tiles share the plate. 95 = the reference footprint (PetClinic's median).
+const cityScale = citySize / 900;   // plate vs the reference plate: lights + far plane follow it
+let cityUnit = 1;
+const REFERENCE_FOOTPRINT = 95;
+function tuneCityToTileSize(leafCount) {
+  const tile = Math.sqrt((cityW * cityD) / Math.max(1, leafCount));
+  cityUnit = Math.max(0.35, tile / REFERENCE_FOOTPRINT);
+  districtGap = 14 * cityUnit;
+  fileGap = 3 * cityUnit;
+  districtStep = 9 * cityUnit;
+  maxHeight = 190 * cityUnit;
+  minHeight = 5 * cityUnit;
+}
 let cityTop = 0;                                             // tallest building; heights are p95-scaled, so outliers blow past maxHeight
-const districtGap = 14;
-const fileGap = 3;
-const districtStep = 9;   // terrace rise per nesting level: tall enough to separate floors without hatching
+let districtGap = 14;
+let fileGap = 3;
+let districtStep = 9;   // terrace rise per nesting level: tall enough to separate floors without hatching
 // Margin kept clear on ALL FOUR sides of every district, where its name is written.
 // It has to be reserved in the treemap itself: children terraces rise ABOVE their
 // parent's floor and tile its whole area, so text laid anywhere else is buried.
 // One fixed width for every level: a package name is an identifier, not a metric —
 // sizing it by the district's area only said "this package is big", which the plate
 // already says, while making the outer names (victor / training / petclinic) shout.
-const floorLabelBand = () => 13;
-const maxHeight = 190;
-const minHeight = 5;
+const floorLabelBand = () => 13 * cityUnit;
+let maxHeight = 190;
+let minHeight = 5;
 let buildings = [];
 let districts = [];
 let cityLabels = [];
 const MIN_LABEL_ROOF_PX = 26;   // a roof narrower than this on screen doesn't get a name
 let districtLabels = [];   // floating package tags (CSS2DObjects), when pkgLabelMode = "floating"
 const floorLabelMeshes = [];   // flat on-the-floor package names; re-oriented each frame to face the camera
+const topLevelPackages = [];   // {area, meshes, tags} per depth-1 district, for the intro's PACKAGES wire
 
 // ── Cross-view link with the 2D codemap (when embedded side by side) ──────────
 // The parent "combined" page bridges hover selection between this city and the
@@ -1024,10 +1064,16 @@ scene.background = new THREE.Color(0xf4f5f7);
 // A long lens (30°, not the usual 45°) shot from far back: perspective flattens
 // out, so the far districts stay the same scale as the near ones, the way the
 // original CodeCity plates look.
-const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 20000);
+// The far plane has to clear the whole plate, and the near plane has to rise with it:
+// a 1-unit near against a 250000-unit far leaves so little depth precision that
+// coplanar surfaces (a building's base on its floor, a name laid on a terrace) trade
+// places from frame to frame and the city flickers — with the camera standing still,
+// because damping never stops nudging it. The log depth buffer holds the rest.
+const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight,
+  Math.max(1, cityRadius / 400), Math.max(20000, cityRadius * 20));
 camera.position.set(720, 620, 760);   // provisional; frameCity() fits it to the real city
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
@@ -1047,7 +1093,7 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.screenSpacePanning = true;
 controls.zoomToCursor = true;
-controls.minDistance = 140;
+controls.minDistance = 140;   // screen-space: how close you may get to one building
 controls.maxDistance = cityRadius * 12;   // room to pull right back off a big city
 controls.target.set(0, 0, 0);
 controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
@@ -1126,7 +1172,7 @@ function openInEditor(rel) {
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8592a3, 2.1));
 const sun = new THREE.DirectionalLight(0xffffff, 2.2);
-sun.position.set(-420, 780, 520);
+sun.position.set(-420 * cityScale, 780 * cityScale, 520 * cityScale);   // the sun has to clear the whole plate
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 sun.shadow.camera.left = -(cityRadius + 60);
@@ -1279,6 +1325,7 @@ function medianFootprint(root) {
 function rebuildCity() {
   clearCity();
   cityTop = 0;                 // tallest building of THIS layout — what frameCity must fit
+  tuneCityToTileSize(filteredDataset().length);   // streets, bands and heights follow the tile
   const areaMetric = areaMetricKey();
   const heightMetric = heightMetricKey();
   const colorMetric = colorMetricKey();
@@ -1311,6 +1358,7 @@ function rebuildCity() {
   // (rest, mapper, ...). A thin outline delimits every package from its siblings.
   _floorLabelBudget = 960;   // cap flat floor-text planes per rebuild (4 per district now)
   floorLabelMeshes.length = 0;   // the previous rebuild's planes are gone; start the facing list over
+  topLevelPackages.length = 0;
   for (const node of root.descendants()) {
     if (node === root || !node.children) {
       continue;
@@ -1395,6 +1443,7 @@ function rebuildCity() {
     cityTop = Math.max(cityTop, baseY + height);
   }
   styleForChanges();
+  refreshScopeOptions();
   setupLabels(areaMetric, heightMetric, colorMetric);
   if (filterCountEl) filterCountEl.textContent = filterRe ? buildings.length + " shown" : "";
   if (changeCountEl) {
@@ -1612,7 +1661,7 @@ function placeFloorLabelMesh(tex, worldW, worldH, x, z, topY, yaw) {
     new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
   );
   mesh.rotation.x = -Math.PI / 2;                    // lay flat on the platform top
-  mesh.position.set(x, topY + 0.6, z);
+  mesh.position.set(x, topY + 0.6 * cityUnit, z);   // clear of the terrace it lies on
   mesh.renderOrder = 3;
   mesh.userData.kind = "package";                    // disposed by clearCity's package sweep
   scene.add(mesh);
@@ -1646,6 +1695,18 @@ function addPackageLabel(node, cx, cz, topY, width, depth) {
   const full = node.data.packageName || node.data.name || "";
   const shortName = full.split(".").pop();
   if (!shortName) return;
+  // Remember which labels belong to which top-level district: the intro points at the
+  // biggest one, and "biggest, outermost" is the instance a newcomer will find first.
+  const meshStart = floorLabelMeshes.length;
+  const tagStart = districtLabels.length;
+  const remember = () => {
+    if (node.depth !== 1) return;
+    topLevelPackages.push({
+      area: width * depth,
+      meshes: floorLabelMeshes.slice(meshStart),
+      tags: districtLabels.slice(tagStart),
+    });
+  };
   if (mode === "floor") {
     const band = floorLabelBand(node);
     if (depth < band + 2 || width < band + 2) return;   // district smaller than its own ring
@@ -1659,6 +1720,7 @@ function addPackageLabel(node, cx, cz, topY, width, depth) {
     addFloorName(shortName, cx, far, topY, width, band, 0);
     addFloorName(shortName, left, cz, topY, depth, band, Math.PI / 2);
     addFloorName(shortName, right, cz, topY, depth, band, Math.PI / 2);
+    remember();
     return;
   }
   const div = document.createElement("div");     // "floating"
@@ -1669,6 +1731,7 @@ function addPackageLabel(node, cx, cz, topY, width, depth) {
   obj.center.set(0.5, 1);
   scene.add(obj);
   districtLabels.push(obj);
+  remember();
 }
 
 // The dotted Java package of a class row lives in `district` ("root" means none).
@@ -1947,6 +2010,8 @@ function fitDistance(dir, target, top) {
 }
 
 function updateBreadcrumb() {
+  if (scopeInput && scopeInput.value.trim() !== scopePath) scopeInput.value = scopePath;
+  if (scopeClearBtn) scopeClearBtn.hidden = scopePath === "";
   if (scopePath === "") {
     breadcrumbEl.hidden = true;
     breadcrumbEl.innerHTML = "";
@@ -1965,6 +2030,40 @@ function updateBreadcrumb() {
   });
   breadcrumbEl.innerHTML = parts.join("");
   breadcrumbEl.hidden = false;
+}
+
+// ── "Zoom to": the drill-in you get by shift-clicking a floor, as a typed one ────
+// Shift-clicking only reaches what you can see and identify; a codebase with 565
+// packages needs a way to say the name. Every package on the current lens (a package
+// IS something else in module view) goes into a datalist, so the browser does the
+// autocomplete and the box stays a plain text field you can also paste into.
+let scopeOptions = new Set();
+function refreshScopeOptions() {
+  if (!scopeList) return;
+  scopeOptions = new Set();
+  for (const file of activeDataset()) {
+    const pkg = packageOf(file);
+    let acc = "";
+    for (const seg of pkg ? pkg.split(".") : []) {
+      acc = acc ? `${acc}.${seg}` : seg;
+      scopeOptions.add(acc);
+    }
+  }
+  scopeList.innerHTML = [...scopeOptions].sort()
+    .map(name => `<option value="${escapeXml(name)}"></option>`).join("");
+}
+
+// Applied the moment the text IS a package (picked from the list, typed in full or
+// pasted) — anything else is someone still typing, and rebuilding the city per
+// keystroke would fight them.
+function applyScopePick() {
+  if (!scopeInput) return;
+  const value = scopeInput.value.trim();
+  if (scopeClearBtn) scopeClearBtn.hidden = value === "";
+  scopeInput.classList.toggle("bad", value !== "" && !scopeOptions.has(value));
+  if (value !== "" && !scopeOptions.has(value)) return;
+  dismissIntro();
+  scopeTo(value);
 }
 
 function onSceneClick(event) {
@@ -2009,15 +2108,29 @@ let introEl = null;
 let introDone = false;
 const introSelects = [];   // dropdowns the intro tinted, to be un-tinted on dismiss
 
-// The package name the PACKAGES connector points at: the lowest one on screen, in
-// whichever style the dropdown is currently set to. "off" leaves nothing to point at.
-function lowestPackageLabelOnScreen(project) {
+// The package name the PACKAGES connector points at: the one written on the LARGEST
+// top-level district — the biggest, outermost name on the plate, the same one a reader
+// would have picked out first. Of its four copies (one per edge) take the nearest, i.e.
+// the lowest on screen. "off" leaves nothing to point at.
+function biggestTopPackageLabel(project) {
+  const biggest = topLevelPackages.reduce((a, b) => (!a || b.area > a.area ? b : a), null);
+  if (!biggest) return null;
   let best = null;
-  for (const { mesh } of floorLabelMeshes) {
-    const p = project(mesh.position.x, mesh.position.y, mesh.position.z);
-    if (p.z < 1 && (!best || p.y > best.y)) best = p;
+  // Of the four copies take the one a reader would read: written along the near/far
+  // edge (baseYaw 0), so it runs across the screen rather than up its side, nearest to
+  // the camera, and not hugging the edge of the viewport — a wire ending half
+  // off-screen points at nothing. Each condition relaxes if nothing qualifies.
+  const W = window.innerWidth;
+  for (const [flat, inset] of [[true, 0.12], [false, 0.12], [false, 0]]) {
+    for (const { mesh, baseYaw } of biggest.meshes) {
+      if (flat && baseYaw !== 0) continue;
+      const p = project(mesh.position.x, mesh.position.y, mesh.position.z);
+      if (p.z >= 1 || p.x < W * inset || p.x > W * (1 - inset)) continue;
+      if (!best || p.y > best.y) best = p;
+    }
+    if (best) break;
   }
-  for (const obj of districtLabels) {
+  for (const obj of biggest.tags) {
     const rect = obj.element ? obj.element.getBoundingClientRect() : null;
     if (!rect || !rect.width) continue;
     const p = { x: rect.left + rect.width / 2, y: rect.bottom };
@@ -2149,23 +2262,22 @@ function buildIntro() {
     `fill="${swatch}" stroke="#fff" stroke-width="2.5"/>`
   );
 
-  // Every connector plugs into its selector on the WEST side and is routed down the
-  // panel's left gutter, then out under the panel. Leaving from the bottom edge sent
-  // each wire straight across the selectors *below* it — three lines striking through
-  // the very dropdowns they were not talking about.
+  // Every connector plugs into its selector on the EAST side and leaves the panel
+  // sideways, toward the thing it explains. Leaving from the bottom edge sent each wire
+  // straight across the selectors *below* it — lines striking through the very
+  // dropdowns they were not talking about.
   const panel = document.querySelector(".panel");
-  const panelRect = panel ? panel.getBoundingClientRect() : { left: 8, bottom: H * 0.4 };
-  const gutterX = Math.max(panelRect.left + 6, 8);
-  const exitY = panelRect.bottom + 14;
+  const panelRect = panel ? panel.getBoundingClientRect() : { right: 340 };
+  const exitX = panelRect.right + 16;
   const connector = (rect, target, color) => {
-    const west = { x: rect.left - 3, y: rect.top + rect.height / 2 };
+    const east = { x: rect.right + 3, y: rect.top + rect.height / 2 };
     return [
-      `<path d="M ${west.x.toFixed(1)} ${west.y.toFixed(1)} ` +
-      `C ${gutterX.toFixed(1)} ${west.y.toFixed(1)}, ${gutterX.toFixed(1)} ${exitY.toFixed(1)}, ` +
-      `${(gutterX + 26).toFixed(1)} ${exitY.toFixed(1)} ` +
-      `S ${target.x.toFixed(1)} ${(exitY + 40).toFixed(1)}, ${target.x.toFixed(1)} ${target.y.toFixed(1)}" ` +
+      `<path d="M ${east.x.toFixed(1)} ${east.y.toFixed(1)} ` +
+      `C ${exitX.toFixed(1)} ${east.y.toFixed(1)}, ` +
+      `${((exitX + target.x) / 2).toFixed(1)} ${target.y.toFixed(1)}, ` +
+      `${target.x.toFixed(1)} ${target.y.toFixed(1)}" ` +
       `fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="5 5" opacity="0.65"/>`,
-      `<circle cx="${west.x.toFixed(1)}" cy="${west.y.toFixed(1)}" r="3.5" fill="${color}"/>`,
+      `<circle cx="${east.x.toFixed(1)}" cy="${east.y.toFixed(1)}" r="3.5" fill="${color}"/>`,
       // Selector highlight.
       `<rect x="${rect.left - 4}" y="${rect.top - 4}" width="${rect.width + 8}" height="${rect.height + 8}" ` +
       `rx="8" fill="none" stroke="${color}" stroke-width="2.5"/>`,
@@ -2199,7 +2311,7 @@ function buildIntro() {
   // PACKAGES gets the same treatment, but its "feature" is not on the hero building:
   // it is the package name written on the floor. Wire the dropdown to the lowest one
   // on screen — the nearest, biggest, least ambiguous instance of what it controls.
-  const pkgAnchor = lowestPackageLabelOnScreen(project);
+  const pkgAnchor = biggestTopPackageLabel(project);
   if (pkgLabelSelect && pkgAnchor) {
     const color = "#4338ca";
     parts.push(
@@ -2388,6 +2500,15 @@ function applyFilter() {
   frameCity();
 }
 filterInput.addEventListener("input", applyFilter);
+if (scopeInput) {
+  scopeInput.addEventListener("input", applyScopePick);
+  scopeInput.addEventListener("change", applyScopePick);
+}
+if (scopeClearBtn) scopeClearBtn.addEventListener("click", () => {
+  scopeInput.value = "";
+  applyScopePick();
+  scopeInput.focus();
+});
 filterClearBtn.addEventListener("click", () => { filterInput.value = ""; applyFilter(); filterInput.focus(); });
 window.addEventListener("resize", onResize);
 window.addEventListener("resize", dismissIntro);
