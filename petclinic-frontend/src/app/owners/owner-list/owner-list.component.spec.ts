@@ -100,7 +100,7 @@ describe('OwnerListComponent', () => {
     fixture.detectChanges();
     fixture.whenStable().then(() => { // wait for async getOwners
       fixture.detectChanges();        // update view with name
-      de = fixture.debugElement.query(By.css('.ownerFullName'));
+      de = fixture.debugElement.query(By.css('.owner-full-name'));
       el = de.nativeElement;
       expect(el.innerText).toBe((testOwner.firstName.toString() + ' ' + testOwner.lastName.toString()));
     });

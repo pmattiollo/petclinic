@@ -36,7 +36,7 @@ public class PetTypeRestController {
             content = @Content(mediaType = "application/json",
                     array = @ArraySchema(schema = @Schema(implementation = PetTypeDto.class)),
                     examples = @ExampleObject(name = "sample", value = ApiExamples.PET_TYPES)))
-    public List<PetTypeDto> listPetTypes() {
+  public List<PetTypeDto> listPetTypes() {   
         List<PetType> petTypes = new ArrayList<>(petTypeRepository.findAll());
         return petTypeMapper.toPetTypeDtos(petTypes);
     }
