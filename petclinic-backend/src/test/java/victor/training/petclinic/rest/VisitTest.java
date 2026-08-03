@@ -214,6 +214,57 @@ public class VisitTest {
     }
 
     @Test
+    void create_rejectsDateBeforeThePetWasBorn() throws Exception {
+        VisitDto newVisit = new VisitDto();
+        newVisit.setPetId(petId);
+        newVisit.setDate(LocalDate.of(9, 7, 20));
+        newVisit.setDescription("absurdly old date");
+
+        mockMvc.perform(post("/api/visits")
+                .content(mapper.writeValueAsString(newVisit))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void create_rejectsDateMoreThanAYearAhead() throws Exception {
+        VisitDto newVisit = new VisitDto();
+        newVisit.setPetId(petId);
+        newVisit.setDate(VisitDateRange.latestAllowed().plusDays(1));
+        newVisit.setDescription("too far in the future");
+
+        mockMvc.perform(post("/api/visits")
+                .content(mapper.writeValueAsString(newVisit))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void update_rejectsDateOutsideTheAllowedRange() throws Exception {
+        VisitFieldsDto update = new VisitFieldsDto();
+        update.setDate(LocalDate.of(9, 7, 20));
+        update.setDescription("absurdly old date");
+
+        mockMvc.perform(put("/api/visits/" + visitId)
+                .content(mapper.writeValueAsString(update))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addVisitToOwner_rejectsDateOutsideTheAllowedRange() throws Exception {
+        int ownerId = petRepository.findById(petId).orElseThrow().getOwner().getId();
+        VisitFieldsDto newVisit = new VisitFieldsDto();
+        newVisit.setDate(LocalDate.of(9, 7, 20));
+        newVisit.setDescription("absurdly old date");
+
+        mockMvc.perform(post("/api/owners/" + ownerId + "/pets/" + petId + "/visits")
+                .content(mapper.writeValueAsString(newVisit))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void findVisitsByPetId() {
         // Add a second visit for the same pet
         Visit visit2 = new Visit();

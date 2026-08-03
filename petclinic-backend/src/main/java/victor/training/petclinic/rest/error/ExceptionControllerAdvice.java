@@ -69,6 +69,16 @@ public class ExceptionControllerAdvice {
         return ResponseEntity.badRequest().body(pd);
     }
 
+    @ExceptionHandler(InvalidVisitDateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ProblemDetail> handleInvalidVisitDate(InvalidVisitDateException ex,
+            HttpServletRequest request) {
+        log.warn("Rejected visit date: {}", ex.getMessage());
+        ProblemDetail pd = buildProblemDetail("Validation Error", ex.getMessage(), HttpStatus.BAD_REQUEST, request);
+        pd.setProperty("errors", List.of(ex.getMessage()));
+        return ResponseEntity.badRequest().body(pd);
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ProblemDetail> handleGeneralException(Exception e, HttpServletRequest request) {
