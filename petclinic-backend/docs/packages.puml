@@ -55,6 +55,7 @@ arrow {
 ' depth 0
 [DTO] <<..rest.dto>>
 [Domain] <<..domain>>
+[Billing] <<..billing>>
 
 label " " as sep1
 label " " as sep2
@@ -82,5 +83,6 @@ sep1 -[hidden]-> [Repository]
 [Repository] -[hidden]-> sep2
 sep2 -[hidden]-> [DTO]
 sep2 -[hidden]-> [Domain]
+sep2 -[hidden]-> [Billing]
 
 @enduml
