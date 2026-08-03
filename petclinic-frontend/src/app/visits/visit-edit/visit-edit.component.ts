@@ -9,6 +9,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import * as moment from 'moment';
 import {OwnerService} from '../../owners/owner.service';
 import {PetService} from '../../pets/pet.service';
+import {maxVisitDate, minVisitDate} from '../visit-date-range';
 
 @Component({
   selector: 'app-visit-edit',
@@ -22,6 +23,8 @@ export class VisitEditComponent implements OnInit {
   currentPetType: PetType;
   updateSuccess = false;
   errorMessage: string;
+  minDate: Date | null = null;
+  maxDate: Date = maxVisitDate();
 
   constructor(private visitService: VisitService,
               private petService: PetService,
@@ -43,6 +46,7 @@ export class VisitEditComponent implements OnInit {
           pet => {
             this.currentPet = pet;
             this.currentPetType = pet.type;
+            this.minDate = minVisitDate(pet);
             this.ownerService.getOwnerById(pet.ownerId).subscribe(
               owner => {
                 this.currentOwner = owner;
