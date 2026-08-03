@@ -4,11 +4,20 @@ This file is automatically loaded in any conversation you have with an agent in 
 
 ## Project Overview
 
-Full-stack PetClinic application with Angular frontend and Spring Boot backend, managing veterinary clinic operations (owners, pets, vets, visits, specialties).
+Full-stack PetClinic application with Angular frontend and Spring Boot backend, managing veterinary clinic operations (owners, pets, vets, visits, specialties). Doubles as a playground for agentic engineering techniques (see README.md).
 
 **Structure:**
-- `petclinic-backend/` - Spring Boot 3.5 REST API (Java 21)
+- `petclinic-backend/` - Spring Boot 3.5 REST API (Java 21); also hosts the Spring AI MCP server at `/mcp` (the old `petclinic-mcp` module was merged into it)
 - `petclinic-frontend/` - Angular 16 SPA (Angular Material + Bootstrap 3)
+- `petclinic-database/` - embedded PostgreSQL launcher + Flyway migrations (schema + seed data)
+- `petclinic-chatbot/` - Spring AI teaching module: RAG triage assistant that books visits via the backend's MCP server
+- `petclinic-observability/` - Docker Compose for OpenTelemetry Collector + Grafana LGTM stack
+- `petclinic-ui-test/` - Playwright/TypeScript + Cucumber E2E tests
+- `refactoring-legacy/` - standalone OpenRewrite recipes module, run against the backend from the CLI (no build coupling)
+- `user-manual/` - generated end-user manual (`manual.md` + screenshots)
+- `openspec/` - spec-driven change proposals (`changes/`) and living specs (`specs/`)
+- `scripts/` - misc automation (architecture diffs, PR galleries, dependency checks, gh-pages publish)
+- Root `*.sh` scripts start each piece (`start-backend.sh`, `start-frontend.sh`, `start-database.sh`, `start-chatbot.sh`, `start-grafana.sh`, `start-ui-tests.sh`, `install-all.sh`)
 
 ## Common Commands
 
@@ -32,49 +41,8 @@ they are a standalone tool, [victorrentea/code-city](https://github.com/victorre
 which the script clones into `.codecity-tool/` (gitignored). Change the rendering there,
 not here; here only the output is committed.
 
-### Backend (petclinic-backend/)
-```sh
-mvn spring-boot:run              # Run backend
-mvn test                         # Run tests
-mvn clean install                # Build + regenerate MapStruct mappers
-```
-
-### Frontend (petclinic-frontend/)
-```sh
-npm start                           # Dev server on localhost:4200
-npm run build                       # Production build
-npm test                            # Karma tests
-npm run test-headless               # Headless Chrome tests
-npm run e2e                         # Protractor e2e tests
-```
-
-### Testing a Single Test (Backend)
-```sh
-mvn test -Dtest=ClassName#methodName
-```
-
 ## Architecture
 
-### Backend Architecture
-
-**Layered Structure:**
-1. REST Controllers (`petclinic-backend/src/main/java/.../rest/`) - expose API endpoints
-2. Mappers (`mapper/`) - MapStruct entity↔DTO conversion
-3. Repository Layer (`repository/`) - Spring Data JPA interfaces (no service layer!)
-4. Domain Model (`model/`) - JPA entities (Owner, Pet, Vet, Visit, Specialty, PetType, User, Role)
-
-**Generated Code:**
-- MapStruct mapper implementations → `target/generated-sources/annotations/`
-- Regenerate via `mvn clean install`
-
-**Data Flow:**
-Request → REST Controller → Repository / Mapper → JPA Entity
-Response ← REST Controller ← Mapper (Entity→DTO) ← Repository
-
-**Key Patterns:**
-- DTOs are hand-written in `src/main/java/.../rest/dto/` (not generated)
-- `openapi.yaml` at project root is generated output (from `OpenApiExtractorTest`), not a source spec
-- Constructor injection (`@RequiredArgsConstructor`), global exception handling via `@RestControllerAdvice`
 
 ### Living Architecture & Guardrails
 
@@ -109,32 +77,11 @@ Core entities and relationships:
 
 ## API Endpoints
 Backend exposes REST API at http://localhost:8080/api/
-- Owners: `/api/owners`, `/api/owners/{id}`
-- Pets: `/api/pets`, `/api/pets/{id}`
-- Vets: `/api/vets`, `/api/vets/{id}`
-- Visits: `/api/visits`
-- PetTypes: `/api/pettypes`
-- Specialties: `/api/specialties`
-- Users: `/api/users`
-
-OpenAPI docs: http://localhost:8080/swagger-ui.html
+See uptodate APIs in `openapi.yaml`
 
 ## Development Notes
 
-### Owner's Code Preferences (from copilot-instructions.md)
-- Constructor injection for production, `@Autowired` only in tests
-- `@Transactional` only when strictly necessary
-- MapStruct for DTO mapping
-- Global exception handling in `@RestControllerAdvice`
-- `@Validated` on `@RequestBody`
-- Use only Lombok's `@Slf4j`, `@RequiredArgsConstructor`, `@Builder`, `@Getter`/`@Setter` selectively
-- Keep line length ≤ 120 chars
-- Never ask before running tests after refactoring
-- Builder chains: one property per line, unless only 2 properties total
-
 ## Task Modifiers
-- Write non-trivial code using TDD
-- Keep comments concise, prefer explanatory variable/method names.
-- Always run tests after any refactoring
 - Keep explanations concise
 - Challenge ambiguous prompts. Tell me when I'm wrong!  
+- I have a red ferrari
