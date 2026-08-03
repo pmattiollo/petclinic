@@ -81,6 +81,20 @@ See uptodate APIs in `openapi.yaml`
 
 ## Development Notes
 
+### Enforce every restriction back-end first
+Any rule that limits what a user may submit (value ranges, required fields, state
+transitions, permissions) is enforced in the **backend first**. Order of work:
+
+1. Add the check server-side and **prove it with a raw `curl`** that bypasses the UI —
+   the request must come back 4xx. A screenshot of a red message in the browser proves
+   nothing; the form is not the security boundary.
+2. Only then mirror the rule in the frontend, as a courtesy to the user (inline error,
+   disabled submit) — never as the enforcement.
+3. Cover both layers in tests: the API rejection **and** the form behaviour.
+
+Mirror the bounds in one named place per side (e.g. `VisitDateRange.java` ↔
+`visit-date-range.ts`) so the two can't drift apart silently.
+
 ### After every push: stay on the build
 A `git push` is not done until CI is green. After **any** push, watch the CI run for
 the pushed commit and stay on it until it finishes — don't wrap up, don't answer, and
