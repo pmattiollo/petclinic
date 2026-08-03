@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""is_git_push — decide whether a Claude Code Bash-tool command is an actual
+"""is_git_push — decide whether an agent's shell-tool command is an actual
 `git push`, and in which working directory it runs.
 
 The bash command is tokenized with the stdlib ``shlex`` module (posix mode,
@@ -8,7 +8,9 @@ punctuation-aware) rather than a regex, so quoting, comments, ``cd`` chains and
 build step into the project (``python3`` is already required by the hook that
 calls this).
 
-Input  (stdin):  the PostToolUse hook JSON ({"tool_input": {"command": "..."}})
+Input  (stdin):  the PostToolUse hook JSON, in either agent's dialect —
+    Claude Code: {"tool_input": {"command": "..."}}
+    Copilot CLI: {"toolArgs": "{\\"command\\": \\"...\\"}"}  (a JSON *string*)
 Output (stdout): two lines —
     line 1: "PUSH" or "NOPUSH"
     line 2: the effective working directory of the push ("" = session cwd)
