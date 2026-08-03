@@ -20,6 +20,19 @@ export interface VisitDto {
   ownerLastName?: string;
 }
 
+export interface PetDto {
+  id: number;
+  name: string;
+  birthDate: string;
+  ownerId?: number;
+  visits?: VisitDto[];
+}
+
+export interface ApiResult {
+  status: number;
+  location?: string;
+}
+
 export class ApiClient {
   private client: AxiosInstance;
 
@@ -47,6 +60,74 @@ export class ApiClient {
   async fetchVisits(): Promise<VisitDto[]> {
     const response = await this.client.get<VisitDto[]>('/visits');
     return response.data;
+  }
+
+  async fetchPet(petId: number): Promise<PetDto> {
+    const response = await this.client.get<PetDto>(`/pets/${petId}`);
+    return response.data;
+  }
+
+  /** Creates an owner and returns its id, read from the 201 Location header. */
+  async createOwner(owner: OwnerDto): Promise<number> {
+    const response = await this.client.post('/owners', owner);
+    return ApiClient.idFromLocation(response.headers['location']);
+  }
+
+  async deleteOwner(ownerId: number): Promise<void> {
+    await this.client.delete(`/owners/${ownerId}`);
+  }
+
+  /** Adds a pet to an owner and returns the new pet's id. */
+  async addPet(ownerId: number, pet: { name: string; birthDate: string; typeId: number }): Promise<number> {
+    await this.client.post(`/owners/${ownerId}/pets`, {
+      name: pet.name,
+      birthDate: pet.birthDate,
+      type: {id: pet.typeId, name: 'ignored-by-server'},
+    });
+    const owner = await this.client.get<{ pets: PetDto[] }>(`/owners/${ownerId}`);
+    const created = owner.data.pets.find(p => p.name === pet.name);
+    if (!created) {
+      throw new Error(`Pet ${pet.name} was not attached to owner ${ownerId}`);
+    }
+    return created.id;
+  }
+
+  async firstPetTypeId(): Promise<number> {
+    const response = await this.client.get<{ id: number }[]>('/pettypes');
+    return response.data[0].id;
+  }
+
+  async deleteVisit(visitId: number): Promise<void> {
+    await this.client.delete(`/visits/${visitId}`);
+  }
+
+  /**
+   * POST /visits without throwing on 4xx — the date-range tests assert on the
+   * status code itself, so a rejection must come back as data, not an exception.
+   */
+  async postVisit(visit: { petId: number; date: string; description: string }): Promise<ApiResult> {
+    const response = await this.client.post('/visits', visit, {validateStatus: () => true});
+    return {status: response.status, location: response.headers['location']};
+  }
+
+  async postVisitForOwnersPet(ownerId: number, petId: number,
+                              visit: { date: string; description: string }): Promise<ApiResult> {
+    const response = await this.client.post(`/owners/${ownerId}/pets/${petId}/visits`, visit,
+      {validateStatus: () => true});
+    return {status: response.status, location: response.headers['location']};
+  }
+
+  async putVisit(visitId: number, visit: { date: string; description: string }): Promise<ApiResult> {
+    const response = await this.client.put(`/visits/${visitId}`, visit, {validateStatus: () => true});
+    return {status: response.status};
+  }
+
+  private static idFromLocation(location: string | undefined): number {
+    const id = Number((location ?? '').split('/').pop());
+    if (!Number.isInteger(id)) {
+      throw new Error(`Cannot extract an id from Location header: ${location}`);
+    }
+    return id;
   }
 
   static getFullNames(owners: OwnerDto[]): string[] {

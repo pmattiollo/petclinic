@@ -21,7 +21,9 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'http://127.0.0.1:4200',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // PW_VIDEO=on records passing runs too — handy when a green run has to be
+    // shown as evidence that a bug is gone, not just when it fails.
+    video: (process.env.PW_VIDEO as 'on' | 'off' | 'retain-on-failure') || 'retain-on-failure',
   },
   projects: [
     {
