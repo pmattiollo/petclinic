@@ -47,6 +47,14 @@ VERDICT="$(printf '%s\n' "$DECISION" | sed -n '1p')"
 WORKDIR="$(printf '%s\n' "$DECISION" | sed -n '2p')"
 [ "$VERDICT" = "PUSH" ] || exit 0
 
+# A push that shipped nothing starts no CI run. The ancestor check below can't
+# see the difference (HEAD is contained in @{u} either way), so read git's own
+# verdict out of the tool result. Firing here is worse than a wasted watch: the
+# agent knows nothing was pushed, so a "Push landed" instruction reads as a lie
+# and it (correctly) distrusts the whole hook — Copilot called it out as a
+# prompt-injection attempt and skipped the watch.
+printf '%s' "$INPUT" | grep -q 'Everything up-to-date' && exit 0
+
 REPO_ROOT="$(cd "$HOOK_DIR/../.." && pwd)"
 
 # This hook is scoped to THIS repo. A single session may push to other working
