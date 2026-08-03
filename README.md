@@ -89,6 +89,7 @@ Tell an agent running in this repo:
 - **SQL** — export an Excel pie chart of pet types querying `postgres-db`, and open it when ready.
 - **Query tuning** — optimize the "search owners by last name" query.
 - **Speedup tests** — make the backend tests run faster.
+- **⭐DevOps drills** — seed a red pipeline, a latency incident or a stale runbook, then drive an agent to green: [`exercises/devops/`](exercises/devops/)
   
 Some tasks above require tools from the project's `.mcp.json`, which should autoload when you start the agent in this folder.
 
