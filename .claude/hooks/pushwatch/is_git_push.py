@@ -132,14 +132,37 @@ def _decide(command):
     return False, ""
 
 
+def command_of(payload):
+    """The shell command inside a PostToolUse payload, whichever agent sent it.
+
+    Claude Code nests the parsed tool input under ``tool_input``; Copilot CLI
+    puts it in ``toolArgs`` as a JSON-encoded *string*, so it needs a second
+    json.loads. Anything unrecognizable yields "" (read as: not a push).
+    """
+    if not isinstance(payload, dict):
+        return ""
+    args = payload.get("tool_input", payload.get("toolArgs"))
+    if isinstance(args, str):
+        try:
+            args = json.loads(args)
+        except ValueError:
+            return ""
+    if not isinstance(args, dict):
+        return ""
+    command = args.get("command")
+    if not isinstance(command, str):
+        return ""
+    return command
+
+
 def main():
     raw = sys.stdin.read()
     try:
-        command = json.loads(raw)["tool_input"]["command"]
-    except (ValueError, KeyError, TypeError):
+        command = command_of(json.loads(raw))
+    except ValueError:
         _emit(False, "")
         return
-    if not isinstance(command, str) or not command:
+    if not command:
         _emit(False, "")
         return
     _emit(*_decide(command))

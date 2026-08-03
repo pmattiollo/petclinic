@@ -81,6 +81,25 @@ See uptodate APIs in `openapi.yaml`
 
 ## Development Notes
 
+### After every push: stay on the build
+A `git push` is not done until CI is green. After **any** push, watch the CI run for
+the pushed commit and stay on it until it finishes — don't wrap up, don't answer, and
+don't move to the next task while it is still running:
+
+```sh
+bash .claude/hooks/pushwatch/watch-ci.sh <sha>   # exit 0 = green, non-zero = red
+```
+
+Run it as a background/async task and keep polling it (Claude Code: `run_in_background`;
+Copilot CLI: bash `mode="async"` + `read_bash`). If it comes back **red, repair the build
+without asking**: `gh run view <id> --log-failed`, fix, commit, push — even if someone
+else broke it. Any red build you catch is yours to fix.
+
+A PostToolUse hook normally injects this instruction automatically after a push — for
+Claude Code from `.claude/settings.json`, for Copilot CLI from `.github/hooks/watch-ci-after-push.json`,
+both running `.claude/hooks/watch-ci-after-push.sh`. This rule is the fallback for when
+that hook doesn't fire (other agent, hooks disabled, push made outside the tool).
+
 ## Task Modifiers
 - Keep explanations concise
 - Challenge ambiguous prompts. Tell me when I'm wrong!  

@@ -1,0 +1,14 @@
+{
+  "//": "Copilot CLI project hook: after a git push, watch the CI run and repair it if red. Same script as the Claude Code hook in .claude/settings.json; see .claude/hooks/watch-ci-after-push.sh",
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "matcher": "bash",
+        "bash": "root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; exec bash \"$root/.claude/hooks/watch-ci-after-push.sh\" copilot",
+        "timeoutSec": 30
+      }
+    ]
+  }
+}

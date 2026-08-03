@@ -1,1 +1,0 @@
-{"version":1,"hooks":{"postToolUse":[{"type":"command","bash":"cat >> /private/tmp/claude-501/-Users-victorrentea-workspace-petclinic/f813ea7b-ced9-45c9-a5d1-ebf7dab7982e/scratchpad/probe.jsonl","timeoutSec":10}]}}

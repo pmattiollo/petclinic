@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 # PostToolUse hook (Bash): after a successful `git push`,
-# this tripwire tells Claude to start a BACKGROUND watch
-# of the resulting CI run to fix it in case it FAILED❌,
-# staying in the loop until CI is GREEN✅
+# this tripwire tells the agent to watch the resulting CI
+# run and fix it in case it FAILED❌, staying in the loop
+# until CI is GREEN✅
+#
+# Wired up for both agents, from config committed in this repo, so a fresh
+# clone gets it with no local setup:
+#   Claude Code   -> .claude/settings.json               (PostToolUse / Bash)
+#   Copilot CLI   -> .github/hooks/watch-ci-after-push.json (postToolUse / bash)
+# The agent is passed as $1; see FLAVOR below.
 #
 ###### Implementation #####
 #
@@ -16,6 +22,11 @@
 # `cd` chains, and `git -C <dir>` are interpreted correctly. The helper reports
 # whether the command is an actual `git push` and the working directory it runs in.
 set -uo pipefail
+
+# Which agent wired us up: "claude" (default, .claude/settings.json) or
+# "copilot" (.github/hooks/watch-ci-after-push.json). Only the wording and the
+# JSON envelope of the final instruction differ; all the detection above is shared.
+FLAVOR="${1:-claude}"
 
 INPUT=$(cat)
 
@@ -87,14 +98,27 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
 # Hand the agent a single short line to launch. All the polling/watching logic
 # lives in watch-ci.sh, so the instruction stays tiny (minimal tokens spent on
 # the agent side). The exit status of that background task is the CI verdict.
-SHA="$SHA" BRANCH="$BRANCH" CMD="bash $PW_DIR/watch-ci.sh $SHA" python3 -c "
+SHA="$SHA" BRANCH="$BRANCH" CMD="bash $PW_DIR/watch-ci.sh $SHA" FLAVOR="$FLAVOR" python3 -c "
 import json, os
 short = os.environ['SHA'][:7]
+launch = {
+    # Claude Code wakes the agent up when a background task exits, so it can
+    # fire and forget the watch and carry on meanwhile.
+    'claude': 'Launch the CI watch in the BACKGROUND (run_in_background:true), then keep working — do not block:',
+    # Copilot CLI has no wake-up-on-exit, so the watch runs as an async shell
+    # the agent polls until it ends — it stays on the build instead.
+    'copilot': 'Start the CI watch with the bash tool using mode=\"async\", shellId=\"ci-watch\", then poll read_bash(shellId=\"ci-watch\") until that process exits — CI takes minutes, so keep polling and wait for it before wrapping up:',
+}[os.environ['FLAVOR']]
 msg = (
     'Push landed: ' + short + ' on ' + os.environ['BRANCH'] + '. '
-    'Launch the CI watch in the BACKGROUND (run_in_background:true), then keep working — do not block:\n\n'
+    + launch + '\n\n'
     + os.environ['CMD'] + '\n\n'
     'Exit 0 = CI green, non-zero = red. On green, just report it. On RED you MUST repair the build automatically — do NOT ask for permission: pull the failing job logs (gh run view <id> --log-failed), diagnose the root cause, apply the fix, commit, and push. Repair it even if someone else broke the build — any red build you catch is yours to fix. Report what you changed when done.'
 )
-print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PostToolUse', 'additionalContext': msg}}))
+# Same payload, two envelopes: Claude Code reads it out of hookSpecificOutput,
+# Copilot CLI reads a bare top-level additionalContext.
+if os.environ['FLAVOR'] == 'copilot':
+    print(json.dumps({'additionalContext': msg}))
+else:
+    print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PostToolUse', 'additionalContext': msg}}))
 "
