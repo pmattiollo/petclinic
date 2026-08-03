@@ -7,7 +7,7 @@ prove its work against something that cannot be talked out of a verdict.
 
 | # | Exercise | Time | The move being taught |
 |---|---|---|---|
-| [01](01-ci-breakfix/) | **Break-fix CI** — a colleague pushed with `--no-verify` and the pipeline is red | ~25 min | The pipeline is ground truth. Let the agent loop until green instead of accepting "should be fixed now". |
+| [01](01-ci-breakfix/) | **Break-fix CI** — a colleague pushed with `--no-verify` and the pipeline is red (branch `orange08`) | ~25 min | The pipeline is ground truth. Let the agent loop until green instead of accepting "should be fixed now". |
 | [02](02-incident-p99/) | **Incident: p99 spike** — owner search fell off a cliff after a data growth event | ~30 min | Give the agent eyes (traces/metrics/DB), demand evidence before a fix. |
 | [03](03-runbook-to-skill/) | **Runbook → Skill** — turn a wiki-grade prose procedure into something executable | ~25 min | Codify tribal knowledge once, instead of re-explaining it to the agent every session. |
 
@@ -38,15 +38,18 @@ access to a fork so real CI runs. There is a local-only path if there is no push
 
 ## Seed and reset
 
-Every exercise that mutates the repo or the database ships `seed.sh` and `reset.sh`:
+Exercise 01 needs no seeding: its scenario is already committed on branch `orange08`, which
+deliberately does not contain this directory.
+
+Exercise 02 mutates the database and ships `seed.sh` / `reset.sh`:
 
 ```sh
-exercises/devops/01-ci-breakfix/seed.sh     # plant the problem
-exercises/devops/01-ci-breakfix/reset.sh    # put everything back
+exercises/devops/02-incident-p99/seed.sh     # plant the problem
+exercises/devops/02-incident-p99/reset.sh    # put everything back
 ```
 
 `seed.sh` refuses to run on a dirty working tree. Run `reset.sh` before switching exercises
-and before going home — exercise 02 in particular leaves 200k rows in your dev database.
+and before going home — exercise 02 leaves 200k rows in your dev database.
 
 ## No solutions in this repo
 
