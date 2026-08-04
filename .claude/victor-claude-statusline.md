@@ -26,13 +26,13 @@ blooms `·` → `✢` → `✳` → `✻` → `✽` and closes again, one frame 
 same spinner Claude Code draws in front of "Working…"):
 
 ```
-Opus 4.8/xhigh 50K/1M | ↗98% left / 4:47h | $0.5 ✻ $25 | ai | +24% = 70% / 1d1h
+Opus 4.8/xhigh 50K/1M | ↗98% left / 4:47h | $0.5 ✻ $25 | ai | +24% = 70% / 1wd1h
 ```
 
 Idle, waiting on you (note the ticking "N ago" clock and no flower):
 
 ```
-Opus 4.8/xhigh 50K/1M | 98% left / 4:47h | $0.1 3m ago ∈ $25 | ai | +24% = 70% / 1d1h
+Opus 4.8/xhigh 50K/1M | 98% left / 4:47h | $0.1 3m ago ∈ $25 | ai | +24% = 70% / 1wd1h
 ```
 
 Five `|`-separated segments: **model/context**, **5h quota + burn-rate**,
@@ -42,7 +42,7 @@ quota**. There is **no leading emoji** on the model segment.
 
 **`|` is reserved for segment boundaries — nothing else uses it.** Inside a
 segment, two readings of the same window are joined with `/` (`↗98% left / 4:47h`,
-`+24% = 70% / 1d1h`), which also buys back a couple of columns per join versus
+`+24% = 70% / 1wd1h`), which also buys back a couple of columns per join versus
 the `•` it replaced.
 
 ---
@@ -197,7 +197,7 @@ forward, so the gap before the new turn's usage shows the old number.
 
 ---
 
-## 4. Weekly quota — `+24% = 70% / 1d1h`
+## 4. Weekly quota — `+24% = 70% / 1wd1h`
 
 The **last** segment, tracking the rolling **7-day** (604800s) rate-limit window.
 Segment 2 answers *"can I keep going right now"*; this one answers the slower
@@ -208,7 +208,7 @@ question — *am I going to run out of week before the week runs out*.
 | `+24%` | pace: **percentage points** off a straight line, `elapsed% − used%` | derived |
 | `=` | reading aid separating the two percentages (see below) | — |
 | `70%` | quota remaining this week = `100 − used%` | `.rate_limits.seven_day.used_percentage` |
-| `1d1h` | **working** time until the weekly window resets (weekends excluded) | `.rate_limits.seven_day.resets_at` |
+| `1wd1h` | **working** time (`wd` = working days) until the weekly window resets (weekends excluded) | `.rate_limits.seven_day.resets_at` |
 
 Pace **leads** the absolute figure, mirroring the 5h arrow: the signed number is
 the "am I OK?" glance, the `% left` is the detail you read second.
@@ -231,12 +231,12 @@ displayed time-left are counted in working seconds only.
 Calendar time lied in **both** directions. It called you "behind" all Friday,
 when the two days you supposedly still had were days you would not work — and it
 flattered you on Monday morning by counting a weekend you had already skipped.
-`1d1h` on a Thursday night is a number you can act on; `3d1h` is not, because two
-of those days aren't yours.
+`1wd1h` on a Thursday night is a number you can act on; `3d1h` is not, because
+two of those days aren't yours.
 
 Consequences worth knowing:
 
-- Monday 00:00 the segment starts at `5d`, not `7d`.
+- Monday 00:00 the segment starts at `5wd`, not `7d`.
 - From **Saturday 00:00 the time-left reads `0m`** and the pace freezes for the
   rest of the weekend. That is not a bug: there is no working time left before
   the reset, so whatever quota you still hold is pure surplus and cannot run out.
@@ -278,10 +278,13 @@ as you cross the line.
 
 ### Time left: mixed units, not a decimal day
 
-`1d1h`, not `1.1d`. A decimal day needs mental arithmetic before it becomes an
+`1wd1h`, not `1.1d`. A decimal day needs mental arithmetic before it becomes an
 hour you can plan around — and the whole point of the segment is deciding what to
-do *today*. A zero tail is dropped (`5d`, never `5d0h`), and below a day it
-degrades to `10h`, then `44m`, then `0m` across the weekend.
+do *today*. The day unit is spelled **`wd`** (working days) because these are
+weekday-only seconds and a bare `d` invites reading them as calendar days — the
+very confusion this segment exists to remove. A zero tail is dropped (`5wd`,
+never `5wd0h`), and below a day it degrades to `10h`, then `44m`, then `0m`
+across the weekend.
 
 ### Why this segment can be trusted more than you'd expect
 
@@ -876,7 +879,7 @@ if [ -n "$dir" ] && [ -d "$dir" ]; then
   out="$out | $where"
 fi
 
-# --- Weekly quota, last segment: "+6% = 27% / 1d1h"
+# --- Weekly quota, last segment: "+6% = 27% / 1wd1h"
 # The 5h segment answers "can I keep going right now"; this one answers the
 # slower question — am I going to run out of week before the week runs out.
 # Three numbers, in the order you actually ask them:
@@ -886,7 +889,7 @@ fi
 #         over a whole week the linear budget is the mental model people
 #         actually use ("it's Thursday, I should be ~80% in").
 #   27%   quota left in the 7-day window (the absolute figure)
-#   1d1h  WORKING time until the window resets — weekends excluded, see below
+#   1wd1h WORKING time until the window resets — weekends excluded, see below
 # Deliberately NOT the ratio-with-bands used for the 5h arrow: on a 7-day window
 # a ratio is wildly unstable in the first hours (tiny elapsed => huge ratio) and
 # numb at the end, whereas the point-difference stays readable throughout.
@@ -911,7 +914,7 @@ if [ -n "$week" ]; then
       # Straight calendar time lied in both directions — it called you "behind"
       # all Friday when the two days you supposedly had left were days you would
       # not work, and it flattered you on Monday by counting a weekend you had
-      # already skipped. "1d1h" on a Thursday night is a number you can act on;
+      # already skipped. "1wd1h" on a Thursday night is a number you can act on;
       # "3d1h" is not, because two of those days aren't yours.
       #
       # Local weekday without strftime (macOS awk has none): 1970-01-01 was a
@@ -948,14 +951,17 @@ if [ -n "$week" ]; then
         }')
       wsecs=${wcalc%% *}
       delta=${wcalc##* }
-      # Time left as "1d1h" -- mixed units rather than a decimal day, because
+      # Time left as "1wd1h" -- mixed units rather than a decimal day, because
       # "1.1d" needs mental arithmetic to become an hour you can plan around.
-      # A zero tail is dropped ("3d", not "3d0h"); under a day it degrades to
+      # The unit is "wd" (WORKING days), not "d": these are weekday-only seconds,
+      # and a bare "d" invites reading them as calendar days -- the exact
+      # confusion this segment exists to remove.
+      # A zero tail is dropped ("3wd", not "3wd0h"); under a day it degrades to
       # "5h", then "45m". Across the weekend this legitimately reads "0m":
       # there is no working time left before the reset, which is the point.
       wdur=$(awk -v d="$wsecs" 'BEGIN{
         dd=int(d/86400); hh=int((d%86400)/3600);
-        if (dd>0)      printf (hh>0 ? "%dd%dh" : "%dd"), dd, hh;
+        if (dd>0)      printf (hh>0 ? "%dwd%dh" : "%dwd"), dd, hh;
         else if (hh>0) printf "%dh", hh;
         else           printf "%dm", int(d/60) }')
       # Signed percentage rather than an arrow glyph: the pace sits right next to
