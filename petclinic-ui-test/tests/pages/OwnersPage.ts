@@ -13,7 +13,7 @@ export class OwnersPage {
     this.pageTitle = page.locator('h2:has-text("Owners")');
     this.lastNameInput = page.locator('#lastName');
     this.findOwnerButton = page.locator('#search-owner-form button[type="submit"]');
-    this.ownerNameCells = page.locator('#ownersTable td.ownerFullName');
+    this.ownerNameCells = page.locator('#ownersTable td.owner-full-name');
     this.ownersTable = page.locator('#ownersTable');
   }
 
@@ -23,7 +23,7 @@ export class OwnersPage {
   }
 
   async getOwnerFullNames(): Promise<string[]> {
-    await this.page.waitForSelector('#ownersTable td.ownerFullName, #lastName', { timeout: 10000 });
+    await this.page.waitForSelector('#ownersTable td.owner-full-name, #lastName', { timeout: 10000 });
 
     const elements = await this.ownerNameCells.all();
     const names: string[] = [];
@@ -49,17 +49,13 @@ export class OwnersPage {
   }
 
   async waitForOwnersCount(expectedCount: number) {
-    try {
-      await this.page.waitForFunction(
-        (count) => {
-          const cells = document.querySelectorAll('#ownersTable td.ownerFullName');
-          return cells.length === count;
-        },
-        expectedCount,
-        { timeout: 10000 }
-      );
-    } catch (error) {
-      // Let assertions fail with actual values when wait condition is not met
-    }
+    await this.page.waitForFunction(
+      (count) => {
+        const cells = document.querySelectorAll('#ownersTable td.owner-full-name');
+        return cells.length === count;
+      },
+      expectedCount,
+      { timeout: 10000 }
+    );
   }
 }

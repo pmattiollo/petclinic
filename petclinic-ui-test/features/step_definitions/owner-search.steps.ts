@@ -41,12 +41,12 @@ When('I search for owners by a last name part', async function (this: Playwright
   await this.page.locator('#lastName').fill(prefix);
   await this.page.locator('#search-owner-form button[type="submit"]').click();
   // Wait until the filtered result set has settled to the expected size.
-  await expect(this.page.locator('#ownersTable td.ownerFullName')).toHaveCount(expected.length, {timeout: 10_000});
+  await expect(this.page.locator('#ownersTable td.owner-full-name')).toHaveCount(expected.length, {timeout: 10_000});
 });
 
 Then('only owners whose last name starts with that part are listed', async function (this: PlaywrightWorld) {
   const prefix = this.searchPrefix!.toLowerCase();
-  const cells = this.page.locator('#ownersTable td.ownerFullName');
+  const cells = this.page.locator('#ownersTable td.owner-full-name');
   const shown = (await cells.allTextContents()).map((t) => t.trim()).filter(Boolean);
 
   expect(shown.length).toBeGreaterThan(0);
