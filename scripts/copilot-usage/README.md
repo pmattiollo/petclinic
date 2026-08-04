@@ -143,5 +143,6 @@ light + dark) is already validated; if you change the charts, re-run that skill'
 `scripts/validate_palette.js` rather than eyeballing the colors. The light-mode
 contrast WARN is why the report ships table views — do not remove them.
 
-> Companion docs in this repo: `.github/victor-copilot-statusline.md` (the live
-> Copilot status line) and `.claude/victor-claude-statusline.md`.
+> Companion docs, now in their own repo:
+> [victorrentea/victor-statusline](https://github.com/victorrentea/victor-statusline)
+> — the live Copilot status line and its Claude Code counterpart.

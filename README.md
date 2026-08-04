@@ -112,7 +112,7 @@ Patiently guide the agent through this setup, then tell it: Turn the lessons you
 - [WisprFlow](https://wisprflow.ai) to dictate.
 - [CodexBar](https://codexbar.app) to see the remaining Claude/Codex/Copilot quota.
 - [ScreenBrush](https://apps.apple.com/us/app/screenbrush/id1233965871) to draw on screen before screenshot to agent. 
-- Custom statusline: My dear CLI agent, configure yourself a status bar inspired from `victor-claude-statusline.md` or `victor-copilot-statusline.md`.
+- Custom statusline: [victorrentea/victor-statusline](https://github.com/victorrentea/victor-statusline) — rich status bars for Claude Code and Copilot CLI (per-turn cost, quota burn-rate, prompt-cache health). Tell your CLI agent: *configure yourself a status bar following that repo's README*.
 
 ### Adopt ideas from `petclinic` into your own project ❤️
 
