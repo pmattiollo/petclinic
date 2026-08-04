@@ -1,6 +1,6 @@
 ---
-name: browser
-description: Drive a real browser from the shell with Playwright CLI - open pages, click, fill forms, read the DOM, screenshot, inspect console and network. Use whenever a task needs a live browser (reproduce a UI bug, verify a frontend change, check a page renders, log into a site, scrape a page) AND no browser MCP tools are available (no mcp__playwright__*, no mcp__claude-in-chrome__*). Also use when explicitly asked to "use the browser skill".
+name: browser-cli
+description: Drive a real browser from the shell with Playwright CLI - open pages, click, fill forms, read the DOM, screenshot, inspect console and network. Use whenever a task needs a live browser (reproduce a UI bug, verify a frontend change, check a page renders, log into a site, scrape a page) AND no browser MCP tools are available (no mcp__playwright__*, no mcp__claude-in-chrome__*). Also use when explicitly asked to "use the browser-cli skill".
 allowed-tools: Bash(playwright-cli:*), Bash(npx:*), Bash(npm:*)
 ---
 
