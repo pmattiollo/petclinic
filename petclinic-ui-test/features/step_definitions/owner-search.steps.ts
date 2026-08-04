@@ -9,18 +9,21 @@ const fullName = (o: {firstName: string; lastName: string}) => `${o.firstName} $
 const lastNameOf = (name: string) => name.trim().split(/\s+/).pop() ?? '';
 
 Given('at least one owner exists', async function (this: PlaywrightWorld) {
-  const {data: owners} = await axios.get(`${API_BASE}/owners`, {timeout: 10_000});
+  // size=1000: fetch the full set, not just the default first page, so this "ground truth" query
+  // isn't silently truncated by the API's own paging.
+  const {data: page} = await axios.get(`${API_BASE}/owners`, {params: {size: 1000}, timeout: 10_000});
+  const owners = page.content;
   const withLastName = owners.find((o: any) => typeof o.lastName === 'string' && o.lastName.length >= 2);
   if (!withLastName) {
     throw new Error('No owner with a usable last name found; cannot run owner-search scenario');
   }
   // "One name part": the first two letters of a real owner's last name.
   this.searchPrefix = withLastName.lastName.slice(0, 2);
-  const {data: matches} = await axios.get(`${API_BASE}/owners`, {
-    params: {lastName: this.searchPrefix},
+  const {data: matchesPage} = await axios.get(`${API_BASE}/owners`, {
+    params: {lastName: this.searchPrefix, size: 1000},
     timeout: 10_000,
   });
-  const expected: string[] = matches.map(fullName).sort();
+  const expected: string[] = matchesPage.content.map(fullName).sort();
   if (expected.length === 0) {
     throw new Error(`API returned no owners for prefix "${this.searchPrefix}"; cannot assert data comes back`);
   }

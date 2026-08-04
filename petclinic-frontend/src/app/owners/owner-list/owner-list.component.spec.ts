@@ -8,7 +8,7 @@ import {OwnerListComponent} from './owner-list.component';
 import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import { OwnerService } from '../owner.service';
-import {Owner} from '../owner';
+import {Owner, OwnerPage} from '../owner';
 import {Observable, of} from 'rxjs';
 import {RouterTestingModule} from '@angular/router/testing';
 import {CommonModule} from '@angular/common';
@@ -23,11 +23,11 @@ import Spy = jasmine.Spy;
 
 
 class OwnerServiceStub {
-  getOwners(): Observable<Owner[]> {
+  getOwners(): Observable<OwnerPage> {
     return of();
   }
 
-  searchOwners(lastName: string): Observable<Owner[]> {
+  searchOwners(lastName: string): Observable<OwnerPage> {
     return of();
   }
 }
@@ -79,10 +79,13 @@ describe('OwnerListComponent', () => {
     fixture = TestBed.createComponent(OwnerListComponent);
     component = fixture.componentInstance;
     ownerService = fixture.debugElement.injector.get(OwnerService);
+    const testOwnerPage: OwnerPage = {
+      content: testOwners, totalElements: testOwners.length, totalPages: 1, number: 0, size: 10
+    };
     getOwnersSpy = spyOn(ownerService, 'getOwners')
-      .and.returnValue(of(testOwners));
+      .and.returnValue(of(testOwnerPage));
     searchOwnersSpy = spyOn(ownerService, 'searchOwners')
-      .and.returnValue(of(testOwners));
+      .and.returnValue(of(testOwnerPage));
 
   });
 

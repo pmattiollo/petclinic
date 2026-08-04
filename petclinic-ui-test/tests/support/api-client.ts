@@ -33,6 +33,14 @@ export interface ApiResult {
   location?: string;
 }
 
+interface OwnerPageDto {
+  content: OwnerDto[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
 export class ApiClient {
   private client: AxiosInstance;
 
@@ -45,16 +53,20 @@ export class ApiClient {
     });
   }
 
+  // size=1000: fetch the full set, not just the default first page, so these "ground truth"
+  // queries aren't silently truncated by the API's own paging.
   async fetchOwners(): Promise<OwnerDto[]> {
-    const response = await this.client.get<OwnerDto[]>('/owners');
-    return response.data;
+    const response = await this.client.get<OwnerPageDto>('/owners', {
+      params: { size: 1000 }
+    });
+    return response.data.content;
   }
 
   async fetchOwnersByPrefix(prefix: string): Promise<OwnerDto[]> {
-    const response = await this.client.get<OwnerDto[]>('/owners', {
-      params: { lastName: prefix }
+    const response = await this.client.get<OwnerPageDto>('/owners', {
+      params: { lastName: prefix, size: 1000 }
     });
-    return response.data;
+    return response.data.content;
   }
 
   async fetchVisits(): Promise<VisitDto[]> {

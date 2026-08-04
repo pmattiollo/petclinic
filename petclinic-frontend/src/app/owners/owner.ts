@@ -5,3 +5,7 @@ export type Owner = Omit<components['schemas']['OwnerDto'], 'id' | 'pets'> & {
   id: number;
   pets: Pet[];
 };
+
+export type OwnerPage = Omit<components['schemas']['OwnerPageDto'], 'content'> & {
+  content: Owner[];
+};

@@ -26,7 +26,7 @@ export class OwnerListComponent implements OnInit {
         this.isOwnersDataReceived = true;
       })
     ).subscribe(
-      owners => this.owners = owners,
+      page => this.owners = page.content,
       error => this.errorMessage = error as any);
   }
 
@@ -45,17 +45,17 @@ export class OwnerListComponent implements OnInit {
       {
         this.ownerService.getOwners()
           .subscribe(
-            (owners) => {
-              this.owners = owners;
+            (page) => {
+              this.owners = page.content;
             });
       }
       if (lastName !== '')
       {
         this.ownerService.searchOwners(lastName)
           .subscribe(
-            (owners) => {
+            (page) => {
 
-              this.owners = owners;
+              this.owners = page.content;
               console.log('this.owners ' + this.owners);
 
             },

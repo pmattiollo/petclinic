@@ -1,10 +1,25 @@
 import { Injectable } from '@angular/core';
-import { Owner } from './owner';
+import { Owner, OwnerPage } from './owner';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { catchError } from 'rxjs/operators';
 import { HandleError, HttpErrorHandler } from '../error.service';
+
+export const EMPTY_OWNER_PAGE: OwnerPage = {
+  content: [],
+  totalElements: 0,
+  totalPages: 0,
+  number: 0,
+  size: 0
+};
+
+export interface OwnerListingParams {
+  lastName?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
 
 @Injectable()
 export class OwnerService {
@@ -19,10 +34,10 @@ export class OwnerService {
     this.handlerError = httpErrorHandler.createHandleError('OwnerService');
   }
 
-  getOwners(): Observable<Owner[]> {
+  getOwners(params: OwnerListingParams = {}): Observable<OwnerPage> {
     return this.http
-      .get<Owner[]>(this.entityUrl)
-      .pipe(catchError(this.handlerError('getOwners', [])));
+      .get<OwnerPage>(this.entityUrl, { params: this.toHttpParams(params) })
+      .pipe(catchError(this.handlerError('getOwners', EMPTY_OWNER_PAGE)));
   }
 
   getOwnerById(ownerId: number): Observable<Owner> {
@@ -50,13 +65,24 @@ export class OwnerService {
       .pipe(catchError(this.handlerError('deleteOwner', [ownerId])));
   }
 
-  searchOwners(lastName: string): Observable<Owner[]> {
-    let url = this.entityUrl;
-    if (lastName !== undefined) {
-      url += '?lastName=' + lastName;
+  searchOwners(lastName: string, params: OwnerListingParams = {}): Observable<OwnerPage> {
+    return this.getOwners({ ...params, lastName });
+  }
+
+  private toHttpParams(params: OwnerListingParams): HttpParams {
+    let httpParams = new HttpParams();
+    if (params.lastName !== undefined) {
+      httpParams = httpParams.set('lastName', params.lastName);
     }
-    return this.http
-      .get<Owner[]>(url)
-      .pipe(catchError(this.handlerError('searchOwners', [])));
+    if (params.page !== undefined) {
+      httpParams = httpParams.set('page', params.page);
+    }
+    if (params.size !== undefined) {
+      httpParams = httpParams.set('size', params.size);
+    }
+    if (params.sort !== undefined) {
+      httpParams = httpParams.set('sort', params.sort);
+    }
+    return httpParams;
   }
 }
