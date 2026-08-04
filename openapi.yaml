@@ -189,12 +189,49 @@ paths:
     get:
       operationId: listOwners
       parameters:
-      - in: query
+      - description: Only owners whose last name starts with this (case-sensitive).
+        example: Dav
+        in: query
         name: lastName
         required: false
         schema:
           type: string
-          default: ""
+          description: Only owners whose last name starts with this (case-sensitive).
+          example: Dav
+      - description: Zero-based page number.
+        example: 0
+        in: query
+        name: page
+        required: false
+        schema:
+          type: integer
+          format: int32
+          description: Zero-based page number.
+          example: 0
+      - description: Number of owners per page; must be positive.
+        example: 10
+        in: query
+        name: size
+        required: false
+        schema:
+          type: integer
+          format: int32
+          description: Number of owners per page; must be positive.
+          example: 10
+      - description: Sort column and direction.
+        example: "name,asc"
+        in: query
+        name: sort
+        required: false
+        schema:
+          type: string
+          description: Sort column and direction.
+          enum:
+          - "name,asc"
+          - "name,desc"
+          - "city,asc"
+          - "city,desc"
+          example: "name,asc"
       responses:
         "200":
           content:
@@ -203,32 +240,35 @@ paths:
                 sample:
                   description: sample
                   value:
-                  - id: 1
-                    firstName: George
-                    lastName: Franklin
-                    address: 110 W. Liberty St.
-                    city: Madison
-                    telephone: "6085551023"
-                    pets:
+                    content:
                     - id: 1
-                      name: Leo
-                      birthDate: 2010-09-07
-                      type:
-                        id: 1
-                        name: cat
-                      ownerId: 1
-                      visits: []
-                  - id: 2
-                    firstName: Betty
-                    lastName: Davis
-                    address: 638 Cardinal Ave.
-                    city: Sun Prairie
-                    telephone: "6085551749"
-                    pets: []
+                      firstName: George
+                      lastName: Franklin
+                      address: 110 W. Liberty St.
+                      city: Madison
+                      telephone: "6085551023"
+                      pets:
+                      - id: 1
+                        name: Leo
+                        birthDate: 2010-09-07
+                        type:
+                          id: 1
+                          name: cat
+                        ownerId: 1
+                        visits: []
+                    - id: 2
+                      firstName: Betty
+                      lastName: Davis
+                      address: 638 Cardinal Ave.
+                      city: Sun Prairie
+                      telephone: "6085551749"
+                      pets: []
+                    totalElements: 2
+                    totalPages: 1
+                    number: 0
+                    size: 10
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/OwnerDto"
+                $ref: "#/components/schemas/OwnerPageDto"
           description: OK
         "400":
           content:
@@ -1684,6 +1724,34 @@ components:
       - firstName
       - lastName
       - telephone
+    OwnerPageDto:
+      type: object
+      properties:
+        content:
+          type: array
+          description: The owners on this page.
+          items:
+            $ref: "#/components/schemas/OwnerDto"
+        number:
+          type: integer
+          format: int32
+          description: "The current page number, zero-based."
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: The page size used to produce this page.
+          example: 10
+        totalElements:
+          type: integer
+          format: int64
+          description: "Total number of owners matching the filter, across all pages."
+          example: 28
+        totalPages:
+          type: integer
+          format: int32
+          description: Total number of pages.
+          example: 3
     PetDto:
       type: object
       properties:
