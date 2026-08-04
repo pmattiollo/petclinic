@@ -13,6 +13,7 @@ entity "owners" as owners {
 {field} address : text
 {field} city : text
 {field} telephone : text
+{field} email : text
 }
 
 entity "pets" as pets {

@@ -4,6 +4,11 @@
 # snapshot against a previous one (e.g. at review time) is the puml-diff tool's job.
 set -euo pipefail
 
+# Invoked as a git hook, GIT_DIR is set in the environment without GIT_WORK_TREE,
+# which makes `git rev-parse --show-toplevel` report the current directory instead
+# of the real repo root. Unset it so `-C` below does normal repo discovery.
+unset GIT_DIR GIT_WORK_TREE
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 DB_SQL="$ROOT/petclinic-backend/DB.sql"
