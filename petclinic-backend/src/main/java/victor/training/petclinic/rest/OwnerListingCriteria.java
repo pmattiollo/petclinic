@@ -9,7 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import victor.training.petclinic.rest.error.InvalidOwnerListingException;
 
 /**
@@ -17,7 +18,8 @@ import victor.training.petclinic.rest.error.InvalidOwnerListingException;
  * {@code @ParameterObject} bean rather than discrete {@code @RequestParam}s so a future search-term param
  * (issue #24) doesn't push the controller method past Sonar's 5-parameter cap.
  */
-@Data
+@Getter
+@Setter
 public class OwnerListingCriteria {
 
     @Schema(description = "Only owners whose last name starts with this (case-sensitive).", example = "Dav")
