@@ -8,6 +8,21 @@ schema: spec-driven
 #     Tech stack: TypeScript, React, Node.js
 #     We use conventional commits
 #     Domain: e-commerce platform
+context: |
+  proposal.md is read by non-technical stakeholders (product owners, business people).
+  Write it in plain language a PO can follow with zero technical background: no class
+  names, DTOs, JSON/TypeScript/Flyway/library names, file paths, or code identifiers.
+  Describe behavior from the user's/business point of view (what changes on screen or
+  in outcomes), not implementation. All technical detail (classes, migrations, DTOs,
+  file paths, libraries) belongs in design.md instead, under Context/Decisions/Impact.
+
+  specs/**/spec.md scenarios should be written, wherever the requirement is
+  user/UI-observable, so they can be lifted almost verbatim into Gherkin feature files
+  driven by Playwright over the UI (not just API-level curl/jsonPath checks). Prefer
+  phrasing WHEN/THEN around what a user does and sees in the browser. Purely
+  API-only/internal requirements (e.g. raw HTTP contract details not exposed through
+  the UI) may stay API-level, but default to the UI-observable framing when the
+  requirement has any user-facing surface.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
@@ -16,6 +31,16 @@ schema: spec-driven
 #     proposal:
 #       - Keep proposals under 500 words
 #       - Always include a "Non-goals" section
+rules:
+  proposal:
+    - No technical jargon or code/file identifiers (classes, DTOs, JSON, TypeScript,
+      Flyway, library names, endpoint paths). Write for a non-technical product owner.
+    - Move all technical rationale, class/file names, and API contract details to
+      design.md instead.
+  specs:
+    - Favor scenarios phrased as user-visible browser behavior (WHEN a user does X in
+      the UI, THEN they see Y), so they translate directly into Gherkin + Playwright
+      UI tests. Use API-only phrasing only for requirements with no UI surface.
 #     tasks:
 #       - Break tasks into chunks of max 2 hours
 
