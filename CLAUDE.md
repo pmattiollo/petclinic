@@ -79,7 +79,30 @@ Core entities and relationships:
 Backend exposes REST API at http://localhost:8080/api/
 See uptodate APIs in `openapi.yaml`
 
+### The REST API is a product, not the frontend's private back door
+The Angular SPA is only the *first* consumer. The API is meant to be consumed by third-party
+clients and other systems we don't control and can't see from this repo. Design every endpoint
+accordingly: explicit contracts, whitelisted parameter values, loud `400`s instead of silent
+fallbacks, and no response shape that only makes sense to our own UI.
+
+Consequence: **treat any change to an existing endpoint's request or response shape as a breaking
+change, and say so out loud before making it.** Today (pre-launch, ~1.5 years of development)
+there are still *no* external clients, so breaking changes are free — but the moment the first one
+onboards, that stops being true. Until then, prefer getting the contract right over keeping it
+stable.
+
 ## Development Notes
+
+### Look in the database before deciding
+When a design decision depends on what the data actually looks like — which columns are worth
+sorting or filtering by, cardinality, nulls, value distribution — **query the running Postgres**
+(`mcp__postgres-db__execute_sql`, or `psql` on localhost:5432) *before* proposing options. Do not
+reason from the entity/DTO shape and assumptions.
+
+A single `SELECT` usually settles a design argument that a paragraph of speculation cannot: e.g.
+the Owners grid has 28 rows where `pets` count is only ever 0–2 (24 owners tied at 1) and
+addresses start with house numbers, so "sort by pets" and "sort by address" are near-useless —
+which is not visible anywhere in the code.
 
 ### Enforce every restriction back-end first
 Any rule that limits what a user may submit (value ranges, required fields, state
