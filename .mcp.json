@@ -1,12 +1,13 @@
 {
   "mcpServers": {
     "context7": {
+      "//": "http mcp",
       "type": "http",
       "url": "https://mcp.context7.com/mcp"
     },
 
     "playwright": {
-      "//": "In case MCPs are disabled, tell agent to use playwright cli",
+      "//": "stdio MCP: copilotul lanseaza acest program si-i scrie pe stdin, citeste de pe stdout MCP local, In case MCPs are disabled, tell agent to use playwright cli",
       "command": "npx",
       "args": [
         "@playwright/mcp@latest",
