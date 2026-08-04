@@ -29,3 +29,86 @@ Feature: Owner management
       {"lastName":"Rodriquez","address":"2693 Commerce St.","city":"McFarland","telephone":"6085558763"}
       """
     Then the response status is 400
+
+  Scenario: Owners are listed a page at a time, 10 by default
+    Given 15 owners exist with distinct last names
+    When I GET "/api/owners"
+    Then the response status is 200
+    And the response content array has size 10
+    And the response has totalElements 15
+    And the response has totalPages 2
+
+  Scenario: An explicit page and size are honored
+    Given 15 owners exist with distinct last names
+    When I GET "/api/owners?page=1&size=5"
+    Then the response status is 200
+    And the response content array has size 5
+    And the response has totalElements 15
+    And the response has totalPages 3
+
+  Scenario: Sorting by name ascending
+    Given the following owners exist:
+      | firstName | lastName |
+      | Bob       | Zeta     |
+      | Alice     | Alpha    |
+    When I GET "/api/owners?sort=name,asc"
+    Then the response status is 200
+    And the content is sorted by "lastName" ascending
+
+  Scenario: Sorting by name descending
+    Given the following owners exist:
+      | firstName | lastName |
+      | Bob       | Zeta     |
+      | Alice     | Alpha    |
+    When I GET "/api/owners?sort=name,desc"
+    Then the response status is 200
+    And the content is sorted by "lastName" descending
+
+  Scenario: Sorting by city ascending
+    Given the following owners exist:
+      | firstName | lastName | city   |
+      | Bob       | Smith    | Zurich |
+      | Alice     | Jones    | Athens |
+    When I GET "/api/owners?sort=city,asc"
+    Then the response status is 200
+    And the content is sorted by "city" ascending
+
+  Scenario: Sorting by city descending
+    Given the following owners exist:
+      | firstName | lastName | city   |
+      | Bob       | Smith    | Zurich |
+      | Alice     | Jones    | Athens |
+    When I GET "/api/owners?sort=city,desc"
+    Then the response status is 200
+    And the content is sorted by "city" descending
+
+  Scenario: An invalid sort value is rejected
+    When I GET "/api/owners?sort=bogus,asc"
+    Then the response status is 400
+    And the response body contains "name,asc"
+
+  Scenario: A zero page size is rejected
+    When I GET "/api/owners?size=0"
+    Then the response status is 400
+    And the response body contains "positive"
+
+  Scenario: A negative page number is rejected
+    When I GET "/api/owners?page=-1"
+    Then the response status is 400
+
+  Scenario: A page beyond the last page is not an error
+    Given 3 owners exist with distinct last names
+    When I GET "/api/owners?page=5&size=10"
+    Then the response status is 200
+    And the response content array has size 0
+    And the response has totalElements 3
+    And the response has totalPages 1
+
+  Scenario: Paging through owners with duplicate names does not lose or repeat rows
+    Given the following owners exist:
+      | firstName | lastName |
+      | Harry     | Potter   |
+      | Beatrix   | Potter   |
+      | George    | Darling  |
+      | Wendy     | Darling  |
+    Then paging through all owners with size 2 sorted by "name,asc" visits each owner exactly once

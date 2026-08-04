@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -60,8 +62,76 @@ public class OwnerSteps {
         for (Map<String, String> row : table.asMaps()) {
             jdbc.update(
                     "INSERT INTO owners (first_name, last_name, address, city, telephone) VALUES (?, ?, ?, ?, ?)",
-                    row.get("firstName"), row.get("lastName"), "addr", "city", "0000000000");
+                    row.get("firstName"), row.get("lastName"), "addr", row.getOrDefault("city", "city"), "0000000000");
         }
+    }
+
+    @Given("{int} owners exist with distinct last names")
+    public void nOwnersExistWithDistinctLastNames(int count) {
+        for (int i = 1; i <= count; i++) {
+            jdbc.update(
+                    "INSERT INTO owners (first_name, last_name, address, city, telephone) VALUES (?, ?, 'addr', ?, '0000000000')",
+                    "First" + i, String.format("Zz%03d", i), "City" + (i % 3));
+        }
+    }
+
+    @Then("the response content array has size {int}")
+    public void theResponseContentArrayHasSize(int expected) {
+        assertThat(http.getLastResponse().jsonPath().getList("content").size()).isEqualTo(expected);
+    }
+
+    @Then("the response has totalElements {int}")
+    public void theResponseHasTotalElements(int expected) {
+        assertThat(http.getLastResponse().jsonPath().getLong("totalElements")).isEqualTo((long) expected);
+    }
+
+    @Then("the response has totalPages {int}")
+    public void theResponseHasTotalPages(int expected) {
+        assertThat(http.getLastResponse().jsonPath().getInt("totalPages")).isEqualTo(expected);
+    }
+
+    @Then("the content is sorted by {string} ascending")
+    public void theContentIsSortedByFieldAscending(String field) {
+        assertThat(contentFieldValues(field)).isSorted();
+    }
+
+    @Then("the content is sorted by {string} descending")
+    public void theContentIsSortedByFieldDescending(String field) {
+        assertThat(contentFieldValues(field)).isSortedAccordingTo(Comparator.reverseOrder());
+    }
+
+    private List<String> contentFieldValues(String field) {
+        List<String> values = http.getLastResponse().jsonPath().getList("content." + field, String.class);
+        assertThat(values).as("content." + field).isNotEmpty().doesNotContainNull();
+        return values;
+    }
+
+    @Then("the response body contains {string}")
+    public void theResponseBodyContains(String text) {
+        assertThat(http.getLastResponse().getBody().asString()).contains(text);
+    }
+
+    @Then("paging through all owners with size {int} sorted by {string} visits each owner exactly once")
+    public void pagingThroughAllOwnersVisitsEachOwnerExactlyOnce(int size, String sort) {
+        long totalOwners = jdbc.queryForObject("SELECT COUNT(*) FROM owners", Long.class);
+        List<Integer> visitedIds = new ArrayList<>();
+        int page = 0;
+        int totalPages;
+        do {
+            var response = RestAssured.given()
+                    .baseUri(http.baseUri())
+                    .queryParam("sort", sort)
+                    .queryParam("size", size)
+                    .queryParam("page", page)
+                    .get("/api/owners");
+            assertThat(response.statusCode()).isEqualTo(200);
+            visitedIds.addAll(response.jsonPath().getList("content.id", Integer.class));
+            totalPages = response.jsonPath().getInt("totalPages");
+            page++;
+        } while (page < totalPages);
+
+        assertThat(visitedIds).hasSize((int) totalOwners);
+        assertThat(visitedIds).doesNotHaveDuplicates();
     }
 
     @Then("the response JSON array has size {int}")
