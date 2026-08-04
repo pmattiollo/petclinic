@@ -170,6 +170,34 @@ export interface components {
        */
       telephone: string;
     };
+    OwnerPageDto: {
+      /** @description The owners on this page. */
+      content?: components["schemas"]["OwnerDto"][];
+      /**
+       * Format: int32
+       * @description The current page number, zero-based.
+       * @example 0
+       */
+      number?: number;
+      /**
+       * Format: int32
+       * @description The page size used to produce this page.
+       * @example 10
+       */
+      size?: number;
+      /**
+       * Format: int64
+       * @description Total number of owners matching the filter, across all pages.
+       * @example 28
+       */
+      totalElements?: number;
+      /**
+       * Format: int32
+       * @description Total number of pages.
+       * @example 3
+       */
+      totalPages?: number;
+    };
     PetDto: {
       /**
        * Format: date
@@ -557,14 +585,33 @@ export interface operations {
   listOwners: {
     parameters: {
       query?: {
+        /**
+         * @description Only owners whose last name starts with this (case-sensitive).
+         * @example Dav
+         */
         lastName?: string;
+        /**
+         * @description Zero-based page number.
+         * @example 0
+         */
+        page?: number;
+        /**
+         * @description Number of owners per page; must be positive.
+         * @example 10
+         */
+        size?: number;
+        /**
+         * @description Sort column and direction.
+         * @example name,asc
+         */
+        sort?: "name,asc" | "name,desc" | "city,asc" | "city,desc";
       };
     };
     responses: {
       /** @description OK */
       200: {
         content: {
-          "application/json": components["schemas"]["OwnerDto"][];
+          "application/json": components["schemas"]["OwnerPageDto"];
         };
       };
       /** @description Bad Request */
