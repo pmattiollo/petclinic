@@ -1,78 +1,38 @@
-#ownersByLastName
-{
-display:none;
+#ownersByLastName {
+  display: none;
 }
 
-#nameGroup {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-left: 0;
-  margin-right: 0;
-  padding-left: 0;
+.owners-sortable-header {
+  cursor: pointer;
+  user-select: none;
 }
 
-#addressGroup {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-left: 0;
-  margin-right: 0;
-  padding-left: 0;
+.owners-sort-indicator {
+  margin-left: 4px;
 }
 
-.owner-search-label {
-  margin: 0;
-  text-align: left;
-  min-width: 60px;
-}
-
-.owner-search-input {
-  flex: 1;
-}
-
-.owners-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.owners-pagination {
+.owners-pager {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin: 16px 0;
 }
 
-.owners-page-size {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.owners-pager-status {
+  flex: 1;
 }
 
-.owners-page-size .form-control {
+.owners-page-size-label {
+  margin: 0;
+}
+
+.owners-page-size-select {
   width: auto;
+  display: inline-block;
 }
 
 @media (max-width: 576px) {
-  #nameGroup {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  #addressGroup {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .owner-search-input {
-    width: 100%;
-  }
-
-  .owners-controls {
+  .owners-pager {
     flex-direction: column;
     align-items: flex-start;
   }
