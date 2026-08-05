@@ -16,11 +16,11 @@
     },
 
     "postgres-db": {
-      "//": "In case MCPs are disabled, tell agent to use scripts/db-via-mcp.sh (same server, over the CLI)",
+      "//": "In case MCPs are disabled, tell agent to use .claude/skills/petclinic-db-cli/db-via-mcp.sh (same server, over the CLI)",
       "command": "npx",
       "args": [
         "-y",
-        "@bytebase/dbhub",
+        "@bytebase/dbhub@1.2.0",
         "--transport", "stdio",
         "--dsn", "postgres://petclinic:petclinic@localhost:5432/petclinic"
       ]

@@ -23,7 +23,7 @@ run_sql() {
   }
   local params out
   params="$(jq -Rs '{sql: .}' < "$1")"
-  out="$(DATABASE_URL="$DSN" scripts/db-via-mcp.sh call execute_sql --params "$params")"
+  out="$(DATABASE_URL="$DSN" .claude/skills/petclinic-db-cli/db-via-mcp.sh call execute_sql --params "$params")"
   if [ "$(printf '%s' "$out" | jq -r '.success // false')" != "true" ]; then
     echo "❌ SQL failed:" >&2
     printf '%s\n' "$out" | jq -r '.error // .' >&2

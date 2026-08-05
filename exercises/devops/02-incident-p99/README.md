@@ -57,9 +57,9 @@ changes people's habits.
 ## What to watch for
 
 - **Does it reach for the tools it has?** The repo ships MCP access to Grafana (traces,
-  metrics, logs) and to Postgres, plus `scripts/db-via-mcp.sh` — the same Postgres MCP
-  server over the CLI — when MCP is unavailable. An
-  agent that never opens a trace and never runs `EXPLAIN` is guessing with confidence.
+  metrics, logs) and to Postgres — and, when MCP is unavailable, the same Postgres MCP
+  server over the CLI via the `petclinic-db-cli` skill. An agent that never opens a trace
+  and never runs `EXPLAIN` is guessing with confidence.
 - **Does its explanation account for the whole number?** This is the sharpest question you
   can ask, and the one that does the teaching: if the stated cause explains only part of the
   measured latency, the diagnosis is not finished — and the re-run will say so.
