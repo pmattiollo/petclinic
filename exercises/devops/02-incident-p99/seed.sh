@@ -22,11 +22,19 @@ MARKER='__loadtest__'
 run_sql() {
   if command -v psql >/dev/null 2>&1; then
     psql "$DSN" -v ON_ERROR_STOP=1 -q -f "$1"
-  elif command -v node >/dev/null 2>&1; then
-    [ -d scripts/node_modules ] || (cd scripts && npm install --silent)
-    DATABASE_URL="$DSN" node scripts/db-wo-mcp.js < "$1"
-  else
-    echo "❌ Need either psql or node to talk to the database." >&2
+    return
+  fi
+  # No psql: reach the same dbhub MCP server that .mcp.json declares, over the CLI.
+  command -v jq >/dev/null 2>&1 || {
+    echo "❌ Need either psql, or jq + mcptools, to talk to the database." >&2
+    exit 1
+  }
+  local params out
+  params="$(jq -Rs '{sql: .}' < "$1")"
+  out="$(DATABASE_URL="$DSN" scripts/db-via-mcp.sh call execute_sql --params "$params")"
+  if [ "$(printf '%s' "$out" | jq -r '.success // false')" != "true" ]; then
+    echo "❌ SQL failed:" >&2
+    printf '%s\n' "$out" | jq -r '.error // .' >&2
     exit 1
   fi
 }

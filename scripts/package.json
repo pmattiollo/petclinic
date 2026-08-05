@@ -1,9 +1,0 @@
-{
-  "name": "petclinic-scripts",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Helper scripts for the petclinic project (db-wo-mcp.js: ad-hoc SQL without psql/MCP)",
-  "dependencies": {
-    "pg": "^8.13.1"
-  }
-}

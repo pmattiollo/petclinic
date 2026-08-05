@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # The petclinic Postgres MCP server (@bytebase/dbhub), exposed as a plain CLI.
 #
-# Counterpart to db-wo-mcp.js: that script bypasses MCP and talks to Postgres
-# directly; this one calls the *real MCP server* declared in .mcp.json, through
-# `mcptools` (https://github.com/f/mcptools) — same tools, same params, same
-# JSON, only the transport differs. For agent harnesses where MCP servers are
-# disabled by org policy but the shell is available.
+# The database has exactly one entry point — the dbhub MCP server declared in
+# .mcp.json. This script reaches that same server through `mcptools`
+# (https://github.com/f/mcptools), an MCP-to-CLI bridge: same tools, same
+# params, same JSON, only the transport differs. For agent harnesses where MCP
+# servers are disabled by org policy but the shell is available.
 #
 #   scripts/db-via-mcp.sh tools
 #   scripts/db-via-mcp.sh call execute_sql --params '{"sql":"select count(*) from owners"}'

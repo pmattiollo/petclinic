@@ -16,7 +16,7 @@
     },
 
     "postgres-db": {
-      "//": "In case MCPs are disabled, tell agent to use db-wo-mcp.js",
+      "//": "In case MCPs are disabled, tell agent to use scripts/db-via-mcp.sh (same server, over the CLI)",
       "command": "npx",
       "args": [
         "-y",

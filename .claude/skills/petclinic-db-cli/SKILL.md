@@ -66,8 +66,10 @@ Full model: see the ER model section in `CLAUDE.md`.
 - An empty database is usually not a bug: Flyway seeds it when the **backend**
   boots (see `CLAUDE.md` → Database).
 
-## Related
+## Why this and not a direct Postgres client
 
-- `scripts/db-wo-mcp.js` — the other direction: bypasses MCP entirely and
-  talks to Postgres directly with the `pg` driver. Use that when you just want
-  SQL; use this skill when the point is to exercise the actual MCP server.
+There is deliberately only **one** way into the database: the `dbhub` MCP
+server. It is reachable two ways — as an MCP tool when the harness supports
+MCP, and through this CLI wrapper when it does not. Both hit the same server,
+so its guardrails and behaviour are identical either way, and switching between
+them changes nothing but the transport.

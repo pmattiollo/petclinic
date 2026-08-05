@@ -57,7 +57,8 @@ changes people's habits.
 ## What to watch for
 
 - **Does it reach for the tools it has?** The repo ships MCP access to Grafana (traces,
-  metrics, logs) and to Postgres, plus `scripts/db-wo-mcp.js` when MCP is unavailable. An
+  metrics, logs) and to Postgres, plus `scripts/db-via-mcp.sh` — the same Postgres MCP
+  server over the CLI — when MCP is unavailable. An
   agent that never opens a trace and never runs `EXPLAIN` is guessing with confidence.
 - **Does its explanation account for the whole number?** This is the sharpest question you
   can ask, and the one that does the teaching: if the stated cause explains only part of the
