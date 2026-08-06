@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -62,6 +63,19 @@ public class ExceptionControllerAdvice {
         BindingResult bindingResult = ex.getBindingResult();
         // reuse ValidationErrorExtractor style: build list of readable messages
         List<String> errors = ValidationErrorFieldExtractor.extract(bindingResult);
+        log.warn("Validation failed: {}", errors);
+        ProblemDetail pd = buildProblemDetail("Validation Error",
+                "Validation failed for request. See 'errors' for details.", HttpStatus.BAD_REQUEST, request);
+        pd.setProperty("errors", errors);
+        return ResponseEntity.badRequest().body(pd);
+    }
+
+    @ExceptionHandler(VisitDateOutOfRangeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ProblemDetail> handleVisitDateOutOfRange(VisitDateOutOfRangeException ex,
+            HttpServletRequest request) {
+        List<String> errors = new ArrayList<>();
+        errors.add(ex.getMessage());
         log.warn("Validation failed: {}", errors);
         ProblemDetail pd = buildProblemDetail("Validation Error",
                 "Validation failed for request. See 'errors' for details.", HttpStatus.BAD_REQUEST, request);
