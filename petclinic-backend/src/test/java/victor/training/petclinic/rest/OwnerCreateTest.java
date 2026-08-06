@@ -151,4 +151,16 @@ class OwnerCreateTest {
                 .extracting(v -> v.getDescription())
                 .contains("Routine checkup");
     }
+
+    @Test
+    void addVisitToOwner_rejectsDateBeforePetBirthDate() throws Exception {
+        VisitFieldsDto dto = new VisitFieldsDto();
+        dto.setDate(LocalDate.of(2021, 3, 2));
+        dto.setDescription("Too early");
+
+        mockMvc.perform(post("/api/owners/" + ownerId + "/pets/" + petId + "/visits")
+                .content(mapper.writeValueAsString(dto))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
+    }
 }
