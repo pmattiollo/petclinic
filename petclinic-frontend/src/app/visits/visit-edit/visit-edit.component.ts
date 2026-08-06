@@ -20,6 +20,8 @@ export class VisitEditComponent implements OnInit {
   currentPet: Pet;
   currentOwner: Owner;
   currentPetType: PetType;
+  minVisitDate: Date | null = null;
+  maxVisitDate: Date;
   updateSuccess = false;
   errorMessage: string;
 
@@ -32,6 +34,8 @@ export class VisitEditComponent implements OnInit {
     this.currentPet = {} as Pet;
     this.currentOwner = {} as Owner;
     this.currentPetType = {} as PetType;
+    this.maxVisitDate = new Date();
+    this.maxVisitDate.setFullYear(this.maxVisitDate.getFullYear() + 1);
   }
 
   ngOnInit() {
@@ -43,6 +47,7 @@ export class VisitEditComponent implements OnInit {
           pet => {
             this.currentPet = pet;
             this.currentPetType = pet.type;
+            this.minVisitDate = new Date(`${this.currentPet.birthDate}T00:00:00`);
             this.ownerService.getOwnerById(pet.ownerId).subscribe(
               owner => {
                 this.currentOwner = owner;
