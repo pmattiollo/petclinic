@@ -69,7 +69,7 @@ Tell an agent running in this repo:
 
 - **Trim boilerplate** — remove from CLAUDE.md the mvn/npm instructions any LLM already knows.
 - **Point at generated sources** — replace CLAUDE.md's `## API Endpoints` with a pointer to the auto-synced `openapi.yaml`.
-- **Scope rules by folder** — extract backend rules into a nested `petclinic-backend/CLAUDE.md` that loads only there.
+- **Scope rules by folder** — extract backend rules into a nested `petclinic-backend/AGENTS.md` that loads only there.
 - **Path-scoped skill** — move `### Java Code Style` into a `java/SKILL.md`
 - **Force load a skill for by file paths**: Add to skill's frontmatter `paths: petclinic-backend/**/*.java`, so it 100% activates before any `.java` edit.
 - **Reference drift-safe knowledge** — replace the drifting `## Domain Model` chapter with a link to the in-sync `DomainModel.puml`. Add a link to DB.sql and openapi.yaml
