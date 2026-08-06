@@ -22,6 +22,17 @@ Feature: Add a visit
     Then I am back on the owner's detail page
     And the pet's visit list contains the new visit dated "2025-02-03"
 
+  Scenario: Reject visit dates outside the allowed range
+    Given an owner with at least one pet exists
+    When I open that owner's detail page
+    And I click "Add Visit" for the first pet
+    And I fill in a visit date before the pet birth date and a unique description
+    Then the "Add Visit" button is disabled
+    And I stay on the visit form page
+    When I fill in a visit date more than one year in the future and a unique description
+    Then the "Add Visit" button is disabled
+    And I stay on the visit form page
+
   @generate_sequence
   Scenario: Add a follow-up visit and capture its sequence diagram
     Given an owner with at least one pet exists

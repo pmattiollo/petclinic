@@ -26,6 +26,7 @@ export class PlaywrightWorld extends World {
   page!: Page;
   ownerId?: number;
   petId?: number;
+  petBirthDate?: string;
   visitDescription?: string;
   // Set by the owner-search scenario: the last-name part typed into the filter
   // and the owner full names the API returns for it (the expected result set).

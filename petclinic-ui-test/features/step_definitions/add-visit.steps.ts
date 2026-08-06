@@ -5,6 +5,12 @@ import {PlaywrightWorld} from '../support/world';
 
 const API_BASE = process.env.API_BASE_URL || 'http://localhost:8080/api';
 
+function shiftDate(dateIso: string, days: number): string {
+  const date = new Date(`${dateIso}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 Given('an owner with at least one pet exists', async function (this: PlaywrightWorld) {
   const {data: owners} = await axios.get(`${API_BASE}/owners`, {timeout: 10_000});
   const ownerWithPet = owners.find((o: any) => Array.isArray(o.pets) && o.pets.length > 0);
@@ -13,6 +19,7 @@ Given('an owner with at least one pet exists', async function (this: PlaywrightW
   }
   this.ownerId = ownerWithPet.id;
   this.petId = ownerWithPet.pets[0].id;
+  this.petBirthDate = ownerWithPet.pets[0].birthDate;
 });
 
 When("I open that owner's detail page", async function (this: PlaywrightWorld) {
@@ -30,6 +37,30 @@ When(
   async function (this: PlaywrightWorld, date: string) {
     this.visitDescription = `Annual check-up ${Date.now()}`;
     await this.page.locator('input[name="date"]').fill(date);
+    await this.page.locator('input#description').fill(this.visitDescription);
+  },
+);
+
+When(
+  'I fill in a visit date before the pet birth date and a unique description',
+  async function (this: PlaywrightWorld) {
+    if (!this.petBirthDate) {
+      throw new Error('Expected pet birth date to be available from Given step');
+    }
+    this.visitDescription = `Invalid-date-before-birth ${Date.now()}`;
+    await this.page.locator('input[name="date"]').fill(shiftDate(this.petBirthDate, -1));
+    await this.page.locator('input#description').fill(this.visitDescription);
+  },
+);
+
+When(
+  'I fill in a visit date more than one year in the future and a unique description',
+  async function (this: PlaywrightWorld) {
+    this.visitDescription = `Invalid-date-far-future ${Date.now()}`;
+    const tomorrowPlusOneYear = new Date();
+    tomorrowPlusOneYear.setDate(tomorrowPlusOneYear.getDate() + 366);
+    const invalidFutureDate = tomorrowPlusOneYear.toISOString().slice(0, 10);
+    await this.page.locator('input[name="date"]').fill(invalidFutureDate);
     await this.page.locator('input#description').fill(this.visitDescription);
   },
 );
@@ -54,3 +85,12 @@ Then(
     await expect(row).toBeVisible({timeout: 10_000});
   },
 );
+
+Then('the {string} button is disabled', async function (this: PlaywrightWorld, buttonLabel: string) {
+  await expect(this.page.getByRole('button', {name: buttonLabel})).toBeDisabled();
+});
+
+Then('I stay on the visit form page', async function (this: PlaywrightWorld) {
+  await expect(this.page).toHaveURL(/\/pets\/\d+\/visits\/add$/);
+  await expect(this.page.locator('h2:has-text("New Visit")')).toBeVisible();
+});
