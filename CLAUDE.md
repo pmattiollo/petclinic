@@ -1,4 +1,4 @@
-# Project Memory - AGENTS.md ~ CLAUDE.md
+# Project Memory - AGENTS.md <~> CLAUDE.md
 
 This file is automatically loaded in any conversation you have with an agent in this folder. It's the most important file in any repo, pushed on git, improved on any AI fail, reviewed every sprint, symlinked to AGENTS.md for inclusiveness.
 
@@ -121,20 +121,19 @@ OpenAPI docs: http://localhost:8080/swagger-ui.html
 
 ## Development Notes
 
-### Owner's Code Preferences (from copilot-instructions.md)
-- Constructor injection for production, `@Autowired` only in tests
-- `@Transactional` only when strictly necessary
-- MapStruct for DTO mapping
+### Java Code Preferences (moved from former .github/copilot-instructions.md)
+- Use constructor injection in src/main, `@Autowired` only in tests
+- Use `@Transactional` only when strictly necessary
+- MapStruct is used for DTO mapping
 - Global exception handling in `@RestControllerAdvice`
-- `@Validated` on `@RequestBody`
-- Use only Lombok's `@Slf4j`, `@RequiredArgsConstructor`, `@Builder`, `@Getter`/`@Setter` selectively
+- Apply `@Validated` on each `@RequestBody`
+- Use (only) Lombok's `@Slf4j`, `@RequiredArgsConstructor`, `@Builder`, `@Getter`/`@Setter`
 - Keep line length ≤ 120 chars
-- Never ask before running tests after refactoring
-- Builder chains: one property per line, unless only 2 properties total
+- Builder chains: one property per line, unless only two properties are set
 
 ## Task Modifiers
 - Write non-trivial code using TDD
 - Keep comments concise, prefer explanatory variable/method names.
 - Always run tests after any refactoring
-- Keep explanations concise
+- Keep your explanations concise
 - Challenge ambiguous prompts. Tell me when I'm wrong!  
