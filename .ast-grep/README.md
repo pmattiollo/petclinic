@@ -1,7 +1,7 @@
 # ast-grep rules
 
 Structural lint rules that enforce conventions already written in prose in
-[CLAUDE.md](../CLAUDE.md). A convention nobody checks is a suggestion.
+[CLAUDE.md](../AGENTS.md). A convention nobody checks is a suggestion.
 
 ```sh
 sg scan                 # scan the repo
