@@ -7,12 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.annotation.McpTool.McpAnnotations;
 import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springaicommunity.mcp.context.McpSyncRequestContext;
 import org.springaicommunity.mcp.context.StructuredElicitResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +25,6 @@ import victor.training.petclinic.repository.OwnerRepository;
 import victor.training.petclinic.repository.PetRepository;
 import victor.training.petclinic.repository.VisitRepository;
 
-@RequiredArgsConstructor
 @Component
 public class PetClinicMcp {
 
@@ -36,9 +35,13 @@ public class PetClinicMcp {
      */
     static final int MAX_UPCOMING_VISITS_PER_PET = 3;
 
-    private final OwnerRepository ownerRepository;
-    private final PetRepository petRepository;
-    private final VisitRepository visitRepository;
+    @Autowired
+
+    private OwnerRepository ownerRepository;
+    @Autowired
+    private PetRepository petRepository;
+    @Autowired
+    private VisitRepository visitRepository;
 
     @McpTool(
             name = "get_owner_profile",
