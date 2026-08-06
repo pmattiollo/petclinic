@@ -66,6 +66,7 @@ label " " as sep2
 [REST] --> [Repository]
 [REST] --> [Mapper]
 [REST] --> [DTO]
+[REST] --> [REST Error]
 [MCP] --> [Domain]
 [MCP] --> [Repository]
 
