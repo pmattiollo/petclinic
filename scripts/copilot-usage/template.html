@@ -142,6 +142,13 @@
           background: var(--grid); overflow: hidden; margin-top: 6px; }
   .sbar i { display: block; height: 100%; border-radius: 2px; }
   .sfiles { color: var(--text-muted); font-size: 11.5px; margin-top: 3px; }
+  /* Which client burned it. Deliberately a neutral outline, not a colour code:
+     the hues in this report already mean "model", and a second colour language
+     on the same row would be read as one. */
+  .src { display: inline-block; font-size: 10.5px; font-weight: 600; line-height: 1.6;
+         letter-spacing: .02em; padding: 0 6px; border-radius: 4px; margin-right: 7px;
+         color: var(--text-secondary); border: 1px solid var(--border);
+         background: var(--grid); vertical-align: 1px; }
 
   /* Calendar heatmap: one hue, light -> dark, anchored to the day you're allowed
      to burn (monthly quota / days in month) rather than to the window's own max,
@@ -269,6 +276,7 @@
       <div><p class="calcap" id="cal-caption"></p><div class="cal" id="calendar" role="group" aria-label="Credits burned per day — click a day to filter the sessions below"></div></div>
       <div class="calside">
         <div class="chips" id="cal-chips"></div>
+        <div class="chips" id="src-chips"></div>
         <div class="calkey" id="cal-key"></div>
         <p class="calhint" id="cal-hint"></p>
       </div>
@@ -692,6 +700,31 @@ function renderChips() {
   });
 }
 
+/* One chip per client that has sessions anywhere in the window -- a machine that
+   only ever uses the CLI should not be told there is an IDE filter. The counts
+   follow the calendar, so they always add up to the header just above them. */
+function renderSourceChips() {
+  const host = document.getElementById("src-chips");
+  const names = Object.keys(SESS.sources || {});
+  host.textContent = "";
+  if (names.length < 2) return;
+  const inWindow = SESS.rows.filter(inRange);
+  [["All clients", null]].concat(names.map(n => [n, n])).forEach(([label, id]) => {
+    const n = id ? inWindow.filter(s => s.source === id).length : inWindow.length;
+    const b = document.createElement("button");
+    b.className = "chip"; b.type = "button";
+    b.textContent = `${label} (${n})`;
+    b.dataset.src = id || "";
+    if (id) b.title = SOURCE_HELP[id] || "";
+    b.setAttribute("aria-pressed", String(sourceFilter === id));
+    b.addEventListener("click", () => {
+      sourceFilter = id;
+      renderSessionList();
+    });
+    host.appendChild(b);
+  });
+}
+
 function setRange(from, to, chipId) {
   range = from ? [from, to] : null;
   document.querySelectorAll("#cal-chips .chip").forEach(b => {
@@ -704,12 +737,27 @@ function setRange(from, to, chipId) {
   renderSessionList();
 }
 
+/* What each client's transcript can and cannot tell us, said once here rather
+   than repeated on every row that shows an em dash instead of a price. */
+const SOURCE_HELP = {
+  "CLI": "GitHub Copilot CLI — priced per model call in ~/.copilot/session-store.db",
+  "VS Code": "Copilot Chat in VS Code — priced per request in the chat transcript",
+  "JetBrains": "Copilot in a JetBrains IDE — the plugin's log records prompts and " +
+               "files but no price, so these sessions are listed unpriced",
+};
+
+/* The source filter is a second, independent axis to the calendar: the calendar
+   answers "when", this answers "in what". Null means every client. */
+let sourceFilter = null;
+
+function inRange(s) {
+  if (!range) return true;
+  const d = sessionDay(s);
+  return d >= range[0] && d <= range[1];
+}
+
 function visibleSessions() {
-  if (!range) return SESS.rows;
-  return SESS.rows.filter(s => {
-    const d = sessionDay(s);
-    return d >= range[0] && d <= range[1];
-  });
+  return SESS.rows.filter(s => inRange(s) && (!sourceFilter || s.source === sourceFilter));
 }
 
 function renderSessionList() {
@@ -735,7 +783,12 @@ function renderSessionList() {
     const main = document.createElement("div");
     const title = document.createElement("div");
     title.className = "stitle";
-    title.textContent = s.title;
+    const src = document.createElement("span");
+    src.className = "src";
+    src.textContent = s.source;
+    src.title = SOURCE_HELP[s.source] || "";
+    title.appendChild(src);
+    title.appendChild(document.createTextNode(s.title));
     const meta = document.createElement("span");
     meta.className = "smeta";
     const mins = minutesBetween(s.started, s.ended);
@@ -778,7 +831,8 @@ function renderSessionList() {
         : Object.entries(s.models).map(([m, v]) => `${m}: ${v}`).join("\n");
     } else {
       cost.textContent = "—";
-      cost.title = "No per-call pricing recorded for this session.";
+      cost.title = SOURCE_HELP[s.source] ||
+        "No per-call pricing recorded for this session.";
     }
     row.appendChild(cost);
 
@@ -800,16 +854,27 @@ function renderSessionList() {
     ? (range[0] === range[1] ? `on ${dayShort(range[0])}`
                              : `${dayShort(range[0])} – ${dayShort(range[1])}`)
     : `over ${DATA.windowDays} days`;
+  // The split is over the date range only, never the source filter -- it is what
+  // you read to decide which client to filter to.
+  const inWindow = SESS.rows.filter(inRange);
+  const mix = Object.keys(SESS.sources || {})
+    .map(n => [n, inWindow.filter(s => s.source === n).length])
+    .filter(([, c]) => c)
+    .map(([n, c]) => `${c} ${n}`).join(", ");
   const bits = [
-    `${rows.length} session${rows.length === 1 ? "" : "s"} ${where}, ${nf0.format(spent)} AIC`,
+    `${rows.length} session${rows.length === 1 ? "" : "s"} ${where}` +
+      (sourceFilter ? ` in ${sourceFilter}` : "") + `, ${nf0.format(spent)} AIC`,
     shown.length < rows.length ? `top ${shown.length} listed` : null,
-    `${SESS.pricedCount}/${SESS.count} sessions carry per-call pricing` +
-      (SESS.since ? ` (the CLI only started recording it on ${dayShort(SESS.since)})` : ""),
+    mix && !sourceFilter ? `split by client: ${mix}` : null,
+    `${SESS.pricedCount}/${SESS.count} sessions in the whole window carry per-session pricing` +
+      (SESS.since ? ` (the CLI only started recording it on ${dayShort(SESS.since)}; ` +
+                    `the JetBrains plugin still records none)` : ""),
   ].filter(Boolean);
   document.getElementById("sessions-note").textContent =
-    bits.join(" — ") + `. Titles come from the CLI's own session store; one-line ` +
+    bits.join(" — ") + `. Titles come from each client's own transcript; one-line ` +
     `descriptions are written by ${SESS.model}` + (SESS.note ? ` (${SESS.note})` : "") + ".";
 
+  renderSourceChips();
   renderSessionTable(rows);
 }
 
@@ -817,14 +882,15 @@ function renderSessionTable(rows) {
   const host = document.getElementById("sessions-table");
   host.textContent = "";
   buildTable(host,
-    ["Session", "Started", "Repo", "Turns", "Calls", "Models", "AIC"],
+    ["Session", "Client", "Started", "Repo", "Turns", "Calls", "Models", "AIC"],
     rows.map(s => [
       {text: s.title, color: s.priced ? (COLOR[dominantModel(s)] || "var(--s8)") : undefined},
+      s.source,
       shortWhen(s.started), s.repo + (s.branch ? "@" + s.branch : ""),
       s.turns || "—", s.requests || "—",
       Object.keys(s.models).join(", ") || "—",
       s.priced ? nf0.format(s.credits) + (s.partial ? "+" : "") : "—",
-    ]), [1, 2, 5]);
+    ]), [1, 2, 3, 6]);
 }
 
 function renderSessions() {

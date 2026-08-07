@@ -5,15 +5,22 @@ Daily burn over a rolling window, broken down per model. Data comes from
 /users/{login}/settings/billing/premium_request/usage queried one day at a
 time -- the only endpoint that carries a `model` field.
 
-A second, finer view comes from the CLI's own local SQLite session store
-(~/.copilot/session-store.db): what each *session* cost, what it was about, and
-which files it touched. The billing API knows nothing about sessions, so the two
-sources are shown side by side rather than merged. See SKILL.md.
+A second, finer view comes from the *local* transcripts each Copilot client
+keeps: what each session cost, what it was about, and which files it touched.
+Three clients write three different stores, and all three are read here:
+
+    CLI        ~/.copilot/session-store.db            SQLite, priced per call
+    VS Code    <Code>/User/**/chatSessions/*.jsonl    op-log, priced per request
+    JetBrains  ~/.copilot/jb/<id>/partition-*.jsonl   event log, no pricing
+
+The billing API knows nothing about sessions, so the two views are shown side by
+side rather than merged. See SKILL.md.
 """
 
 import argparse
 import concurrent.futures as cf
 import datetime as dt
+import glob
 import json
 import os
 import re
@@ -40,6 +47,31 @@ HERE = os.path.dirname(os.path.realpath(__file__))
 # session, and it is free to read -- no API call, no tokens.
 SESSION_DB = os.path.expanduser("~/.copilot/session-store.db")
 NANO_PER_CREDIT = 1_000_000_000
+
+# --- IDE transcripts -------------------------------------------------------
+# The CLI is not the only client that burns credits. VS Code's Copilot Chat and
+# the JetBrains plugin each keep their own local transcript, in their own format,
+# and neither shows up in session-store.db -- which is why the session card used
+# to under-report a day that was spent inside an IDE.
+#
+# VS Code: one op-log per chat session. Line 0 is a full snapshot; every later
+# line patches it ({kind:1} set, {kind:2} append at a JSON path). `copilotCredits`
+# on a request is cumulative across that request's internal model calls.
+VSCODE_ROOTS = [
+    os.path.expanduser(p) for p in (
+        "~/Library/Application Support/Code/User",            # macOS, stable
+        "~/Library/Application Support/Code - Insiders/User",
+        "~/.config/Code/User",                                # Linux
+        "~/.config/Code - Insiders/User",
+    )
+] + ([os.path.join(os.environ["APPDATA"], "Code", "User")]      # Windows
+     if os.environ.get("APPDATA") else [])
+# JetBrains: an append-only event log per conversation. It records the prompts,
+# the tool calls and the timestamps -- but no model and no price, so these
+# sessions are listed unpriced rather than silently costed at zero.
+JETBRAINS_ROOT = os.path.expanduser("~/.copilot/jb")
+
+SOURCE_CLI, SOURCE_VSCODE, SOURCE_JETBRAINS = "CLI", "VS Code", "JetBrains"
 # Summaries are written once and reused: re-running the dashboard must not
 # re-spend credits on sessions whose transcript hasn't grown.
 SUMMARY_CACHE = os.path.expanduser("~/.copilot/usage-session-summaries.json")
@@ -176,7 +208,7 @@ def is_scratch_cwd(cwd):
                for p in (tempfile.gettempdir(), "/tmp", "/var/folders"))
 
 
-def load_sessions(since, billing_models):
+def load_cli_sessions(since, billing_models):
     """Per-session cost, subject, models and files from ~/.copilot/session-store.db.
 
     `since` is an ISO date string; sessions last touched before it are dropped.
@@ -251,6 +283,7 @@ def load_sessions(since, billing_models):
             paths = files.get(s["id"], [])
             rows.append({
                 "id": s["id"],
+                "source": SOURCE_CLI,
                 "title": title,
                 "repo": s["repository"] or os.path.basename(s["cwd"] or "") or "—",
                 "branch": s["branch"] or "",
@@ -282,6 +315,308 @@ def load_sessions(since, billing_models):
         con.close()
 
 
+# ---------------------------------------------------------------------------
+# IDE transcripts: same row shape as the CLI's, so the report can list all three
+# clients in one sorted table instead of three cards.
+# ---------------------------------------------------------------------------
+
+def blank_session(sid, source, title):
+    """A session row with every field the report expects, ready to be filled in."""
+    return {"id": sid, "source": source, "title": title, "repo": "—", "branch": "",
+            "started": "", "ended": "", "credits": 0.0, "requests": 0,
+            "partial": False, "priced": False, "turns": 0, "models": {},
+            "files": [], "fileCount": 0,
+            "tokens": {"in": 0, "out": 0, "cached": 0}, "prompts": []}
+
+
+_REPO_CACHE = {}
+
+
+def repo_of(path):
+    """Nearest ancestor of `path` that is a git working copy, by name.
+
+    Neither IDE records the repository the way the CLI does, so it is recovered
+    from the files the session touched. Cached per directory: a session touches
+    dozens of files that all resolve to the same root.
+    """
+    cur = os.path.dirname(path or "")
+    if not cur:
+        return None
+    seen, name = [], None
+    while cur and cur != os.path.dirname(cur):
+        if cur in _REPO_CACHE:
+            name = _REPO_CACHE[cur]
+            break
+        seen.append(cur)
+        if os.path.exists(os.path.join(cur, ".git")):
+            name = os.path.basename(cur)
+            break
+        cur = os.path.dirname(cur)
+    for d in seen:
+        _REPO_CACHE[d] = name
+    return name
+
+
+def iso_ms(ms):
+    """VS Code stamps epoch milliseconds; the rest of the report speaks ISO."""
+    if not ms:
+        return ""
+    return dt.datetime.fromtimestamp(ms / 1000).isoformat(timespec="seconds")
+
+
+def strip_model(model_id, billing_by_key):
+    """'copilot/claude-sonnet-5' -> the billing API's own spelling of that model."""
+    name = (model_id or "").split("/")[-1]
+    return billing_by_key.get(norm_model(name), name)
+
+
+# Per-request fields we never read; dropping them keeps a 50 MB transcript from
+# being materialised in memory just to reach the four numbers we want.
+VSC_DROP = {"result", "promptTokenDetails", "contentReferences", "codeCitations",
+            "outputBuffer", "modelState", "responseMarkdownInfo", "followups",
+            "variableData"}
+
+
+def harvest_edits(value, sink):
+    """Collect the files a response actually wrote (textEditGroup carries the uri)."""
+    for item in (value if isinstance(value, list) else [value]):
+        if not isinstance(item, dict) or item.get("kind") != "textEditGroup":
+            continue
+        uri = item.get("uri") or {}
+        path = uri.get("fsPath") or uri.get("path")
+        if path and path not in sink:
+            sink.append(path)
+
+
+def replay_vscode_log(path):
+    """Fold a chatSessions op-log back into the session object it describes.
+
+    Returns (state, edited_paths). `response` arrays are harvested for filenames
+    and then thrown away -- they are 99% of the bytes and none of the answer.
+    """
+    state, edits = None, []
+
+    def scrub(request):
+        harvest_edits(request.pop("response", None), edits)
+        for key in VSC_DROP:
+            request.pop(key, None)
+        return request
+
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                op = json.loads(line)
+            except ValueError:
+                continue
+            kind, keys, val = op.get("kind"), op.get("k") or [], op.get("v")
+
+            if kind == 0:                       # opening snapshot
+                state = val if isinstance(val, dict) else None
+                if state:
+                    state["requests"] = [scrub(r) for r in state.get("requests") or []
+                                         if isinstance(r, dict)]
+                continue
+            if not isinstance(state, dict) or not keys:
+                continue
+
+            last = keys[-1]
+            if last == "response":              # harvest, never store
+                harvest_edits(val, edits)
+                continue
+            if last in VSC_DROP:
+                continue
+            try:
+                cur = state
+                for k in keys[:-1]:
+                    cur = cur[k]
+                if kind == 1:
+                    cur[last] = val
+                elif kind == 2:                 # append; only ever targets a list
+                    if last == "requests":
+                        val = [scrub(r) for r in val if isinstance(r, dict)]
+                    tgt = cur[last]
+                    if isinstance(tgt, list):
+                        tgt.extend(val if isinstance(val, list) else [val])
+            except (KeyError, IndexError, TypeError):
+                continue                        # a path into something we dropped
+    return state, edits
+
+
+def vscode_workspace_folder(session_path):
+    """The folder this chat belonged to: <workspaceStorage>/<hash>/workspace.json."""
+    ws = os.path.join(os.path.dirname(os.path.dirname(session_path)), "workspace.json")
+    try:
+        with open(ws, encoding="utf-8") as fh:
+            meta = json.load(fh)
+        uri = meta.get("folder") or meta.get("workspace") or ""
+    except Exception:
+        return None
+    if uri.startswith("file://"):
+        from urllib.parse import unquote, urlparse
+        return unquote(urlparse(uri).path)
+    return None
+
+
+def vscode_session_files(roots):
+    """Every chat transcript worth opening, newest-touched first."""
+    found = []
+    for root in roots:
+        if not os.path.isdir(root):
+            continue
+        found += glob.glob(os.path.join(root, "workspaceStorage", "*", "chatSessions", "*.json*"))
+        found += glob.glob(os.path.join(root, "globalStorage", "emptyWindowChatSessions", "*.json*"))
+    return found
+
+
+def load_vscode_sessions(since, billing_models):
+    """Per-session cost and subject from VS Code's Copilot Chat transcripts."""
+    billing_by_key = {norm_model(m): m for m in billing_models}
+    rows = []
+    for path in vscode_session_files(VSCODE_ROOTS):
+        # mtime is an upper bound on the session's last activity, so this only
+        # skips files that cannot possibly fall inside the window.
+        try:
+            if dt.date.fromtimestamp(os.path.getmtime(path)).isoformat() < since:
+                continue
+        except OSError:
+            continue
+
+        try:
+            if path.endswith(".jsonl"):
+                state, edits = replay_vscode_log(path)
+            else:                               # pre-op-log format: a plain snapshot
+                with open(path, encoding="utf-8", errors="replace") as fh:
+                    state = json.load(fh)
+                edits = []
+                for r in state.get("requests") or []:
+                    harvest_edits(r.get("response"), edits)
+        except Exception:
+            continue
+        if not isinstance(state, dict):
+            continue
+
+        requests = [r for r in state.get("requests") or [] if isinstance(r, dict)]
+        if not requests:
+            continue
+
+        prompts, models, stamps = [], defaultdict(float), []
+        credits = tin = tout = 0.0
+        unpriced = 0
+        for r in requests:
+            text = ((r.get("message") or {}).get("text") or "").strip()
+            if text:
+                prompts.append(text)
+            for key in ("timestamp", "responseTimestamp"):
+                if r.get(key):
+                    stamps.append(r[key])
+            aic = r.get("copilotCredits")
+            if aic is None:
+                unpriced += 1
+            else:
+                credits += aic
+                models[strip_model(r.get("modelId"), billing_by_key)] += aic
+            tin += r.get("promptTokens") or 0
+            tout += r.get("completionTokens") or 0
+
+        started, ended = iso_ms(min(stamps or [state.get("creationDate")])), \
+            iso_ms(max(stamps or [state.get("lastMessageDate") or state.get("creationDate")]))
+        if not ended or ended[:10] < since:
+            continue
+
+        sid = state.get("sessionId") or os.path.splitext(os.path.basename(path))[0]
+        title = re.sub(r"\s+", " ", (state.get("customTitle") or "").strip()
+                       or (prompts[0] if prompts else ""))[:90] or "(untitled chat)"
+        folder = vscode_workspace_folder(path)
+        repo = (repo_of(edits[0]) if edits else None) \
+            or (os.path.basename(folder.rstrip("/")) if folder else None) or "—"
+
+        row = blank_session("vsc:" + sid, SOURCE_VSCODE, title)
+        row.update({
+            "repo": repo,
+            "started": started[:16].replace("T", " "),
+            "ended": ended[:16].replace("T", " "),
+            "credits": round(credits, 2),
+            # One VS Code "request" is a whole user turn, however many model calls
+            # the agent made inside it -- unlike the CLI, which counts the calls.
+            "requests": len(requests),
+            "partial": bool(unpriced) and unpriced < len(requests),
+            "priced": unpriced < len(requests),
+            "turns": len(prompts),
+            "models": {m: round(v, 2) for m, v in models.items()},
+            "files": edits[:40],
+            "fileCount": len(edits),
+            "tokens": {"in": int(tin), "out": int(tout), "cached": 0},
+            "prompts": prompts,
+        })
+        rows.append(row)
+    return rows
+
+
+def load_jetbrains_sessions(since):
+    """Prompts, files and timing from the JetBrains plugin's conversation logs.
+
+    The plugin records no model and no price, so every row comes back unpriced --
+    the credits are in the daily chart above, just not attributable to a session.
+    """
+    rows = []
+    for conv in sorted(glob.glob(os.path.join(JETBRAINS_ROOT, "*"))):
+        parts = sorted(glob.glob(os.path.join(conv, "partition-*.jsonl")))
+        if not parts:
+            continue
+        prompts, files, stamps = [], [], []
+        answers = 0
+        for part in parts:
+            try:
+                fh = open(part, encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            with fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        ev = json.loads(line)
+                    except ValueError:
+                        continue
+                    kind, data = ev.get("type"), ev.get("data") or {}
+                    if ev.get("timestamp"):
+                        stamps.append(ev["timestamp"])
+                    if kind == "user.message":
+                        text = (data.get("content") or "").strip()
+                        if text:
+                            prompts.append(text)
+                    elif kind == "assistant.message":
+                        answers += 1
+                    elif kind == "tool.execution_start":
+                        path = (data.get("arguments") or {}).get("filePath")
+                        if path and path not in files:
+                            files.append(path)
+        if not stamps or not prompts:
+            continue
+        started, ended = min(stamps), max(stamps)
+        if ended[:10] < since:
+            continue
+
+        title = re.sub(r"\s+", " ", prompts[0])[:90] or "(untitled chat)"
+        row = blank_session("jb:" + os.path.basename(conv), SOURCE_JETBRAINS, title)
+        row.update({
+            "repo": (repo_of(files[0]) if files else None) or "—",
+            "started": started[:16].replace("T", " "),
+            "ended": ended[:16].replace("T", " "),
+            "requests": answers,
+            "turns": len(prompts),
+            "files": files[:40],
+            "fileCount": len(files),
+            "prompts": prompts,
+        })
+        rows.append(row)
+    return rows
+
+
 def load_summary_cache():
     try:
         with open(SUMMARY_CACHE, encoding="utf-8") as fh:
@@ -310,12 +645,13 @@ def summarise_batch(batch, model):
         blocks.append(
             f"### {s['id']}\n"
             f"title: {s['title']}\n"
+            f"client: {s['source']}\n"
             f"repo: {s['repo']}\n"
             f"files touched: {files or '(none)'}\n"
             f"user asked:\n{prompts or '- (no prompts recorded)'}"
         )
     prompt = (
-        "Below are records of past CLI coding sessions. For EACH session write ONE "
+        "Below are records of past AI coding sessions. For EACH session write ONE "
         "line of at most 16 words saying what the session was actually about and what "
         "came out of it. Be concrete (name the feature/file/tool), no filler, no "
         "markdown, English. Answer with ONLY a JSON object mapping session id to that "
@@ -447,11 +783,18 @@ def sessions_block(sessions, first_priced, summary_note, summary_model, list_lim
     the report never sums one into the other.
     """
     priced = [s for s in sessions if s["priced"]]
+    by_source = defaultdict(lambda: {"count": 0, "credits": 0.0, "priced": 0})
+    for s in sessions:
+        agg = by_source[s["source"]]
+        agg["count"] += 1
+        agg["credits"] = round(agg["credits"] + s["credits"], 2)
+        agg["priced"] += bool(s["priced"])
     return {
         "rows": sessions,
         "count": len(sessions),
         "pricedCount": len(priced),
         "credits": round(sum(s["credits"] for s in sessions), 2),
+        "sources": dict(by_source),
         "since": (first_priced or "")[:10],
         "note": summary_note,
         "model": summary_model,
@@ -471,6 +814,8 @@ def main():
     ap.add_argument("--json", action="store_true", help="also dump aggregates to stdout")
     ap.add_argument("--no-sessions", action="store_true",
                     help="skip the per-session view from the local session store")
+    ap.add_argument("--sources", default="cli,vscode,jetbrains",
+                    help="which clients' transcripts to list (default: all three)")
     ap.add_argument("--no-summarize", action="store_true",
                     help="list sessions but don't call a model to describe the new ones")
     ap.add_argument("--resummarize", action="store_true",
@@ -493,7 +838,19 @@ def main():
 
     payload["sessions"] = None
     if not args.no_sessions:
-        sessions, first_priced = load_sessions(days[0].isoformat(), ranked.keys())
+        since = days[0].isoformat()
+        wanted = {s.strip().lower() for s in args.sources.split(",") if s.strip()}
+        sessions, first_priced = [], None
+        if "cli" in wanted:
+            sessions, first_priced = load_cli_sessions(since, ranked.keys())
+        if "vscode" in wanted:
+            sessions += load_vscode_sessions(since, ranked.keys())
+        if "jetbrains" in wanted:
+            sessions += load_jetbrains_sessions(since)
+        # Cost first, recency as the tie-break, across all three clients at once:
+        # the question is "what did I spend that on", not "which app was it in".
+        sessions.sort(key=lambda r: r["ended"], reverse=True)
+        sessions.sort(key=lambda r: r["credits"], reverse=True)
         if sessions:
             _, note = attach_summaries(sessions, args.summary_model,
                                        not args.no_summarize, args.resummarize,

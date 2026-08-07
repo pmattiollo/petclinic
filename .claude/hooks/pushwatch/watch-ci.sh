@@ -18,25 +18,37 @@ set -uo pipefail
 SHA="${1:?usage: watch-ci.sh <sha>}"
 short="${SHA:0:7}"
 
-# Resolve the run id for this commit. `gh run list --commit` is the obvious way
+# The gate we care about. Every lookup below is scoped to it ON PURPOSE: a push
+# triggers several workflows (pages-mirror, diagram-preview, and GitHub's implicit
+# pages-build-deployment), and an unscoped `gh run list` returns whichever
+# registered first. Observed for real: 2026-08-06, af94c70 reported "CI passed"
+# off pages-build-deployment while ci.yml had not started at all — a FALSE GREEN,
+# the mirror image of the false red this script guards against everywhere else.
+CI_WORKFLOW=ci.yml
+
+# Resolve the ci.yml run for this commit. `gh run list --commit` is the obvious way
 # but is unreliable here (sometimes returns nothing for a run that demonstrably
 # exists — only findable via --branch), so we also scan recent runs and match the
 # head SHA. GitHub lags a few seconds registering the run after a push, so poll up
 # to ~2min.
 id=""
 for _ in $(seq 1 24); do
-  id=$(gh run list --commit "$SHA" --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null)
+  id=$(gh run list --workflow="$CI_WORKFLOW" --commit "$SHA" --limit 1 \
+        --json databaseId --jq '.[0].databaseId' 2>/dev/null)
   [ -n "$id" ] && break
-  # Fallback: match the SHA (short or full) against recent runs across branches.
-  id=$(gh run list --limit 40 --json databaseId,headSha \
+  # Fallback: match the SHA (short or full) against recent runs of the same workflow.
+  id=$(gh run list --workflow="$CI_WORKFLOW" --limit 40 --json databaseId,headSha \
         --jq "[.[] | select(.headSha | startswith(\"$SHA\"))][0].databaseId" 2>/dev/null)
   [ -n "$id" ] && break
   sleep 5
 done
 if [ -z "$id" ]; then
-  # Couldn't FIND a run — a discovery problem, NOT a build failure. Never emit the
-  # "red -> repair" signal for a run we can't even see; treat it as indeterminate.
-  echo "⚠️ No CI run found for $short after ~2min (discovery failure, not a red build) — NOT treating as a failure."
+  # No $CI_WORKFLOW run for this SHA. Either GitHub never dispatched it (Actions
+  # outage) or discovery failed — never a build failure, so never emit the
+  # "red -> repair" signal. But do NOT let this read as green either: the gate has
+  # produced no verdict, and the commit stays unverified until it does.
+  echo "⚠️ $CI_WORKFLOW never started for $short after ~2min — NO CI verdict for this commit (not green, not red)."
+  echo "   Actions may be degraded. Re-run this script later, or dispatch one: gh workflow run $CI_WORKFLOW"
   exit 0
 fi
 
@@ -84,6 +96,18 @@ done
 
 if [ "$conclusion" = "success" ]; then
   echo "CI passed for $short — $run_url"
+  exit 0
+fi
+
+# A run can report conclusion=failure while its jobs were CANCELLED without ever
+# being assigned a runner (Actions outage, capacity shortage). Zero steps ran, so
+# no gate actually evaluated the code and there is nothing to repair — treat it as
+# indeterminate, never red. Observed for real: 2026-08-06, both workflows on this
+# repo reported failure with runner=none and steps=0 during an Actions major outage.
+started=$(gh run view "$id" --json jobs \
+            --jq '[.jobs[] | select((.steps | length) > 0)] | length' 2>/dev/null)
+if [ "${started:-0}" = "0" ]; then
+  echo "⚠️ No job in run $id ever started (no runner assigned) for $short — infrastructure, NOT a red build. $run_url"
   exit 0
 fi
 

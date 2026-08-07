@@ -37,6 +37,7 @@ not here; here only the output is committed.
 mvn spring-boot:run              # Run backend
 mvn test                         # Run tests
 mvn clean install                # Build + regenerate MapStruct mappers
+mvn test -Dtest=ClassName#methodName # Run a single test
 ```
 
 ### Frontend (petclinic-frontend/)
@@ -46,11 +47,6 @@ npm run build                       # Production build
 npm test                            # Karma tests
 npm run test-headless               # Headless Chrome tests
 npm run e2e                         # Protractor e2e tests
-```
-
-### Testing a Single Test (Backend)
-```sh
-mvn test -Dtest=ClassName#methodName
 ```
 
 ## Architecture

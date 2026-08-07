@@ -3,7 +3,8 @@
 A self-contained HTML dashboard of GitHub Copilot AI-credit consumption:
 **per day**, **per model**, and — the part the billing API cannot tell you —
 **per session**: what each past conversation was about, which files it touched,
-and what it cost.
+and what it cost. Sessions are collected from **all three Copilot clients** — the
+CLI, Copilot Chat in VS Code, and the JetBrains plugin.
 
 ```bash
 python3 scripts/copilot-usage/render_usage.py          # writes report.html and opens it
@@ -36,14 +37,31 @@ without color.
 | View | Source | Cost to read |
 |---|---|---|
 | Daily + per-model | `GET /users/{login}/settings/billing/premium_request/usage?year&month&day`, one call per day, ~10 in parallel | one `gh` call per day of the window |
-| Sessions | `~/.copilot/session-store.db` — the CLI's own local SQLite store | free, local, no tokens |
+| Sessions | the local transcript each Copilot client keeps for itself | free, local, no tokens |
 
 The billing endpoint is the **only** one with a `model` field:
 `/users/{login}/settings/billing/usage` has no model, the web UI's per-model view
 is whole-month only, and hourly granularity does not exist anywhere (passing
 `hour` returns `400 Hourly time period filtering is deprecated`).
 
-### The session store
+### Three clients, three stores
+
+The billing API sees every client at once. The session view does not get that for
+free — each client writes its own transcript, in its own format, and **the IDEs
+never write to the CLI's database**. Reading only the CLI store means a day spent
+in Copilot Chat still shows up in the daily chart but has no session behind it.
+
+| Client | Store | Cost per session? |
+|---|---|---|
+| CLI | `~/.copilot/session-store.db` (SQLite) | yes, per model call |
+| VS Code | `<Code>/User/**/chatSessions/*.jsonl` | yes, per request |
+| JetBrains | `~/.copilot/jb/<id>/partition-*.jsonl` | **no** — listed unpriced |
+
+All three are folded into one list sorted by cost, each row badged with the
+client it came from, and the calendar card carries a second row of chips to
+filter down to one. `--sources cli,vscode,jetbrains` narrows it further.
+
+**CLI** — `~/.copilot/session-store.db`:
 
 | Table | What we take |
 |---|---|
@@ -52,14 +70,29 @@ is whole-month only, and hourly granularity does not exist anywhere (passing
 | `turns` | the user's prompts (assistant replies are not stored) |
 | `session_files` | every file the session touched, and the tool that touched it |
 
-Two honest caveats, also printed on the page:
+**VS Code** — `workspaceStorage/<hash>/chatSessions/<id>.jsonl`, plus
+`globalStorage/emptyWindowChatSessions/` for folderless windows. This file is an
+**op-log, not a document**: line 0 is a full snapshot and every later line patches
+it at a JSON path (`{kind:1}` sets, `{kind:2}` appends). It has to be *replayed* —
+read line 0 alone and the session appears to have cost nothing. The last
+`copilotCredits` written for a request is that request's total, cumulative over
+the model calls inside it, so a "request" here is a user turn rather than a call.
+The `response` arrays are ~99% of the bytes (53 MB in one workspace); they are
+scanned for the files the session wrote and then dropped.
+
+**JetBrains** — `~/.copilot/jb/<conversationId>/partition-N.jsonl`, an append-only
+event stream. It has the prompts, the touched files and the timing, but **no model
+and no price**. Those rows are listed with `—` rather than costed at zero: the
+credits are real, they simply aren't attributable to a conversation.
+
+Honest caveats, also printed on the page:
 
 - `assistant_usage_events` only exists since **20 Jul 2026**. Older sessions show
   `—` instead of a cost, and a session containing unpriced calls is marked
   `AIC+` — a floor, not the full cost.
-- Session totals and billing totals never match exactly: the DB knows only what
-  *this machine* ran; the API lags by minutes and counts every device. The report
-  therefore never sums one into the other.
+- Session totals and billing totals never match exactly: the transcripts know only
+  what *this machine* ran; the API lags by minutes and counts every device. The
+  report therefore never sums one into the other.
 
 ---
 
@@ -102,7 +135,9 @@ The calendar is also the **filter** for the list beneath it:
 
 - **click** a day → only that day's sessions;
 - **shift-click** a second day → the span between them;
-- **chips**: `Last 7 days` / `Last N days` / `All`.
+- **chips**: `Last 7 days` / `Last N days` / `All`, and a second row of client
+  chips (`All clients` / `CLI` / `VS Code` / `JetBrains`) whose counts follow
+  whatever range the calendar is showing.
 
 The list **opens on the last 7 days**: a month of sessions is a wall, and the
 question you open this with is almost always "what did I just spend?".
@@ -120,6 +155,7 @@ question you open this with is almost always "what did I just spend?".
 | `--json` | off | also dump the aggregates to stdout |
 | `--user LOGIN` | `gh`'s own | GitHub login to query |
 | `--no-sessions` | off | skip the session card entirely |
+| `--sources LIST` | `cli,vscode,jetbrains` | which clients' transcripts to list |
 | `--no-summarize` | off | list sessions but call no model (0 credits) |
 | `--resummarize` | off | ignore the cache and re-describe everything |
 | `--summary-model M` | `gpt-5-mini` | model that writes the one-liners |
