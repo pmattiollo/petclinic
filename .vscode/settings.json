@@ -1,0 +1,6 @@
+{
+  "java.compile.nullAnalysis.mode": "disabled",
+  "chat.tools.terminal.autoApprove": {
+    "npm audit": true
+  }
+}

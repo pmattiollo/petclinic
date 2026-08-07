@@ -95,3 +95,4 @@ rag-vector-store.json
 
 # Clone of the Code City generators (generate-codecity.sh) — a tool, not our source
 /.codecity-tool/
+/owners_pets.xlsx

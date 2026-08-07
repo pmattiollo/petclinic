@@ -1,0 +1,40 @@
+schema: spec-driven
+githubCopilot:
+  cloudAgent: true
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Write for a non-technical audience (e.g. a product owner in the review). Explain what changes for the user and why it matters, in plain language.
+    - No engineering jargon or implementation detail. Avoid HTTP verbs/status codes (GET, 400), data-format words (JSON, DTO, envelope, array, null), class/method/file/column names, library/framework names (Spring, Angular, Flyway, Hibernate), SQL, indexes, and collation talk.
+    - Keep ALL technical decisions, contracts, and database work in design.md. In the proposal, link to design.md for the details instead of restating them.
+    - Keep the required OpenSpec structure (Why / What Changes / Capabilities / Impact). Capability ids stay kebab-case, but describe each capability in one plain sentence.
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

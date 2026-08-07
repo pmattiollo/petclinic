@@ -70,10 +70,16 @@ Core entities and relationships:
 - **Vet** N→N **Specialty** (via `vet_specialties` join table)
 - **User** 1→N **Role**
 
+### Volumetry (business-provided)
+- **Owners: ~10,000 rows** expected in production (per business). Size pagination/sort/index work for 10k — NOT the ~1M figure some older commit messages cite; that number is wrong.
+
 ## API Endpoints
 You can see real openapi in sync with code in `openapi.yaml`
 
 ## Development Notes
+
+### UI Conventions
+- **Person names in lists/grids are displayed surname-first: "Last, First"** (e.g. "Baskerville, Henry"), so the visible order matches the sort key (`last_name, first_name`). Detail/edit screens may still show "First Last".
 
 ### Java Code Preferences
 
@@ -85,4 +91,5 @@ See the `java` skill (`.github/skills/java/SKILL.md`).
 - Always run tests after any refactoring
 - Always start with the simplest solution
 - Keep explanations concise. We are experienced engineers
-- Challenge ambiguous prompts. Tell me when I'm wrong!  
+- Challenge ambiguous prompts. Tell me when I'm wrong!
+- A few MB over the network is NOT negligible — it's a lot. Don't ship unbounded lists/payloads to the client; bound them (paginate) server-side.  
