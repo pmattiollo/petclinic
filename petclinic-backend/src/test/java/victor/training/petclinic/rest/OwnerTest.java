@@ -215,6 +215,36 @@ public class OwnerTest {
     }
 
     @Test
+    void getAll_sizeNotWhitelisted_isBadRequest() throws Exception {
+        mockMvc.perform(get("/api/owners?size=7"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAll_sizeTooLarge_isBadRequest() throws Exception {
+        mockMvc.perform(get("/api/owners?size=100000"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAll_negativePage_isBadRequest() throws Exception {
+        mockMvc.perform(get("/api/owners?page=-1"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAll_sortColumnNotWhitelisted_isBadRequest() throws Exception {
+        mockMvc.perform(get("/api/owners?sort=pets,asc"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAll_sortDirectionInvalid_isBadRequest() throws Exception {
+        mockMvc.perform(get("/api/owners?sort=name,sideways"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void update_ok() throws Exception {
         OwnerDto existing = callGet(ownerId);
         existing.setFirstName("GeorgeI");

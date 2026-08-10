@@ -71,6 +71,13 @@ public class ExceptionControllerAdvice {
         return buildValidationErrorResponse(List.of(ex.getMessage()), request);
     }
 
+    @ExceptionHandler(InvalidOwnerQueryException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ProblemDetail> handleInvalidOwnerQuery(InvalidOwnerQueryException ex,
+            HttpServletRequest request) {
+        return buildValidationErrorResponse(List.of(ex.getMessage()), request);
+    }
+
     private ResponseEntity<ProblemDetail> buildValidationErrorResponse(List<String> errors,
             HttpServletRequest request) {
         log.warn("Validation failed: {}", errors);
