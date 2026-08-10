@@ -9,6 +9,14 @@ export interface OwnerDto {
   telephone?: string;
 }
 
+export interface OwnerPageDto {
+  content: OwnerDto[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
 export interface VisitDto {
   id: number;
   date: string;
@@ -32,16 +40,28 @@ export class ApiClient {
     });
   }
 
-  async fetchOwners(): Promise<OwnerDto[]> {
-    const response = await this.client.get<OwnerDto[]>('/owners');
+  /** Mirrors the grid's own default request (page 0, size 10, sorted by name ascending). */
+  async fetchOwnersPage(params: {lastName?: string; page?: number; size?: number; sort?: string} = {}):
+      Promise<OwnerPageDto> {
+    const response = await this.client.get<OwnerPageDto>('/owners', {
+      params: {
+        lastName: params.lastName ?? '',
+        page: params.page ?? 0,
+        size: params.size ?? 10,
+        sort: params.sort ?? 'name,asc',
+      }
+    });
     return response.data;
   }
 
+  async fetchOwners(): Promise<OwnerDto[]> {
+    const page = await this.fetchOwnersPage();
+    return page.content;
+  }
+
   async fetchOwnersByPrefix(prefix: string): Promise<OwnerDto[]> {
-    const response = await this.client.get<OwnerDto[]>('/owners', {
-      params: { lastName: prefix }
-    });
-    return response.data;
+    const page = await this.fetchOwnersPage({lastName: prefix});
+    return page.content;
   }
 
   async fetchVisits(): Promise<VisitDto[]> {
@@ -49,9 +69,10 @@ export class ApiClient {
     return response.data;
   }
 
+  /** "Last, First" — the surname-first order shown in the grid (D5). */
   static getFullNames(owners: OwnerDto[]): string[] {
     return owners
-      .map(owner => `${owner.firstName} ${owner.lastName}`.trim())
+      .map(owner => `${owner.lastName}, ${owner.firstName}`.trim())
       .filter(name => name.length > 0);
   }
 
@@ -64,11 +85,8 @@ export class ApiClient {
   }
 
   static extractLastName(fullName: string): string {
-    const firstSpace = fullName.indexOf(' ');
-    if (firstSpace < 0 || firstSpace === fullName.length - 1) {
-      return fullName;
-    }
-    return fullName.substring(firstSpace + 1);
+    const firstComma = fullName.indexOf(',');
+    return firstComma < 0 ? fullName : fullName.substring(0, firstComma);
   }
 
   static choosePrefixFrom(owners: OwnerDto[]): string {
@@ -81,3 +99,4 @@ export class ApiClient {
     throw new Error('No owners available to derive search prefix');
   }
 }
+

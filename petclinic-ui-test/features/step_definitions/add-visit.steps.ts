@@ -18,8 +18,8 @@ async function fillVisitForm(world: PlaywrightWorld, date: string, descriptionPr
 }
 
 Given('an owner with at least one pet exists', async function (this: PlaywrightWorld) {
-  const {data: owners} = await axios.get(`${API_BASE}/owners`, {timeout: 10_000});
-  const ownerWithPet = owners.find((o: any) => Array.isArray(o.pets) && o.pets.length > 0);
+  const {data: page} = await axios.get(`${API_BASE}/owners`, {params: {size: 20}, timeout: 10_000});
+  const ownerWithPet = page.content.find((o: any) => Array.isArray(o.pets) && o.pets.length > 0);
   if (!ownerWithPet) {
     throw new Error('No owner with a pet found in the system; cannot run add-visit scenario');
   }

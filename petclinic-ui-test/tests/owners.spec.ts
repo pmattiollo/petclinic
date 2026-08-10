@@ -26,12 +26,12 @@ test.describe('Owners Page', () => {
     console.log(`Screenshot saved: ${screenshotPath}`);
   });
 
-  test('shows all owners on initial load', async ({ page }) => {
+  test('shows the first page of owners (sorted by name) on initial load', async ({ page }) => {
     const ownersPage = new OwnersPage(page);
 
-    // Fetch expected owners from API
-    const expectedOwners = await apiClient.fetchOwners();
-    const expectedFullNames = ApiClient.getFullNames(expectedOwners);
+    // The grid defaults to page 0, size 10, sorted by name ascending (D7).
+    const expectedFirstPage = await apiClient.fetchOwnersPage({ page: 0, size: 10, sort: 'name,asc' });
+    const expectedFullNames = ApiClient.getFullNames(expectedFirstPage.content);
 
     // Open the owners page
     await ownersPage.open();
@@ -39,21 +39,20 @@ test.describe('Owners Page', () => {
     // Wait for the expected number of owners
     await ownersPage.waitForOwnersCount(expectedFullNames.length);
 
-    // Get actual owner names from the page
+    // Get actual owner names from the page, displayed surname-first (D5)
     const actualFullNames = await ownersPage.getOwnerFullNames();
 
-    // Assert that all expected owners are displayed
-    expect(ApiClient.sorted(actualFullNames)).toEqual(ApiClient.sorted(expectedFullNames));
+    expect(actualFullNames).toEqual(expectedFullNames);
   });
 
   test('filters owners by last name prefix', async ({ page }) => {
-    // Fetch all owners and choose a prefix
-    const allOwners = await apiClient.fetchOwners();
-    const prefix = ApiClient.choosePrefixFrom(allOwners);
+    // Fetch the default first page and choose a prefix from it
+    const firstPage = await apiClient.fetchOwnersPage({ page: 0, size: 10, sort: 'name,asc' });
+    const prefix = ApiClient.choosePrefixFrom(firstPage.content);
 
-    // Fetch filtered owners from API
-    const expectedFilteredOwners = await apiClient.fetchOwnersByPrefix(prefix);
-    const expectedFilteredFullNames = ApiClient.getFullNames(expectedFilteredOwners);
+    // Fetch filtered owners from API (same defaults the grid itself uses)
+    const expectedFilteredPage = await apiClient.fetchOwnersPage({ lastName: prefix, page: 0, size: 10, sort: 'name,asc' });
+    const expectedFilteredFullNames = ApiClient.getFullNames(expectedFilteredPage.content);
 
     // Open the owners page
     const ownersPage = new OwnersPage(page);
@@ -76,8 +75,45 @@ test.describe('Owners Page', () => {
     }
 
     // Verify exact match with API results
-    expect(ApiClient.sorted(actualFilteredFullNames)).toEqual(
-      ApiClient.sorted(expectedFilteredFullNames)
-    );
+    expect(actualFilteredFullNames).toEqual(expectedFilteredFullNames);
+  });
+
+  test('paginates to the next page of owners', async ({ page }) => {
+    const firstPage = await apiClient.fetchOwnersPage({ page: 0, size: 5, sort: 'name,asc' });
+    const secondPage = await apiClient.fetchOwnersPage({ page: 1, size: 5, sort: 'name,asc' });
+    expect(secondPage.content.length).toBeGreaterThan(0);
+
+    const ownersPage = new OwnersPage(page);
+    await ownersPage.open();
+    await ownersPage.waitForOwnersCount(firstPage.content.length);
+
+    await ownersPage.goToNextPage();
+    await ownersPage.waitForOwnersCount(secondPage.content.length);
+
+    const actualNames = await ownersPage.getOwnerFullNames();
+    expect(actualNames).toEqual(ApiClient.getFullNames(secondPage.content));
+  });
+
+  test('sorts owners by city', async ({ page }) => {
+    const expectedPage = await apiClient.fetchOwnersPage({ page: 0, size: 10, sort: 'city,asc' });
+
+    const ownersPage = new OwnersPage(page);
+    await ownersPage.open();
+    await ownersPage.waitForOwnersCount(10);
+
+    await ownersPage.sortBy('city');
+    await ownersPage.waitForOwnersCount(expectedPage.content.length);
+
+    const actualNames = await ownersPage.getOwnerFullNames();
+    expect(actualNames).toEqual(ApiClient.getFullNames(expectedPage.content));
+  });
+
+  test('shows an error banner (not an empty list) when the query is invalid', async ({ page }) => {
+    const ownersPage = new OwnersPage(page);
+    // Sharing/bookmarking a URL is the single source of truth (D12); an invalid sort
+    // value here reaches the backend as-is and is rejected with HTTP 400.
+    await ownersPage.open('?sort=name,sideways');
+
+    await expect(ownersPage.errorBanner).toBeVisible();
   });
 });

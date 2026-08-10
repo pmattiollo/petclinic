@@ -7,6 +7,10 @@ export class OwnersPage {
   readonly findOwnerButton: Locator;
   readonly ownerNameCells: Locator;
   readonly ownersTable: Locator;
+  readonly errorBanner: Locator;
+  readonly nameSortHeader: Locator;
+  readonly citySortHeader: Locator;
+  readonly nextPageButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -15,10 +19,14 @@ export class OwnersPage {
     this.findOwnerButton = page.locator('#search-owner-form button[type="submit"]');
     this.ownerNameCells = page.locator('#ownersTable td.ownerFullName');
     this.ownersTable = page.locator('#ownersTable');
+    this.errorBanner = page.locator('#ownersErrorBanner');
+    this.nameSortHeader = page.locator('#ownersTable th[mat-sort-header="name"]');
+    this.citySortHeader = page.locator('#ownersTable th[mat-sort-header="city"]');
+    this.nextPageButton = page.locator('#ownersTable button.mat-mdc-paginator-navigation-next');
   }
 
-  async open() {
-    await this.page.goto('/owners');
+  async open(queryString = '') {
+    await this.page.goto(`/owners${queryString}`);
     await this.pageTitle.waitFor({ state: 'visible', timeout: 10000 });
   }
 
@@ -48,6 +56,15 @@ export class OwnersPage {
     await this.findOwnerButton.click();
   }
 
+  async sortBy(column: 'name' | 'city') {
+    const header = column === 'name' ? this.nameSortHeader : this.citySortHeader;
+    await header.click();
+  }
+
+  async goToNextPage() {
+    await this.nextPageButton.click();
+  }
+
   async waitForOwnersCount(expectedCount: number) {
     try {
       await this.page.waitForFunction(
@@ -63,3 +80,4 @@ export class OwnersPage {
     }
   }
 }
+
