@@ -1,15 +1,16 @@
 /* tslint:disable:no-unused-variable */
 
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
 import {DebugElement, NO_ERRORS_SCHEMA} from '@angular/core';
 
 import {OwnerListComponent} from './owner-list.component';
 import {FormsModule} from '@angular/forms';
-import {ActivatedRoute} from '@angular/router';
-import { OwnerService } from '../owner.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import { OwnerService, OwnerQuery } from '../owner.service';
 import {Owner} from '../owner';
-import {Observable, of} from 'rxjs';
+import {OwnerPage} from '../owner-page';
+import {Observable, of, throwError} from 'rxjs';
 import {RouterTestingModule} from '@angular/router/testing';
 import {CommonModule} from '@angular/common';
 import {PartsModule} from '../../parts/parts.module';
@@ -19,16 +20,16 @@ import {OwnersModule} from '../owners.module';
 import {DummyComponent} from '../../testing/dummy.component';
 import {OwnerAddComponent} from '../owner-add/owner-add.component';
 import {OwnerEditComponent} from '../owner-edit/owner-edit.component';
+import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import Spy = jasmine.Spy;
 
+// content is assigned straight into the component, so a shared array would leak mutable state
+// between callers.
+const emptyOwnerPage = (): OwnerPage => ({content: [], totalElements: 0, totalPages: 0, number: 0, size: 10});
 
 class OwnerServiceStub {
-  getOwners(): Observable<Owner[]> {
-    return of();
-  }
-
-  searchOwners(lastName: string): Observable<Owner[]> {
-    return of();
+  getOwnersPage(query: OwnerQuery): Observable<OwnerPage> {
+    return of(emptyOwnerPage());
   }
 }
 
@@ -36,12 +37,11 @@ describe('OwnerListComponent', () => {
 
   let component: OwnerListComponent;
   let fixture: ComponentFixture<OwnerListComponent>;
-  let ownerService = new OwnerServiceStub();
-  let getOwnersSpy: Spy;
-  let searchOwnersSpy: Spy;
+  let ownerService: OwnerServiceStub;
+  let getOwnersPageSpy: Spy;
+  let router: Router;
   let de: DebugElement;
   let el: HTMLElement;
-
 
   const testOwner: Owner = {
     id: 1,
@@ -52,13 +52,13 @@ describe('OwnerListComponent', () => {
     telephone: '6085551023',
     pets: []
   };
-  let testOwners: Owner[];
 
   beforeEach(waitForAsync(() => {
+    ownerService = new OwnerServiceStub();
     TestBed.configureTestingModule({
       declarations: [DummyComponent],
       schemas: [NO_ERRORS_SCHEMA],
-      imports: [CommonModule, FormsModule, PartsModule, OwnersModule,
+      imports: [CommonModule, FormsModule, PartsModule, OwnersModule, NoopAnimationsModule,
         RouterTestingModule.withRoutes(
           [{path: 'owners', component: OwnerListComponent},
             {path: 'owners/add', component: OwnerAddComponent},
@@ -74,56 +74,71 @@ describe('OwnerListComponent', () => {
   }));
 
   beforeEach(() => {
-    testOwners = [testOwner];
-
     fixture = TestBed.createComponent(OwnerListComponent);
     component = fixture.componentInstance;
     ownerService = fixture.debugElement.injector.get(OwnerService);
-    getOwnersSpy = spyOn(ownerService, 'getOwners')
-      .and.returnValue(of(testOwners));
-    searchOwnersSpy = spyOn(ownerService, 'searchOwners')
-      .and.returnValue(of(testOwners));
-
+    router = fixture.debugElement.injector.get(Router);
+    getOwnersPageSpy = spyOn(ownerService, 'getOwnersPage')
+      .and.returnValue(of({content: [testOwner], totalElements: 1, totalPages: 1, number: 0, size: 10}));
+    spyOn(router, 'navigate');
   });
 
   it('should create OwnerListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should call ngOnInit() method', () => {
+  it('loads the default page on init and shows the name surname-first', () => {
     fixture.detectChanges();
-    expect(getOwnersSpy.calls.any()).toBe(true, 'getOwners called');
-  });
 
-
-  it(' should show full name after getOwners observable (async) ', waitForAsync(() => {
-    fixture.detectChanges();
-    fixture.whenStable().then(() => { // wait for async getOwners
-      fixture.detectChanges();        // update view with name
-      de = fixture.debugElement.query(By.css('.ownerFullName'));
-      el = de.nativeElement;
-      expect(el.innerText).toBe((testOwner.firstName.toString() + ' ' + testOwner.lastName.toString()));
+    expect(getOwnersPageSpy).toHaveBeenCalledWith({
+      lastName: '', page: 0, size: 10, sortColumn: 'name', sortDirection: 'asc'
     });
-  }));
-
-  it('searchByLastName should call getOwners for empty term', () => {
-    getOwnersSpy.calls.reset();
-    searchOwnersSpy.calls.reset();
-
-    component.searchByLastName('');
-
-    expect(getOwnersSpy).toHaveBeenCalled();
-    expect(searchOwnersSpy).not.toHaveBeenCalled();
+    de = fixture.debugElement.query(By.css('.ownerFullName'));
+    el = de.nativeElement;
+    expect(el.textContent.trim()).toBe('Franklin, George');
   });
 
-  it('searchByLastName should call searchOwners for non-empty term', () => {
-    getOwnersSpy.calls.reset();
-    searchOwnersSpy.calls.reset();
+  it('shows an error banner (not an empty list) when the reload fails', () => {
+    getOwnersPageSpy.and.returnValue(throwError('boom'));
+
+    fixture.detectChanges();
+
+    expect(component.errorMessage).toBe('boom');
+    expect(component.owners.length).toBe(0);
+  });
+
+  it('searchByLastName debounces ~300ms then navigates to page 0 with the typed term', fakeAsync(() => {
+    fixture.detectChanges();
 
     component.searchByLastName('Fr');
+    tick(299);
+    expect(router.navigate).not.toHaveBeenCalled();
 
-    expect(searchOwnersSpy).toHaveBeenCalledWith('Fr');
-    expect(getOwnersSpy).not.toHaveBeenCalled();
+    tick(1);
+    expect(router.navigate).toHaveBeenCalledWith([], jasmine.objectContaining({
+      queryParams: jasmine.objectContaining({lastName: 'Fr', page: 0})
+    }));
+  }));
+
+  it('onSortChange navigates with the new sort and resets to page 0', () => {
+    fixture.detectChanges();
+
+    component.onSortChange({active: 'city', direction: 'desc'});
+
+    expect(router.navigate).toHaveBeenCalledWith([], jasmine.objectContaining({
+      queryParams: jasmine.objectContaining({sort: 'city,desc', page: 0})
+    }));
+  });
+
+  it('onPageChange resets to page 0 when the page size changes', () => {
+    fixture.detectChanges();
+
+    component.onPageChange({pageIndex: 3, pageSize: 20, length: 100} as any);
+
+    expect(router.navigate).toHaveBeenCalledWith([], jasmine.objectContaining({
+      queryParams: jasmine.objectContaining({page: 0, size: 20})
+    }));
   });
 
 });
+

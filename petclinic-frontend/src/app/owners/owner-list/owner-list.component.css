@@ -55,6 +55,15 @@ display:none;
   width: auto;
 }
 
+.owners-table-loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+#ownersErrorBanner {
+  margin-top: 16px;
+}
+
 @media (max-width: 576px) {
   #nameGroup {
     flex-direction: column;
