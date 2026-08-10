@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Comparator;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +28,7 @@ import victor.training.petclinic.repository.OwnerRepository;
 import victor.training.petclinic.repository.PetRepository;
 import victor.training.petclinic.repository.PetTypeRepository;
 import victor.training.petclinic.rest.dto.OwnerDto;
+import victor.training.petclinic.rest.dto.PageDto;
 import victor.training.petclinic.rest.dto.PetDto;
 import victor.training.petclinic.rest.dto.PetTypeDto;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -128,11 +129,20 @@ public class OwnerTest {
 
     @Test
     void getAll() throws Exception {
-        List<OwnerDto> owners = search("/api/owners");
+        PageDto<OwnerDto> page = search("/api/owners");
 
-        assertThat(owners)
+        assertThat(page.content())
                 .extracting(OwnerDto::getId, OwnerDto::getFirstName, OwnerDto::getLastName)
                 .contains(Assertions.tuple(ownerId, "George", "Franklin"));
+    }
+
+    @Test
+    void getAll_defaultsToFirstPageOfTen() throws Exception {
+        PageDto<OwnerDto> page = search("/api/owners");
+
+        assertThat(page.number()).isZero();
+        assertThat(page.size()).isEqualTo(10);
+        assertThat(page.content().size()).isLessThanOrEqualTo(10);
     }
 
     @Test
@@ -141,14 +151,51 @@ public class OwnerTest {
         owner2.setLastName("JavaBeans");
         int owner2Id = ownerRepository.save(owner2).getId();
 
-        List<OwnerDto> owners = search("/api/owners?lastName=Java");
+        PageDto<OwnerDto> page = search("/api/owners?lastName=Java");
 
-        assertThat(owners)
+        assertThat(page.content())
                 .extracting(OwnerDto::getId, OwnerDto::getLastName)
                 .contains(Assertions.tuple(owner2Id, "JavaBeans"));
     }
 
-    private List<OwnerDto> search(String uriTemplate) throws Exception {
+    @Test
+    void getPage_specificPageAndSize() throws Exception {
+        for (int i = 0; i < 6; i++) {
+            Owner owner = TestData.anOwner();
+            owner.setLastName("Page" + i);
+            ownerRepository.save(owner);
+        }
+
+        PageDto<OwnerDto> page = search("/api/owners?page=1&size=5");
+
+        assertThat(page.number()).isEqualTo(1);
+        assertThat(page.size()).isEqualTo(5);
+        assertThat(page.content().size()).isLessThanOrEqualTo(5);
+    }
+
+    @Test
+    void getPage_beyondLastPage_returnsEmptyContent() throws Exception {
+        PageDto<OwnerDto> page = search("/api/owners?page=9999&size=20");
+
+        assertThat(page.content()).isEmpty();
+        assertThat(page.totalElements()).isGreaterThan(0);
+    }
+
+    @Test
+    void getPage_sortByCityDescending() throws Exception {
+        Owner ownerA = TestData.anOwner().setLastName("Amber").setCity("Aville");
+        Owner ownerZ = TestData.anOwner().setLastName("Zorro").setCity("Zville");
+        ownerRepository.save(ownerA);
+        ownerRepository.save(ownerZ);
+
+        PageDto<OwnerDto> page = search("/api/owners?size=20&sort=city,desc");
+
+        assertThat(page.content())
+                .extracting(OwnerDto::getCity)
+                .isSortedAccordingTo(Comparator.reverseOrder());
+    }
+
+    private PageDto<OwnerDto> search(String uriTemplate) throws Exception {
         String responseJson = mockMvc.perform(get(uriTemplate))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
@@ -156,15 +203,15 @@ public class OwnerTest {
                 .getResponse()
                 .getContentAsString();
 
-        return mapper.readValue(responseJson, new TypeReference<List<OwnerDto>>() {
+        return mapper.readValue(responseJson, new TypeReference<PageDto<OwnerDto>>() {
         });
     }
 
     @Test
     void getAllWithNameFilter_notFound() throws Exception {
-        List<OwnerDto> results = search("/api/owners?lastName=NonExistent");
+        PageDto<OwnerDto> results = search("/api/owners?lastName=NonExistent");
 
-        assertThat(results).isEmpty();
+        assertThat(results.content()).isEmpty();
     }
 
     @Test
