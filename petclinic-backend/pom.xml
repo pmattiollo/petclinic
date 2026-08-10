@@ -23,10 +23,6 @@
         <lombok.version>1.18.36</lombok.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <spring-ai.version>1.1.2</spring-ai.version>
-
-        <!-- Mutation testing; never bound to a phase, run on demand -->
-        <pitest.version>1.20.0</pitest.version>
-        <pitest-junit5.version>1.2.3</pitest-junit5.version>
     </properties>
 
     <dependencyManagement>
@@ -249,27 +245,6 @@
                         <goals><goal>report</goal></goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <!-- Mutation testing. No <executions>: runs only when asked -->
-                <!-- explicitly, via .claude/skills/java-coverage/scripts/mutation.sh -->
-                <groupId>org.pitest</groupId>
-                <artifactId>pitest-maven</artifactId>
-                <version>${pitest.version}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.pitest</groupId>
-                        <artifactId>pitest-junit5-plugin</artifactId>
-                        <version>${pitest-junit5.version}</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <timestampedReports>false</timestampedReports>
-                    <outputFormats>
-                        <outputFormat>XML</outputFormat>
-                        <outputFormat>HTML</outputFormat>
-                    </outputFormats>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>

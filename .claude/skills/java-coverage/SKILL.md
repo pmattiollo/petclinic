@@ -24,7 +24,13 @@ scripts/mutation.sh ValidationErrorExtractor   # a class, found by simple name
 scripts/mutation.sh                       # everything — minutes, avoid
 ```
 
-**PIT is slow: always pass a scope.** A package took ~9s, the whole base package takes
+`mutation.sh` is self-contained: PIT is **not** in `pom.xml`. The script resolves the PIT
+jars from a throwaway POM under `target/pit-work/` and drives PIT's command-line entry
+point against the module's compiled classes — so nothing in the project changes, and
+`mvn test` / CI never pay for mutation testing. Keep it that way; do not add
+`pitest-maven` to the POM.
+
+**PIT is slow: always pass a scope.** A package took ~10s, the whole base package takes
 minutes. By default only the scope's own tests may kill its mutants; `-T` lets the whole
 suite try (truer score, much slower). `--help` for the rest.
 
@@ -42,5 +48,3 @@ hole, fix it with a test before worrying about the mutant.
 - Report the numbers and the gaps. Do not propose a test for every gap: generated code
   (MapStruct `*MapperImpl`), `equals`/`hashCode`/`toString` and Lombok accessors are
   noise, and `coverage.sh` already filters them (`--keep-generated` to see them).
-- The `pitest-maven` plugin in `petclinic-backend/pom.xml` has **no `<executions>`** on
-  purpose — mutation testing must never slow down `mvn test` or CI. Keep it that way.
