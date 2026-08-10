@@ -3,7 +3,7 @@ set -euo pipefail
 printf '\033]0;Structurizr\007'  # set terminal/tab title
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"  # petclinic-backend/docs (this script lives in docs/scripts)
-DSL="$DOCS_DIR/c4model.dsl"  # hand-written C4 source (!includes c4model.c3.dsl)
+DSL="$DOCS_DIR/c4model.c1+c2.dsl"  # hand-written C4 source (!includes c4model.c3.dsl)
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "❌ Docker not found. Install Docker Desktop or Colima first." >&2
@@ -18,8 +18,8 @@ PORT=8081  # backend already owns 8080
 
 # `structurizr/structurizr local` (structurizr/lite is retired) serves ONLY a file
 # named workspace.dsl from its data dir, and autosaves layout back into that dir.
-# So stage a COPY of c4model.dsl in a throwaway temp dir — keeps docs/ clean and
-# guarantees the real c4model.dsl can never be overwritten by the editor.
+# So stage a COPY of c4model.c1+c2.dsl in a throwaway temp dir — keeps docs/ clean and
+# guarantees the real c4model.c1+c2.dsl can never be overwritten by the editor.
 STAGE="$(mktemp -d -t structurizr.XXXXXX)"
 cp "$DSL" "$STAGE/workspace.dsl"
 cp "$DOCS_DIR"/c4model.*.dsl "$STAGE/" 2>/dev/null || true  # C3 fragment(s) so !include resolves
@@ -33,8 +33,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "🏛️  Serving petclinic-backend/docs/c4model.dsl at http://localhost:$PORT"
-echo "    (re-run this script to pick up edits to c4model.dsl)"
+echo "🏛️  Serving petclinic-backend/docs/c4model.c1+c2.dsl at http://localhost:$PORT"
+echo "    (re-run this script to pick up edits to c4model.c1+c2.dsl)"
 echo "📜 Press Ctrl+C to stop."
 
 docker rm -f petclinic-structurizr >/dev/null 2>&1 || true  # clear any stale container
