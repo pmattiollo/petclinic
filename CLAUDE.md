@@ -40,6 +40,16 @@ mvn clean install                # Build + regenerate MapStruct mappers
 mvn test -Dtest=ClassName#methodName # Run a single test
 ```
 
+**Test coverage without IntelliJ:** use the `coverage` skill
+(`.claude/skills/coverage/scripts/coverage.sh`, runnable from the repo root) — it runs the
+tests and prints only the uncovered lines as clickable `File.java:51-52,69` refs.
+JaCoCo is already wired in `pom.xml` (agent + report bound to the `test` phase), so a
+plain `mvn test` also writes the same report IntelliJ's "Run with Coverage" shows:
+`target/site/jacoco/index.html`. Never run `mvn test` while IntelliJ is also
+building/running tests — both write `target/classes`, and the collision produces bogus
+`NoClassDefFoundError` / "Unable to find @SpringBootConfiguration" failures.
+Also beware the partial-run trap: `-Dtest=...` makes coverage look falsely low.
+
 ### Frontend (petclinic-frontend/)
 ```sh
 npm start                           # Dev server on localhost:4200
