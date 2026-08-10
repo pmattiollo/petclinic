@@ -79,6 +79,6 @@ Rollback: drop the three indexes and recollate the columns back to the database 
 
 ## Open Questions
 
-- Whether the descending sort paths need their own mixed-direction indexes is deferred to an `EXPLAIN` check at ~10k rows (see Risks). This is safe to defer: it does not change the observable contract or the task breakdown — only whether an extra index is added during implementation.
+- ~~Whether the descending sort paths need their own mixed-direction indexes~~ **Resolved**: verified with `EXPLAIN` at ~10k rows. Ascending paths (`name,asc` / `city,asc`) and the `lastName` prefix count both use a pure `Index Only Scan` (no seq scan, no sort node). Descending paths (`name,desc` / `city,desc`) use an `Index Only Scan Backward` plus a cheap `Incremental Sort` (only the ASC tiebreaker columns are sorted per equal-primary-key group) — not a full sort. No mixed-direction index was added.
 
 The other unknown (ICU collation availability) is resolved by verification at implementation start with a defined fallback (D9), so it does not block planning.
