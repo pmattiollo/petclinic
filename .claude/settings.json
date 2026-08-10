@@ -8,8 +8,7 @@
       "Bash(git push --no-verify*)"
     ],
     "ask": [
-      "Edit(.claude/settings.json)",
-      "Write(.claude/settings.json)"
+      "Edit(.claude/settings.json)"
     ]
   },
   "hooks": {
