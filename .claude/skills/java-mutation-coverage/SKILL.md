@@ -1,16 +1,26 @@
 ---
 name: java-mutation-coverage
-description: Mutation coverage via PIT — reports the surviving mutants, i.e. the lines a test executed but asserted nothing about. Use when asked about mutation testing, pitest, whether the tests actually assert anything, or how good the tests really are.
+disable-model-invocation: true
 ---
 
-# Java mutation coverage
+<!--
+  LOCAL OVERLAY — intentionally has NO description and is not model-invocable,
+  so it can never be picked up on its own. It is injected into the conversation
+  by .claude/hooks/skill-overlay.sh whenever the upstream `java-coverage`
+  skill is invoked. Corrects the upstream flow, which stops at line coverage.
+-->
+
+# Mutation coverage (local overlay on `java-coverage`)
+
+Line coverage says a line *ran*. It says nothing about whether a test would **notice**
+if that line were wrong. Never report on coverage without this second pass.
 
 ## What ran but nothing asserted on
 
 ```sh
-scripts/mutation.sh rest.error            # a package (seconds)
-scripts/mutation.sh ValidationErrorExtractor   # a class, found by simple name
-scripts/mutation.sh                       # everything — minutes, avoid
+.claude/skills/java-mutation-coverage/scripts/mutation.sh rest.error          # a package (seconds)
+.claude/skills/java-mutation-coverage/scripts/mutation.sh ValidationErrorExtractor  # a class, by simple name
+.claude/skills/java-mutation-coverage/scripts/mutation.sh                     # everything — minutes, avoid
 ```
 
 `mutation.sh` is self-contained: PIT is **not** in `pom.xml`. The script resolves the PIT
@@ -26,3 +36,10 @@ suite try (truer score, much slower). `--help` for the rest.
 Reading the output: `SURVIVED` = a test executed that line but asserted nothing that the
 mutation broke. `NEVER REACHED` = no test touches it at all — that is a line-coverage
 hole, fix it with a test before worrying about the mutant.
+
+## Overlay rule
+
+After running `coverage.sh`, pick the most business-critical class among the ones with
+*high* line coverage and run `mutation.sh` on it. A class at 100% lines with surviving
+mutants is a worse finding than one at 80% lines, and the upstream skill will never
+surface it.
