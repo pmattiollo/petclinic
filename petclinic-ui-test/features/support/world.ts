@@ -6,8 +6,10 @@ import {Browser, BrowserContext, chromium, Page} from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import {appendWindow} from '../../tests/support/trace-window-store';
+import {flushBrowserSpans} from '../../tests/support/otel-flush';
 import {shouldGenerateSequence} from '../../src/trace-diagram/sequence-tag';
 import {runGenerate} from '../../src/trace-diagram/generate';
+import {OwnerSearch} from '../dsl/owner-search.dsl';
 
 setDefaultTimeout(60_000);
 
@@ -28,9 +30,8 @@ export class PlaywrightWorld extends World {
   petId?: number;
   visitDescription?: string;
   // Set by the owner-search scenario: the last-name part typed into the filter
-  // and the owner full names the API returns for it (the expected result set).
-  searchPrefix?: string;
-  expectedFullNames?: string[];
+  // plus the owner full names the API returns for it (the expected result set).
+  ownerSearch?: OwnerSearch;
   // Set only for @generate_sequence scenarios: the title + start of the Tempo
   // search window whose traces become a sequence diagram.
   traceTitle?: string;
@@ -39,18 +40,27 @@ export class PlaywrightWorld extends World {
   constructor(options: IWorldOptions) {
     super(options);
   }
+
+  requireOwnerSearch(): OwnerSearch {
+    if (!this.ownerSearch) {
+      throw new Error('Expected a search prefix to have been chosen earlier in the scenario');
+    }
+    return this.ownerSearch;
+  }
 }
 
 setWorldConstructor(PlaywrightWorld);
 
-// Start each regenerating run from a clean slate: drop every previously
-// generated .puml and any stale recorded windows, so the diagrams left behind
-// are exactly the ones this run produces.
+// Drop this run's recorded windows so the diagrams regenerated below come only
+// from scenarios that just ran.
+//
+// Deliberately NOT wiping every .puml in DIAGRAMS_DIR: the plain-TypeScript
+// twins (../*.spec.ts, run by Playwright) write their diagrams into the same
+// folder, and a blanket wipe here would delete theirs — including
+// owner-search's, whose @generate_sequence tag now lives only on that side.
+// run-tests-with-tracing.sh clears the folder once, before running either suite.
 BeforeAll(function () {
   fs.mkdirSync(DIAGRAMS_DIR, {recursive: true});
-  for (const f of fs.readdirSync(DIAGRAMS_DIR)) {
-    if (f.endsWith('.puml')) fs.rmSync(path.join(DIAGRAMS_DIR, f));
-  }
   fs.rmSync(WINDOWS_FILE, {force: true});
 });
 
@@ -72,6 +82,7 @@ Before(async function (this: PlaywrightWorld, {pickle}: ITestCaseHookParameter) 
 
 After(async function (this: PlaywrightWorld) {
   if (this.traceTitle && this.traceStartMs !== undefined) {
+    await flushBrowserSpans(this.page);
     appendWindow(WINDOWS_FILE, {
       title: this.traceTitle,
       startMs: this.traceStartMs,

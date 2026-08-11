@@ -53,17 +53,32 @@ if ((${#down[@]})); then
 fi
 log "✅ Stack reachable (Grafana, Tempo/OTLP, Postgres, backend+agent, frontend)."
 
-# Heads-up if the backend is running WITHOUT the OTel agent — tests would pass
-# but no traces would be recorded, so no diagrams would be produced.
-if ! http_up "http://localhost:$GRAFANA_PORT/api/datasources/proxy/uid/tempo/api/echo"; then
-  warn "Could not reach the Tempo proxy echo endpoint — diagram generation may find no traces."
+# The backend only attaches the OTel agent when :4318 was already up at boot, so
+# a backend started before Grafana passes every check above yet emits no traces.
+backend_pid="$(lsof -nP -iTCP:$BACKEND_PORT -sTCP:LISTEN -t 2>/dev/null | head -1 || true)"
+if [[ -n "$backend_pid" ]] && ! ps -o command= -p "$backend_pid" 2>/dev/null | grep -q 'opentelemetry-javaagent.jar'; then
+  die "Backend on :$BACKEND_PORT is running WITHOUT the OpenTelemetry agent — restart it (./start-backend.sh) first."
 fi
+log "✅ Backend has the OpenTelemetry agent attached."
 
-# --- run the suite ---------------------------------------------------------
-log "Running e2e tests with tracing…"
+# --- run both suites -------------------------------------------------------
+# The same scenarios exist twice: as .feature files (Cucumber) and as their
+# plain-TypeScript twins (Playwright). Each carries its own @generate_sequence
+# tags, so both are needed to produce the full diagram set.
 cd "$UI_TEST_DIR" || die "cannot cd into $UI_TEST_DIR"
-npm run test:cucumber
+
+# Clean slate once, for both suites: each regenerates only its own diagrams, so
+# neither may wipe the folder itself.
+rm -f "$UI_TEST_DIR"/features/generated_sequences/*.puml
+
+log "Running the plain-TypeScript feature specs (Playwright)…"
+npm run test:features
 test_status=$?
+
+log "Running the .feature scenarios (Cucumber)…"
+npm run test:cucumber
+cucumber_status=$?
+((test_status == 0)) && test_status=$cucumber_status
 
 # --- report the diagrams produced ------------------------------------------
 shopt -s nullglob

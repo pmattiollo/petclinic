@@ -28,6 +28,13 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      // The plain-TypeScript twins of the .feature files, living next to them:
+      // same glue functions, same @generate_sequence opt-in, no Gherkin.
+      name: 'features',
+      testDir: './features',
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
   webServer: process.env.SKIP_SERVER_START ? undefined : {
     command: 'npm run start:apps',

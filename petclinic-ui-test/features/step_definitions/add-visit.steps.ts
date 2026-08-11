@@ -1,46 +1,46 @@
 import {Given, When, Then} from '@cucumber/cucumber';
-import {expect} from '@playwright/test';
-import axios from 'axios';
 import {PlaywrightWorld} from '../support/world';
+import {
+  anOwnerWithAtLeastOnePetExists,
+  clickAddVisitForFirstPet,
+  expectBackOnOwnerDetailPage,
+  expectPetVisitListContains,
+  fillVisitDateAndUniqueDescription,
+  openOwnerDetailPage,
+  submitVisitForm,
+} from '../dsl/add-visit.dsl';
 
-const API_BASE = process.env.API_BASE_URL || 'http://localhost:8080/api';
+// Every step here is a one-line adapter: bind the sentence to a glue function
+// from ../dsl and thread the World's state into it. The same functions back
+// ../add-visit.spec.ts, which needs no adapter layer at all.
 
 Given('an owner with at least one pet exists', async function (this: PlaywrightWorld) {
-  const {data: owners} = await axios.get(`${API_BASE}/owners`, {timeout: 10_000});
-  const ownerWithPet = owners.find((o: any) => Array.isArray(o.pets) && o.pets.length > 0);
-  if (!ownerWithPet) {
-    throw new Error('No owner with a pet found in the system; cannot run add-visit scenario');
-  }
-  this.ownerId = ownerWithPet.id;
-  this.petId = ownerWithPet.pets[0].id;
+  const {ownerId, petId} = await anOwnerWithAtLeastOnePetExists();
+  this.ownerId = ownerId;
+  this.petId = petId;
 });
 
 When("I open that owner's detail page", async function (this: PlaywrightWorld) {
-  await this.page.goto(`/owners/${this.ownerId}`);
-  await this.page.locator('h2:has-text("Owner Information")').waitFor({state: 'visible', timeout: 10_000});
+  await openOwnerDetailPage(this.page, this.ownerId!);
 });
 
 When('I click {string} for the first pet', async function (this: PlaywrightWorld, buttonLabel: string) {
-  await this.page.locator('app-pet-list').first().locator(`button:has-text("${buttonLabel}")`).click();
-  await this.page.locator('h2:has-text("New Visit")').waitFor({state: 'visible', timeout: 10_000});
+  await clickAddVisitForFirstPet(this.page, buttonLabel);
 });
 
 When(
   'I fill in the visit date {string} and a unique description',
   async function (this: PlaywrightWorld, date: string) {
-    this.visitDescription = `Annual check-up ${Date.now()}`;
-    await this.page.locator('input[name="date"]').fill(date);
-    await this.page.locator('input#description').fill(this.visitDescription);
+    this.visitDescription = await fillVisitDateAndUniqueDescription(this.page, date);
   },
 );
 
 When('I submit the visit form', async function (this: PlaywrightWorld) {
-  await this.page.locator('button[type="submit"]:has-text("Add Visit")').click();
+  await submitVisitForm(this.page);
 });
 
 Then("I am back on the owner's detail page", async function (this: PlaywrightWorld) {
-  await this.page.waitForURL(new RegExp(`/owners/${this.ownerId}$`), {timeout: 10_000});
-  await this.page.locator('h2:has-text("Owner Information")').waitFor({state: 'visible', timeout: 10_000});
+  await expectBackOnOwnerDetailPage(this.page, this.ownerId!);
 });
 
 Then(
@@ -49,8 +49,6 @@ Then(
     if (!this.visitDescription) {
       throw new Error('Expected a unique description to have been generated earlier in the scenario');
     }
-    const petBlock = this.page.locator('app-pet-list').first();
-    const row = petBlock.locator('app-visit-list tr').filter({hasText: date}).filter({hasText: this.visitDescription});
-    await expect(row).toBeVisible({timeout: 10_000});
+    await expectPetVisitListContains(this.page, date, this.visitDescription);
   },
 );

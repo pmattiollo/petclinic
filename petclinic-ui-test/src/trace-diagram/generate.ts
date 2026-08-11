@@ -14,19 +14,47 @@ export interface GenerateDeps {
   getTrace: (traceId: string) => Promise<unknown>;
   writeFile: (filePath: string, content: string) => void;
   log: (msg: string) => void;
+  sleep?: (ms: number) => Promise<void>;
 }
+
+// Tempo ingests asynchronously, so a search fired the instant the suite ends
+// routinely comes back empty for traces that land a second or two later.
+export interface RetryOptions {
+  attempts?: number;
+  delayMs?: number;
+}
+
+const DEFAULT_ATTEMPTS = 8;
+const DEFAULT_DELAY_MS = 2_000;
+
+export const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
 export function slugify(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
+async function searchWithRetry(
+  traceql: string, w: TestWindow, deps: GenerateDeps, retry: RetryOptions,
+): Promise<string[]> {
+  const attempts = retry.attempts ?? DEFAULT_ATTEMPTS;
+  const delayMs = retry.delayMs ?? DEFAULT_DELAY_MS;
+  const pause = deps.sleep ?? sleep;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const ids = await deps.searchTraceIds(traceql, w.startMs, w.endMs);
+    if (ids.length > 0) return ids;
+    if (attempt < attempts) await pause(delayMs);
+  }
+  return [];
+}
+
 export async function generateFromWindows(
-  windows: TestWindow[], outDir: string, deps: GenerateDeps,
+  windows: TestWindow[], outDir: string, deps: GenerateDeps, retry: RetryOptions = {},
 ): Promise<string[]> {
   const written: string[] = [];
   for (const w of windows) {
     const traceql = `{ span.test.name = "${w.title}" }`;
-    const ids = await deps.searchTraceIds(traceql, w.startMs, w.endMs);
+    const ids = await searchWithRetry(traceql, w, deps, retry);
     if (ids.length === 0) {
       deps.log(`⏭️  "${w.title}": no traces in window — skipped`);
       continue;
@@ -64,6 +92,15 @@ export async function runGenerate(): Promise<void> {
     writeFile: (p, c) => fs.writeFileSync(p, c),
     log: (m) => console.log(m),
   };
+
+  // Each window deliberately ends a few seconds in the *future* (the pad that
+  // covers the exporters' async flush), so searching the moment the suite
+  // finishes would query a window that has not closed yet.
+  const settleMs = Math.max(...windows.map((w) => w.endMs)) - Date.now();
+  if (settleMs > 0) {
+    console.log(`⏳ Waiting ${(settleMs / 1000).toFixed(1)}s for the last trace window to close…`);
+    await sleep(settleMs);
+  }
 
   try {
     const paths = await generateFromWindows(windows, outDir, deps);

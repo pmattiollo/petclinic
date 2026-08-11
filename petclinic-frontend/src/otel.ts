@@ -42,6 +42,12 @@ isCollectorReachable().then((up) => {
 
   provider.register({ contextManager: new ZoneContextManager() });
 
+  // e2e escape hatch: BatchSpanProcessor only exports every ~5s, but the test
+  // runner closes the page the instant the last assertion passes — so the spans
+  // that matter would be dropped before they ever leave the browser. The e2e
+  // trace fixture calls this right before closing the page.
+  (globalThis as any).__OTEL_FLUSH__ = () => provider.forceFlush();
+
   registerInstrumentations({
     instrumentations: [
       getWebAutoInstrumentations({

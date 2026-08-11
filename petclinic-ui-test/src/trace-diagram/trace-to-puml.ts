@@ -124,11 +124,25 @@ function emitTrace(spans: NormSpan[], lines: string[], present: Set<string>): vo
 }
 
 export function renderPuml(title: string, traces: NormSpan[][]): string {
-  const body: string[] = [];
+  // A trace can carry spans yet draw nothing — a lone browser `click`, say.
+  // Render each trace in isolation first and keep only the ones with content,
+  // so no empty `== title #n ==` section survives to skew the numbering (or the
+  // participant list).
   const present = new Set<string>();
-  traces.forEach((spans, i) => {
-    if (traces.length > 1) body.push(`== ${title} #${i + 1} ==`);
-    emitTrace(spans, body, present);
+  const sections: string[][] = [];
+  for (const spans of traces) {
+    const lines: string[] = [];
+    const drawn = new Set<string>();
+    emitTrace(spans, lines, drawn);
+    if (lines.length === 0) continue;
+    drawn.forEach((p) => present.add(p));
+    sections.push(lines);
+  }
+
+  const body: string[] = [];
+  sections.forEach((lines, i) => {
+    if (sections.length > 1) body.push(`== ${title} #${i + 1} ==`);
+    body.push(...lines);
   });
 
   const header = [

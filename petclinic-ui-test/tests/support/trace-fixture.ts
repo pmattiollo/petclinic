@@ -1,6 +1,7 @@
 import { test as base } from '@playwright/test';
 import * as path from 'path';
 import { appendWindow } from './trace-window-store';
+import { flushBrowserSpans } from './otel-flush';
 
 const WINDOWS_FILE = path.join(__dirname, '..', '..', 'test-results', 'trace-windows.json');
 
@@ -19,6 +20,7 @@ export const test = base.extend({
 
     const startMs = Date.now() - PRE_PAD_MS;
     await use(page);
+    await flushBrowserSpans(page);
     const endMs = Date.now() + POST_PAD_MS;
 
     appendWindow(WINDOWS_FILE, { title: testInfo.title, startMs, endMs });

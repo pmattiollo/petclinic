@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
-import { parseTempoTrace, spansToPuml } from './trace-to-puml';
+import { NormSpan, parseTempoTrace, renderPuml, spansToPuml } from './trace-to-puml';
 
 const fixture = JSON.parse(
   fs.readFileSync(path.join(__dirname, '__fixtures__', 'add-visit-trace.json'), 'utf-8'),
@@ -59,4 +59,21 @@ test('spansToPuml footers the diagram with its provenance', () => {
   expect(puml).toContain('\ntitle add a visit\n');
   expect(puml).not.toContain('note across');
   expect(puml).not.toContain('caption');
+});
+
+// The browser emits standalone spans (a lone `click`, say) that draw no arrow
+// at all. Such a trace used to still get a `== title #n ==` header, leaving an
+// empty section — and inflating the numbering of the sections that do exist.
+test('renderPuml drops traces that would draw nothing', () => {
+  const drawable = parseTempoTrace(fixture);
+  const lonelyClick: NormSpan[] = [{
+    traceId: 't2', spanId: 'c1', parentSpanId: '', name: 'click',
+    kind: 'INTERNAL', serviceName: 'petclinic-frontend', startNano: 1, attributes: {},
+  }];
+
+  const puml = renderPuml('add a visit', [lonelyClick, drawable]);
+
+  expect(puml).not.toContain('#2');
+  expect(puml).not.toContain('== add a visit');
+  expect(puml).toContain('Browser -> Backend: POST /api/visits');
 });
