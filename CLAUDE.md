@@ -32,6 +32,14 @@ they are a standalone tool, [victorrentea/code-city](https://github.com/victorre
 which the script clones into `.codecity-tool/` (gitignored). Change the rendering there,
 not here; here only the output is committed.
 
+### Backend (petclinic-backend/)
+```sh
+mvn spring-boot:run              # Run backend
+mvn test                         # Run tests
+mvn clean install                # Build + regenerate MapStruct mappers
+mvn test -Dtest=ClassName#methodName # Run a single test
+```
+
 **Test coverage without IntelliJ:** use the `java-coverage` skill
 (`.claude/skills/java-coverage/scripts/coverage.sh`, runnable from the repo root) — it runs the
 tests and prints only the uncovered lines as clickable `File.java:51-52,69` refs.
@@ -43,11 +51,37 @@ building/running tests — both write `target/classes`, and the collision produc
 Also beware the partial-run trap: `-Dtest=...` makes coverage look falsely low.
 For mutation coverage use `scripts/mutation.sh <package-or-class>` (PIT; always scope it).
 
+### Frontend (petclinic-frontend/)
+```sh
+npm start                           # Dev server on localhost:4200
+npm run build                       # Production build
+npm test                            # Karma tests
+npm run test-headless               # Headless Chrome tests
+npm run e2e                         # Protractor e2e tests
+```
 
 ## Architecture
 
-Backend internals (layering, MapStruct, DTOs, data flow) live in
-[petclinic-backend/CLAUDE.md](petclinic-backend/CLAUDE.md) — loaded only when working there.
+### Backend Architecture
+
+**Layered Structure:**
+1. REST Controllers (`petclinic-backend/src/main/java/.../rest/`) - expose API endpoints
+2. Mappers (`mapper/`) - MapStruct entity↔DTO conversion
+3. Repository Layer (`repository/`) - Spring Data JPA interfaces (no service layer!)
+4. Domain Model (`model/`) - JPA entities (Owner, Pet, Vet, Visit, Specialty, PetType, User, Role)
+
+**Generated Code:**
+- MapStruct mapper implementations → `target/generated-sources/annotations/`
+- Regenerate via `mvn clean install`
+
+**Data Flow:**
+Request → REST Controller → Repository / Mapper → JPA Entity
+Response ← REST Controller ← Mapper (Entity→DTO) ← Repository
+
+**Key Patterns:**
+- DTOs are hand-written in `src/main/java/.../rest/dto/` (not generated)
+- `openapi.yaml` at project root is generated output (from `OpenApiExtractorTest`), not a source spec
+- Constructor injection (`@RequiredArgsConstructor`), global exception handling via `@RestControllerAdvice`
 
 ### Living Architecture & Guardrails
 
@@ -80,21 +114,31 @@ Core entities and relationships:
 - **Vet** N→N **Specialty** (via `vet_specialties` join table)
 - **User** 1→N **Role**
 
-### Expected Data Volumes
-Business expects **~10,000 owners** within a couple of months of going to production
-(stated 2026-08-11). The 28 seeded owners are *not* representative — never design owner
-listing/search on the assumption the whole table fits in memory or in one HTTP response.
-Paginate and sort **server-side**.
-
 ## API Endpoints
-Backend exposes REST API of `openapi.yaml` kept in sync with java API via tests.
+Backend exposes REST API at http://localhost:8080/api/
+- Owners: `/api/owners`, `/api/owners/{id}`
+- Pets: `/api/pets`, `/api/pets/{id}`
+- Vets: `/api/vets`, `/api/vets/{id}`
+- Visits: `/api/visits`
+- PetTypes: `/api/pettypes`
+- Specialties: `/api/specialties`
+- Users: `/api/users`
+
+OpenAPI docs: http://localhost:8080/swagger-ui.html
+
+## Development Notes
+
+### Java Code Preferences (moved from former .github/copilot-instructions.md)
+- Use constructor injection in src/main, `@Autowired` only in tests
+- Use `@Transactional` only when strictly necessary
+- MapStruct is used for DTO mapping
+- Global exception handling in `@RestControllerAdvice`
+- Apply `@Validated` on each `@RequestBody`
+- Use (only) Lombok's `@Slf4j`, `@RequiredArgsConstructor`, `@Builder`, `@Getter`/`@Setter`
+- Keep line length ≤ 120 chars
+- Builder chains: one property per line, unless only two properties are set
 
 ## Task Modifiers
-- **Look at the real data first.** Before paginating a grid, deciding which columns are
-  sortable, choosing a default sort, or whenever simply curious about a column — query the
-  DB (postgres MCP, or the `petclinic-db-cli` skill when MCP is off) and sample the actual
-  values. Cardinality, NULLs, duplicates and value formats decide the design; guessing from
-  column names does not.
 - Write non-trivial code using TDD
 - Keep comments concise, prefer explanatory variable/method names.
 - Always run tests after any refactoring

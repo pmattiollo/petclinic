@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.annotations.BatchSize;
 import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PropertyComparator;
 
@@ -51,8 +50,6 @@ public class Pet {
     @JoinColumn(name = "owner_id")
     private Owner owner;
 
-    /** Batch-fetched for the same reason as {@code Owner.pets}: a page of owners drags in every pet's visits. */
-    @BatchSize(size = 25)
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.LAZY)
     private Set<Visit> visits = new HashSet<>();
 

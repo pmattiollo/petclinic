@@ -7,12 +7,6 @@ export class OwnersPage {
   readonly findOwnerButton: Locator;
   readonly ownerNameCells: Locator;
   readonly ownersTable: Locator;
-  readonly sortByNameHeader: Locator;
-  readonly sortByCityHeader: Locator;
-  readonly pageSizeSelect: Locator;
-  readonly nextPageButton: Locator;
-  readonly previousPageButton: Locator;
-  readonly pageIndicator: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -21,12 +15,6 @@ export class OwnersPage {
     this.findOwnerButton = page.locator('#search-owner-form button[type="submit"]');
     this.ownerNameCells = page.locator('#ownersTable td.ownerFullName');
     this.ownersTable = page.locator('#ownersTable');
-    this.sortByNameHeader = page.locator('#sortByName');
-    this.sortByCityHeader = page.locator('#sortByCity');
-    this.pageSizeSelect = page.locator('#pageSize');
-    this.nextPageButton = page.locator('#nextPage');
-    this.previousPageButton = page.locator('#previousPage');
-    this.pageIndicator = page.locator('#pageIndicator');
   }
 
   async open() {
@@ -48,43 +36,6 @@ export class OwnersPage {
     }
 
     return names;
-  }
-
-  async sortByName() {
-    await this.sortByNameHeader.click();
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async sortByCity() {
-    await this.sortByCityHeader.click();
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async getCities(): Promise<string[]> {
-    const rows = await this.page.locator('#ownersTable tbody tr').all();
-    const cities: string[] = [];
-    for (const row of rows) {
-      const city = await row.locator('td').nth(2).textContent();
-      if (city && city.trim()) {
-        cities.push(city.trim());
-      }
-    }
-    return cities;
-  }
-
-  async setPageSize(size: number) {
-    await this.pageSizeSelect.selectOption(String(size));
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async goToNextPage() {
-    await this.nextPageButton.click();
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async goToPreviousPage() {
-    await this.previousPageButton.click();
-    await this.page.waitForLoadState('networkidle');
   }
 
   async searchByLastNamePrefix(prefix: string) {

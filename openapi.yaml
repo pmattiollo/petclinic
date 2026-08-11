@@ -189,66 +189,53 @@ paths:
     get:
       operationId: listOwners
       parameters:
-      - description: Zero-based page number.
-        example: 0
-        in: query
-        name: page
-        required: false
-        schema:
-          type: integer
-          format: int32
-          description: Zero-based page number.
-          example: 0
-          minimum: 0
-      - description: "Rows per page. One of 5, 10 or 20."
-        example: 10
-        in: query
-        name: size
-        required: false
-        schema:
-          type: integer
-          format: int32
-          description: "Rows per page. One of 5, 10 or 20."
-          example: 10
-      - description: Column to order by. Defaults to NAME.
-        in: query
-        name: sort
-        required: false
-        schema:
-          type: string
-          description: Column to order by. Defaults to NAME.
-          enum:
-          - NAME
-          - CITY
-      - description: Order direction. Defaults to ASC.
-        in: query
-        name: direction
-        required: false
-        schema:
-          type: string
-          description: Order direction. Defaults to ASC.
-          enum:
-          - ASC
-          - DESC
-      - description: Only owners whose last name starts with this.
-        example: Fra
-        in: query
+      - in: query
         name: lastName
         required: false
         schema:
           type: string
-          description: Only owners whose last name starts with this.
-          example: Fra
+          default: ""
       responses:
         "200":
           content:
             application/json:
+              examples:
+                sample:
+                  description: sample
+                  value:
+                  - id: 1
+                    firstName: George
+                    lastName: Franklin
+                    address: 110 W. Liberty St.
+                    city: Madison
+                    telephone: "6085551023"
+                    pets:
+                    - id: 1
+                      name: Leo
+                      birthDate: 2010-09-07
+                      type:
+                        id: 1
+                        name: cat
+                      ownerId: 1
+                      visits: []
+                  - id: 2
+                    firstName: Betty
+                    lastName: Davis
+                    address: 638 Cardinal Ave.
+                    city: Sun Prairie
+                    telephone: "6085551749"
+                    pets: []
               schema:
-                $ref: "#/components/schemas/OwnerPageDto"
+                type: array
+                items:
+                  $ref: "#/components/schemas/OwnerDto"
           description: OK
         "400":
-          content: {}
-          description: Invalid paging or ordering parameters
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Bad Request
         "404":
           content:
             '*/*':
@@ -261,7 +248,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Internal Server Error
-      summary: "List owners, one page at a time"
+      summary: List owners
       tags:
       - owner-rest-controller
     post:
@@ -1697,34 +1684,6 @@ components:
       - firstName
       - lastName
       - telephone
-    OwnerPageDto:
-      type: object
-      properties:
-        content:
-          type: array
-          description: The owners on this page.
-          items:
-            $ref: "#/components/schemas/OwnerDto"
-        number:
-          type: integer
-          format: int32
-          description: Zero-based number of this page.
-          example: 0
-        size:
-          type: integer
-          format: int32
-          description: Rows per page.
-          example: 10
-        totalElements:
-          type: integer
-          format: int64
-          description: "Total owners matching the filter, across all pages."
-          example: 28
-        totalPages:
-          type: integer
-          format: int32
-          description: Total number of pages.
-          example: 3
     PetDto:
       type: object
       properties:

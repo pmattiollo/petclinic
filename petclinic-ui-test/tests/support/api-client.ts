@@ -9,14 +9,6 @@ export interface OwnerDto {
   telephone?: string;
 }
 
-export interface OwnerPageDto {
-  content: OwnerDto[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-}
-
 export interface VisitDto {
   id: number;
   date: string;
@@ -40,27 +32,16 @@ export class ApiClient {
     });
   }
 
-  /** The listing is paged; ask for the largest page the server allows. */
   async fetchOwners(): Promise<OwnerDto[]> {
-    const response = await this.client.get<OwnerPageDto>('/owners', {
-      params: { size: 20 }
-    });
-    return response.data.content;
+    const response = await this.client.get<OwnerDto[]>('/owners');
+    return response.data;
   }
 
   async fetchOwnersByPrefix(prefix: string): Promise<OwnerDto[]> {
-    const response = await this.client.get<OwnerPageDto>('/owners', {
-      params: { lastName: prefix, size: 20 }
+    const response = await this.client.get<OwnerDto[]>('/owners', {
+      params: { lastName: prefix }
     });
-    return response.data.content;
-  }
-
-  /** Total owners matching a prefix, across every page — not just the ones on the first page. */
-  async countOwnersByPrefix(prefix: string): Promise<number> {
-    const response = await this.client.get<OwnerPageDto>('/owners', {
-      params: { lastName: prefix, size: 5 }
-    });
-    return response.data.totalElements;
+    return response.data;
   }
 
   async fetchVisits(): Promise<VisitDto[]> {
@@ -68,14 +49,10 @@ export class ApiClient {
     return response.data;
   }
 
-  /**
-   * The grid renders the surname first ("Potter, Harry") so that its alphabetical ordering is visible in the
-   * column being read. Expected values must be built the same way to be comparable with what is on screen.
-   */
   static getFullNames(owners: OwnerDto[]): string[] {
     return owners
-      .map(owner => `${owner.lastName}, ${owner.firstName}`.trim())
-      .filter(name => name.length > 2);
+      .map(owner => `${owner.firstName} ${owner.lastName}`.trim())
+      .filter(name => name.length > 0);
   }
 
   static sorted(values: string[]): string[] {
@@ -86,13 +63,12 @@ export class ApiClient {
     return [...rows].sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  /** Names render as "Lastname, Firstname", so the surname is what precedes the comma. */
   static extractLastName(fullName: string): string {
-    const comma = fullName.indexOf(',');
-    if (comma < 0) {
+    const firstSpace = fullName.indexOf(' ');
+    if (firstSpace < 0 || firstSpace === fullName.length - 1) {
       return fullName;
     }
-    return fullName.substring(0, comma).trim();
+    return fullName.substring(firstSpace + 1);
   }
 
   static choosePrefixFrom(owners: OwnerDto[]): string {

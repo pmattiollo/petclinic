@@ -8,7 +8,6 @@ import { HttpResponse } from '@angular/common/http';
 import { HttpErrorHandler } from '../error.service';
 import { OwnerService } from './owner.service';
 import { Owner } from './owner';
-import { OwnerPage } from './owner-page';
 
 describe('OwnerService', () => {
   let httpTestingController: HttpTestingController;
@@ -35,14 +34,6 @@ describe('OwnerService', () => {
     }
   ];
 
-  const expectedPage: OwnerPage = {
-    content: expectedOwners,
-    totalElements: 2,
-    totalPages: 1,
-    number: 0,
-    size: 10
-  };
-
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
@@ -57,22 +48,14 @@ describe('OwnerService', () => {
     httpTestingController.verify();
   });
 
-  it('should return the first page of owners with the default paging and ordering', () => {
+  it('should return expected owners (called once)', () => {
     ownerService
       .getOwners()
-      .subscribe((page) => expect(page).toEqual(expectedPage), fail);
+      .subscribe((owners) => expect(owners).toEqual(expectedOwners), fail);
 
-    const req = httpTestingController.expectOne(
-      (request) => request.url === ownerService.entityUrl
-    );
+    const req = httpTestingController.expectOne(ownerService.entityUrl);
     expect(req.request.method).toEqual('GET');
-    expect(req.request.params.get('page')).toEqual('0');
-    expect(req.request.params.get('size')).toEqual('10');
-    expect(req.request.params.get('sort')).toEqual('NAME');
-    expect(req.request.params.get('direction')).toEqual('ASC');
-    // Absent rather than empty: an empty lastName would still be sent as a parameter.
-    expect(req.request.params.has('lastName')).toBe(false);
-    req.flush(expectedPage);
+    req.flush(expectedOwners);
   });
 
   it('search the owner by id', () => {
@@ -149,16 +132,14 @@ describe('OwnerService', () => {
   });
 
   it('search owners by last name prefix', () => {
-    ownerService.searchOwners('Fr').subscribe((page) => {
-      expect(page).toEqual(expectedPage);
+    ownerService.searchOwners('Fr').subscribe((owners) => {
+      expect(owners).toEqual(expectedOwners);
     });
 
     const req = httpTestingController.expectOne(
-      (request) => request.url === ownerService.entityUrl && request.params.get('lastName') === 'Fr'
+      ownerService.entityUrl + '?lastName=Fr'
     );
     expect(req.request.method).toEqual('GET');
-    // A new search term must return to the first page: page 3 of the old result set means nothing in the new one.
-    expect(req.request.params.get('page')).toEqual('0');
-    req.flush(expectedPage);
+    req.flush(expectedOwners);
   });
 });

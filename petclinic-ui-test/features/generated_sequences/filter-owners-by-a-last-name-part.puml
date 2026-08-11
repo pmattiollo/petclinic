@@ -23,6 +23,18 @@ deactivate DB
 Backend -> DB: SELECT petclinic.visits
 activate DB
 deactivate DB
+Backend -> DB: SELECT petclinic
+activate DB
+deactivate DB
+Backend -> DB: SELECT petclinic
+activate DB
+deactivate DB
+Backend -> DB: SELECT petclinic.visits
+activate DB
+deactivate DB
+Backend -> DB: SELECT petclinic.visits
+activate DB
+deactivate DB
 Backend --> Browser: 200
 deactivate Backend
 == Filter owners by a last name part #2 ==

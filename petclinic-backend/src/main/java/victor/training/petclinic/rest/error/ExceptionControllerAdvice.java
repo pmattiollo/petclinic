@@ -11,14 +11,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.net.URI;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -42,7 +38,7 @@ public class ExceptionControllerAdvice {
         ProblemDetail pd = ProblemDetail.forStatus(status);
         pd.setTitle(title);
         pd.setDetail(detail);
-        pd.setType(URI.create(request.getRequestURL().toString()));
+        pd.setType(java.net.URI.create(request.getRequestURL().toString()));
         pd.setProperty("timestamp", Instant.now());
         return pd;
     }
@@ -71,32 +67,6 @@ public class ExceptionControllerAdvice {
                 "Validation failed for request. See 'errors' for details.", HttpStatus.BAD_REQUEST, request);
         pd.setProperty("errors", errors);
         return ResponseEntity.badRequest().body(pd);
-    }
-
-    /**
-     * A request parameter that cannot be converted to its declared type is the caller's fault, not ours. Without this
-     * handler it falls through to {@link #handleGeneralException} and is reported as a 500, leaking the internal
-     * conversion message.
-     */
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ProblemDetail> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
-            HttpServletRequest request) {
-        String detail = describeTypeMismatch(ex);
-        log.warn("Invalid request parameter: {}", detail);
-        ProblemDetail pd = buildProblemDetail("Invalid Request Parameter", detail, HttpStatus.BAD_REQUEST, request);
-        return ResponseEntity.badRequest().body(pd);
-    }
-
-    private String describeTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        Class<?> requiredType = ex.getRequiredType();
-        if (requiredType != null && requiredType.isEnum()) {
-            String allowedValues = Arrays.stream(requiredType.getEnumConstants())
-                    .map(Object::toString)
-                    .collect(Collectors.joining(", "));
-            return "Parameter '%s' must be one of: %s".formatted(ex.getName(), allowedValues);
-        }
-        return "Parameter '%s' has an invalid value".formatted(ex.getName());
     }
 
     @ExceptionHandler(Exception.class)

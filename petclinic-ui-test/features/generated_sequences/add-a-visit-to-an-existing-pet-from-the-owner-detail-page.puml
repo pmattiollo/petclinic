@@ -122,4 +122,7 @@ deactivate Browser
 Browser -> Browser: resourceFetch
 activate Browser
 deactivate Browser
+Browser -> Browser: resourceFetch
+activate Browser
+deactivate Browser
 @enduml
