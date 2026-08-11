@@ -17,7 +17,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class DbSchemaExtractorTest {
-
     @Test
     void generatesDbSqlFromMigrations() throws Exception {
         String pgDump = locatePgDump();
