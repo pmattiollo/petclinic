@@ -96,3 +96,6 @@ rag-vector-store.json
 
 # Clone of the Code City generators (generate-codecity.sh) — a tool, not our source
 /.codecity-tool/
+
+# jira-cli skill: project-local PAT override, never commit it
+.jira.env
