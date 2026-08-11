@@ -51,7 +51,7 @@ public class OwnerSteps {
                 .baseUri(http.baseUri())
                 .get("/api/owners?lastName=" + lastName);
         assertThat(response.statusCode()).isEqualTo(200);
-        List<String> lastNames = response.jsonPath().getList("lastName", String.class);
+        List<String> lastNames = response.jsonPath().getList("content.lastName", String.class);
         assertThat(lastNames).contains(lastName);
     }
 
