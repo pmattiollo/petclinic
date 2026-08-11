@@ -1,46 +1,26 @@
 @startuml
 hide footbox
-title Add a visit to an existing pet from the owner detail page
+title pages forward and back without repeating or losing an owner
 footer @generate_sequence Scenario in a .feature test
 participant Browser
 participant Backend
 participant DB
-== Add a visit to an existing pet from the owner detail page #1 ==
-Browser -> Backend: GET /api/owners/{ownerId}
+== pages forward and back without repeating or losing an owner #1 ==
+Browser -> Backend: GET /api/owners
 activate Backend
-Backend -> Backend: OwnerRepository.findById
+Backend -> Backend: OwnerRepository.findByLastNameStartingWith
 activate Backend
-Backend -> Backend: Session.find victor.training.petclinic.domain.Owner
-activate Backend
-Backend -> DB: SELECT petclinic.owners
-activate DB
-deactivate DB
-deactivate Backend
-Backend -> Backend: Transaction.commit
-activate Backend
-deactivate Backend
-deactivate Backend
-Backend -> DB: SELECT petclinic
-activate DB
-deactivate DB
-Backend -> DB: SELECT petclinic.visits
-activate DB
-deactivate DB
-Backend --> Browser: 200
-deactivate Backend
-== Add a visit to an existing pet from the owner detail page #2 ==
-Browser -> Backend: GET /api/owners/{ownerId}
-activate Backend
-Backend -> Backend: OwnerRepository.findById
-activate Backend
-Backend -> Backend: Session.find victor.training.petclinic.domain.Owner
+Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
 activate Backend
 Backend -> DB: SELECT petclinic.owners
 activate DB
 deactivate DB
 deactivate Backend
-Backend -> Backend: Transaction.commit
+Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
 activate Backend
+Backend -> DB: SELECT petclinic.owners
+activate DB
+deactivate DB
 deactivate Backend
 deactivate Backend
 Backend -> DB: SELECT petclinic
@@ -51,44 +31,62 @@ activate DB
 deactivate DB
 Backend --> Browser: 200
 deactivate Backend
-== Add a visit to an existing pet from the owner detail page #3 ==
-Browser -> Backend: GET /api/pets/{petId}
+== pages forward and back without repeating or losing an owner #2 ==
+Browser -> Backend: GET /api/owners
 activate Backend
-Backend -> Backend: PetRepository.findById
+Backend -> Backend: OwnerRepository.findByLastNameStartingWith
 activate Backend
-Backend -> Backend: Session.find victor.training.petclinic.domain.Pet
+Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
 activate Backend
-Backend -> DB: SELECT petclinic
+Backend -> DB: petclinic
+activate DB
+deactivate DB
+Backend -> DB: SELECT petclinic.owners
 activate DB
 deactivate DB
 deactivate Backend
-Backend -> Backend: Transaction.commit
+Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
 activate Backend
+Backend -> DB: SELECT petclinic.owners
+activate DB
+deactivate DB
 deactivate Backend
 deactivate Backend
+Backend -> DB: SELECT petclinic
+activate DB
+deactivate DB
 Backend -> DB: SELECT petclinic.visits
 activate DB
 deactivate DB
 Backend --> Browser: 200
 deactivate Backend
-== Add a visit to an existing pet from the owner detail page #4 ==
-Browser -> Backend: POST /api/owners/{ownerId}/pets/{petId}/visits
+== pages forward and back without repeating or losing an owner #3 ==
+Browser -> Backend: GET /api/owners
 activate Backend
-Backend -> Backend: VisitRepository.save
+Backend -> Backend: OwnerRepository.findByLastNameStartingWith
 activate Backend
-Backend -> Backend: Session.persist victor.training.petclinic.domain.Visit
+Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
 activate Backend
-Backend -> DB: INSERT petclinic.visits
+Backend -> DB: SELECT petclinic.owners
 activate DB
 deactivate DB
 deactivate Backend
-Backend -> Backend: Transaction.commit
+Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
 activate Backend
+Backend -> DB: SELECT petclinic.owners
+activate DB
+deactivate DB
 deactivate Backend
 deactivate Backend
-Backend --> Browser: 201
+Backend -> DB: SELECT petclinic
+activate DB
+deactivate DB
+Backend -> DB: SELECT petclinic.visits
+activate DB
+deactivate DB
+Backend --> Browser: 200
 deactivate Backend
-== Add a visit to an existing pet from the owner detail page #5 ==
+== pages forward and back without repeating or losing an owner #4 ==
 Browser -> Browser: documentFetch
 activate Browser
 deactivate Browser
