@@ -98,6 +98,12 @@ Core entities and relationships:
 - **Vet** N→N **Specialty** (via `vet_specialties` join table)
 - **User** 1→N **Role**
 
+### Expected Data Volumes
+Business expects **~10,000 owners** within a couple of months of going to production
+(stated 2026-08-11). The 28 seeded owners are *not* representative — never design owner
+listing/search on the assumption the whole table fits in memory or in one HTTP response.
+Paginate and sort **server-side**.
+
 ## API Endpoints
 Backend exposes REST API of `openapi.yaml` kept in sync with java API via tests.
 
@@ -114,6 +120,11 @@ Backend exposes REST API of `openapi.yaml` kept in sync with java API via tests.
 - Builder chains: one property per line, unless only two properties are set
 
 ## Task Modifiers
+- **Look at the real data first.** Before paginating a grid, deciding which columns are
+  sortable, choosing a default sort, or whenever simply curious about a column — query the
+  DB (postgres MCP, or the `petclinic-db-cli` skill when MCP is off) and sample the actual
+  values. Cardinality, NULLs, duplicates and value formats decide the design; guessing from
+  column names does not.
 - Write non-trivial code using TDD
 - Keep comments concise, prefer explanatory variable/method names.
 - Always run tests after any refactoring
