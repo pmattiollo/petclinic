@@ -3,6 +3,12 @@ name: java-coverage
 description: Measure backend test coverage from the terminal — JaCoCo line coverage reported as the exact uncovered lines. Use whenever asked about test coverage, "what isn't tested", "run tests with coverage", uncovered/untested lines or branches, how good the tests are, or before adding tests to a class — instead of asking the user to click "Run with Coverage" in IntelliJ.
 ---
 
+<!--
+  UPSTREAM SKILL — treat as vendor-owned, spec-driven backbone.
+  Do not fork or edit locally: local additions are layered on by hooks
+  (see .claude/hooks/skill-overlay.sh), so this file stays upgradable.
+-->
+
 # Java coverage
 
 `scripts/coverage.sh`, runnable from anywhere in the repo. It prints only the **gaps**,
@@ -30,3 +36,5 @@ plain `mvn test` writes the same report IntelliJ's "Run with Coverage" shows:
 - Report the numbers and the gaps. Do not propose a test for every gap: generated code
   (MapStruct `*MapperImpl`), `equals`/`hashCode`/`toString` and Lombok accessors are
   noise, and `coverage.sh` already filters them (`--keep-generated` to see them).
+- Line coverage only answers "did this line run". It cannot tell you whether anything
+  was **asserted**. Stop before concluding the tests are good.
