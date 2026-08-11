@@ -3,7 +3,7 @@
 # run-tests-with-tracing.sh — run the e2e tests against an ALREADY-RUNNING stack
 # so each @generate_sequence scenario's browser↔backend↔DB trace is captured in
 # Tempo and turned into a PlantUML sequence diagram
-# (petclinic-ui-test/features/generated_sequences/<scenario>.puml) by the
+# (petclinic-test/features/generated_sequences/<scenario>.puml) by the
 # Cucumber AfterAll hook.
 #
 # This script assumes the full telemetry stack is already up, started the
@@ -18,7 +18,7 @@
 # runs the Cucumber suite (which reuses the running apps), and reports the
 # diagrams produced.
 #
-# Usage:  ./run-tests-with-tracing.sh            (from petclinic-ui-test/)
+# Usage:  ./run-tests-with-tracing.sh            (from petclinic-test/)
 #
 set -uo pipefail
 

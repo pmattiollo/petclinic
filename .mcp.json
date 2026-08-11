@@ -10,7 +10,7 @@
       "command": "npx",
       "args": [
         "@playwright/mcp@latest",
-        "--output-dir", "petclinic-ui-test/.playwright-mcp",
+        "--output-dir", "petclinic-test/.playwright-mcp",
         "--save-session"
       ]
     },

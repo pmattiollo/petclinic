@@ -15,8 +15,8 @@ echo "==> mvn install: petclinic-backend"
 echo "==> npm install: petclinic-frontend"
 (cd "$ROOT/petclinic-frontend" && npm install)
 
-echo "==> npm install: petclinic-ui-test"
-(cd "$ROOT/petclinic-ui-test" && npm install)
+echo "==> npm install: petclinic-test"
+(cd "$ROOT/petclinic-test" && npm install)
 
 echo ""
 echo "All dependencies installed."
