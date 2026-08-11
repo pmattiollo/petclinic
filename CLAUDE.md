@@ -32,14 +32,6 @@ they are a standalone tool, [victorrentea/code-city](https://github.com/victorre
 which the script clones into `.codecity-tool/` (gitignored). Change the rendering there,
 not here; here only the output is committed.
 
-### Backend (petclinic-backend/)
-```sh
-mvn spring-boot:run              # Run backend
-mvn test                         # Run tests
-mvn clean install                # Build + regenerate MapStruct mappers
-mvn test -Dtest=ClassName#methodName # Run a single test
-```
-
 **Test coverage without IntelliJ:** use the `java-coverage` skill
 (`.claude/skills/java-coverage/scripts/coverage.sh`, runnable from the repo root) — it runs the
 tests and prints only the uncovered lines as clickable `File.java:51-52,69` refs.
@@ -51,14 +43,6 @@ building/running tests — both write `target/classes`, and the collision produc
 Also beware the partial-run trap: `-Dtest=...` makes coverage look falsely low.
 For mutation coverage use `scripts/mutation.sh <package-or-class>` (PIT; always scope it).
 
-### Frontend (petclinic-frontend/)
-```sh
-npm start                           # Dev server on localhost:4200
-npm run build                       # Production build
-npm test                            # Karma tests
-npm run test-headless               # Headless Chrome tests
-npm run e2e                         # Protractor e2e tests
-```
 
 ## Architecture
 
@@ -115,16 +99,7 @@ Core entities and relationships:
 - **User** 1→N **Role**
 
 ## API Endpoints
-Backend exposes REST API at http://localhost:8080/api/
-- Owners: `/api/owners`, `/api/owners/{id}`
-- Pets: `/api/pets`, `/api/pets/{id}`
-- Vets: `/api/vets`, `/api/vets/{id}`
-- Visits: `/api/visits`
-- PetTypes: `/api/pettypes`
-- Specialties: `/api/specialties`
-- Users: `/api/users`
-
-OpenAPI docs: http://localhost:8080/swagger-ui.html
+Backend exposes REST API of `openapi.yaml` kept in sync with java API via tests.
 
 ## Development Notes
 
