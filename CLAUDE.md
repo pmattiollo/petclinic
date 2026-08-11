@@ -107,18 +107,6 @@ Paginate and sort **server-side**.
 ## API Endpoints
 Backend exposes REST API of `openapi.yaml` kept in sync with java API via tests.
 
-## Development Notes
-
-### Java Code Preferences (moved from former .github/copilot-instructions.md)
-- Use constructor injection in src/main, `@Autowired` only in tests
-- Use `@Transactional` only when strictly necessary
-- MapStruct is used for DTO mapping
-- Global exception handling in `@RestControllerAdvice`
-- Apply `@Validated` on each `@RequestBody`
-- Use (only) Lombok's `@Slf4j`, `@RequiredArgsConstructor`, `@Builder`, `@Getter`/`@Setter`
-- Keep line length ≤ 120 chars
-- Builder chains: one property per line, unless only two properties are set
-
 ## Task Modifiers
 - **Look at the real data first.** Before paginating a grid, deciding which columns are
   sortable, choosing a default sort, or whenever simply curious about a column — query the
