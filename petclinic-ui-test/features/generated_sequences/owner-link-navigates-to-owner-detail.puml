@@ -1,20 +1,23 @@
 @startuml
 hide footbox
-title Filter owners by a last name part
+title owner link navigates to owner detail
 footer @generate_sequence Scenario in a .feature test
 participant Browser
 participant Backend
 participant DB
-== Filter owners by a last name part #1 ==
-Browser -> Backend: GET /api/owners
+== owner link navigates to owner detail #1 ==
+Browser -> Backend: GET /api/owners/{ownerId}
 activate Backend
-Backend -> Backend: OwnerRepository.findByLastNameStartingWith
+Backend -> Backend: OwnerRepository.findById
 activate Backend
-Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
+Backend -> Backend: Session.find victor.training.petclinic.domain.Owner
 activate Backend
 Backend -> DB: SELECT petclinic.owners
 activate DB
 deactivate DB
+deactivate Backend
+Backend -> Backend: Transaction.commit
+activate Backend
 deactivate Backend
 deactivate Backend
 Backend -> DB: SELECT petclinic
@@ -25,8 +28,11 @@ activate DB
 deactivate DB
 Backend --> Browser: 200
 deactivate Backend
-== Filter owners by a last name part #2 ==
+== owner link navigates to owner detail #2 ==
 Browser -> Browser: documentFetch
+activate Browser
+deactivate Browser
+Browser -> Browser: resourceFetch
 activate Browser
 deactivate Browser
 Browser -> Browser: resourceFetch

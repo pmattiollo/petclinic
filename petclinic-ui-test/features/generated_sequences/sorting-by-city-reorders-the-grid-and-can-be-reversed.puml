@@ -1,15 +1,24 @@
 @startuml
 hide footbox
-title Filter owners by a last name part
+title sorting by City reorders the grid and can be reversed
 footer @generate_sequence Scenario in a .feature test
 participant Browser
 participant Backend
 participant DB
-== Filter owners by a last name part #1 ==
+== sorting by City reorders the grid and can be reversed #1 ==
 Browser -> Backend: GET /api/owners
 activate Backend
 Backend -> Backend: OwnerRepository.findByLastNameStartingWith
 activate Backend
+Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
+activate Backend
+Backend -> DB: petclinic
+activate DB
+deactivate DB
+Backend -> DB: SELECT petclinic.owners
+activate DB
+deactivate DB
+deactivate Backend
 Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
 activate Backend
 Backend -> DB: SELECT petclinic.owners
@@ -25,7 +34,36 @@ activate DB
 deactivate DB
 Backend --> Browser: 200
 deactivate Backend
-== Filter owners by a last name part #2 ==
+== sorting by City reorders the grid and can be reversed #2 ==
+Browser -> Backend: GET /api/owners
+activate Backend
+Backend -> Backend: OwnerRepository.findByLastNameStartingWith
+activate Backend
+Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
+activate Backend
+Backend -> DB: petclinic
+activate DB
+deactivate DB
+Backend -> DB: SELECT petclinic.owners
+activate DB
+deactivate DB
+deactivate Backend
+Backend -> Backend: SELECT victor.training.petclinic.domain.Owner
+activate Backend
+Backend -> DB: SELECT petclinic.owners
+activate DB
+deactivate DB
+deactivate Backend
+deactivate Backend
+Backend -> DB: SELECT petclinic
+activate DB
+deactivate DB
+Backend -> DB: SELECT petclinic.visits
+activate DB
+deactivate DB
+Backend --> Browser: 200
+deactivate Backend
+== sorting by City reorders the grid and can be reversed #3 ==
 Browser -> Browser: documentFetch
 activate Browser
 deactivate Browser

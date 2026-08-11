@@ -15,7 +15,7 @@ export interface paths {
     patch: operations["redirectToSwagger_4"];
   };
   "/api/owners": {
-    /** List owners */
+    /** List owners, one page at a time */
     get: operations["listOwners"];
     /** Create an owner */
     post: operations["addOwner"];
@@ -169,6 +169,34 @@ export interface components {
        * @example 6085551023
        */
       telephone: string;
+    };
+    OwnerPageDto: {
+      /** @description The owners on this page. */
+      content?: components["schemas"]["OwnerDto"][];
+      /**
+       * Format: int32
+       * @description Zero-based number of this page.
+       * @example 0
+       */
+      number?: number;
+      /**
+       * Format: int32
+       * @description Rows per page.
+       * @example 10
+       */
+      size?: number;
+      /**
+       * Format: int64
+       * @description Total owners matching the filter, across all pages.
+       * @example 28
+       */
+      totalElements?: number;
+      /**
+       * Format: int32
+       * @description Total number of pages.
+       * @example 3
+       */
+      totalPages?: number;
     };
     PetDto: {
       /**
@@ -553,10 +581,28 @@ export interface operations {
       };
     };
   };
-  /** List owners */
+  /** List owners, one page at a time */
   listOwners: {
     parameters: {
       query?: {
+        /**
+         * @description Zero-based page number.
+         * @example 0
+         */
+        page?: number;
+        /**
+         * @description Rows per page. One of 5, 10 or 20.
+         * @example 10
+         */
+        size?: number;
+        /** @description Column to order by. Defaults to NAME. */
+        sort?: "NAME" | "CITY";
+        /** @description Order direction. Defaults to ASC. */
+        direction?: "ASC" | "DESC";
+        /**
+         * @description Only owners whose last name starts with this.
+         * @example Fra
+         */
         lastName?: string;
       };
     };
@@ -564,13 +610,12 @@ export interface operations {
       /** @description OK */
       200: {
         content: {
-          "application/json": components["schemas"]["OwnerDto"][];
+          "application/json": components["schemas"]["OwnerPageDto"];
         };
       };
-      /** @description Bad Request */
+      /** @description Invalid paging or ordering parameters */
       400: {
         content: {
-          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Not Found */

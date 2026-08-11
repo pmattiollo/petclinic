@@ -28,12 +28,12 @@ import victor.training.petclinic.repository.OwnerRepository;
 import victor.training.petclinic.repository.PetRepository;
 import victor.training.petclinic.repository.PetTypeRepository;
 import victor.training.petclinic.rest.dto.OwnerDto;
+import victor.training.petclinic.rest.dto.OwnerPageDto;
 import victor.training.petclinic.rest.dto.PetDto;
 import victor.training.petclinic.rest.dto.PetTypeDto;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -118,6 +118,12 @@ public class OwnerTest {
     }
 
     @Test
+    void unparsableParam_isClientError_notServerError() throws Exception {
+        mockMvc.perform(get("/api/owners/not-a-number"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void count_returnsOwnerCount() throws Exception {
         long before = ownerRepository.count();
 
@@ -128,7 +134,9 @@ public class OwnerTest {
 
     @Test
     void getAll() throws Exception {
-        List<OwnerDto> owners = search("/api/owners");
+        // Filtered by last name so the assertion does not depend on where "Franklin" falls in the alphabetical
+        // ordering of the seeded owners — the listing now returns only the first page.
+        List<OwnerDto> owners = search("/api/owners?lastName=Franklin");
 
         assertThat(owners)
                 .extracting(OwnerDto::getId, OwnerDto::getFirstName, OwnerDto::getLastName)
@@ -148,6 +156,7 @@ public class OwnerTest {
                 .contains(Assertions.tuple(owner2Id, "JavaBeans"));
     }
 
+    /** The listing is paged; these tests assert on the owners of the first page. See OwnerListingTest for paging. */
     private List<OwnerDto> search(String uriTemplate) throws Exception {
         String responseJson = mockMvc.perform(get(uriTemplate))
                 .andExpect(status().isOk())
@@ -156,8 +165,7 @@ public class OwnerTest {
                 .getResponse()
                 .getContentAsString();
 
-        return mapper.readValue(responseJson, new TypeReference<List<OwnerDto>>() {
-        });
+        return mapper.readValue(responseJson, OwnerPageDto.class).content();
     }
 
     @Test

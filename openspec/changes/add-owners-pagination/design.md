@@ -155,6 +155,15 @@ Every caller is in this repo. A dual-shape endpoint (array without `?page`, enve
 it) cannot be expressed as one OpenAPI response schema and would generate a union type on
 the frontend. One shape, all callers updated in the same change.
 
+### D12: The direction applies to the tiebreaker too
+
+`Sort.by(direction, "city", "lastName", "id")` reverses *every* term, so `CITY DESC` also
+orders the owners within each city by descending last name. That is the intended reading of
+"reverse the order": clicking a header twice presents the exact reverse of the list, rather
+than the same city blocks with their contents still ascending. Confirmed by
+`OwnerListingTest.orderByCityDescending_thenByLastName`, which asserts the reversed
+tiebreak explicitly rather than accepting whatever came out.
+
 ### D11: Render the Name column surname-first (`Potter, Harry`)
 
 `owner-list.component.html:41` renders `{{firstName}} {{lastName}}` while D2 orders by
@@ -211,6 +220,19 @@ update. The `.ownerFullName` selector itself is unchanged, so the page object su
   assumes the whole list is on one page
 - `petclinic-ui-test/tests/support/api-client.ts` — `getFullNames` must emit the
   surname-first format (D11)
+- `petclinic-ui-test/features/dsl/owner-search.dsl.ts` — the glue shared by the Cucumber
+  suite (`features/owner-search.feature` + `step_definitions/owner-search.steps.ts`) and its
+  plain-TypeScript twin (`features/owner-search.spec.ts`), both added on `main` while this
+  change was being planned. One file, five breakages:
+  1. `axios.get('/api/owners')` destructures a bare array — becomes `.content`
+  2. the filtered call does the same
+  3. `fullName()` builds `${firstName} ${lastName}` — must become surname-first (D11)
+  4. `lastNameOf()` takes the **last** whitespace token, which for `Potter, Harry` returns
+     `Harry` — the prefix assertion silently inverts
+  5. `toHaveCount(expectedFullNames.length)` assumes the whole result set is on one page
+- `petclinic-ui-test/playwright.config.ts` — now runs two projects (`chromium`, `features`);
+  both must pass. `tests/support/trace-fixture.ts` adds a ~1s OTel flush per test — expected,
+  do not revert.
 
 **Deliberately untouched**
 - `GET /api/owners/count` — redundant with `totalElements`, but removing it is a separate
