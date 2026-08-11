@@ -2,9 +2,18 @@ import { Injectable } from '@angular/core';
 import { Owner } from './owner';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { catchError } from 'rxjs/operators';
 import { HandleError, HttpErrorHandler } from '../error.service';
+import { DEFAULT_OWNER_QUERY, DEFAULT_PAGE_SIZE, OwnerPage, OwnerQuery } from './owner-page';
+
+const EMPTY_OWNER_PAGE: OwnerPage = {
+  content: [],
+  totalElements: 0,
+  totalPages: 0,
+  number: 0,
+  size: DEFAULT_PAGE_SIZE,
+};
 
 @Injectable()
 export class OwnerService {
@@ -19,10 +28,19 @@ export class OwnerService {
     this.handlerError = httpErrorHandler.createHandleError('OwnerService');
   }
 
-  getOwners(): Observable<Owner[]> {
+  /** One page of owners, ordered and filtered as asked. The server never returns them all at once. */
+  getOwners(query: OwnerQuery = DEFAULT_OWNER_QUERY): Observable<OwnerPage> {
+    let params = new HttpParams()
+      .set('page', query.page)
+      .set('size', query.size)
+      .set('sort', query.sort)
+      .set('direction', query.direction);
+    if (query.lastName) {
+      params = params.set('lastName', query.lastName);
+    }
     return this.http
-      .get<Owner[]>(this.entityUrl)
-      .pipe(catchError(this.handlerError('getOwners', [])));
+      .get<OwnerPage>(this.entityUrl, { params })
+      .pipe(catchError(this.handlerError('getOwners', EMPTY_OWNER_PAGE)));
   }
 
   getOwnerById(ownerId: number): Observable<Owner> {
@@ -50,13 +68,8 @@ export class OwnerService {
       .pipe(catchError(this.handlerError('deleteOwner', [ownerId])));
   }
 
-  searchOwners(lastName: string): Observable<Owner[]> {
-    let url = this.entityUrl;
-    if (lastName !== undefined) {
-      url += '?lastName=' + lastName;
-    }
-    return this.http
-      .get<Owner[]>(url)
-      .pipe(catchError(this.handlerError('searchOwners', [])));
+  /** Search is the listing with a last-name filter — same paging and ordering rules apply. */
+  searchOwners(lastName: string, query: OwnerQuery = DEFAULT_OWNER_QUERY): Observable<OwnerPage> {
+    return this.getOwners({ ...query, lastName, page: 0 });
   }
 }
