@@ -2,22 +2,63 @@ schema: spec-driven
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  PetClinic: Angular 16 frontend + Spring Boot 3.5 / Java 21 backend, PostgreSQL.
+  See CLAUDE.md at the repo root for architecture, commands and code preferences.
+
+  AUDIENCES — each artifact is read by different people. Write for the reader:
+    - proposal.md  -> the Product Owner. NON-TECHNICAL. He is smart but does not
+                      know JSON, HTTP status codes, Spring, or SQL.
+    - specs/*.md   -> PO and engineers together. Observable behaviour, no internals.
+    - design.md    -> engineers. All technical depth belongs here.
+    - tasks.md     -> engineers doing the work.
 
 # Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - >-
+      Write for a NON-TECHNICAL Product Owner who will read this alone, without an
+      engineer present. Plain business language throughout.
+    - >-
+      BANNED from proposal.md — put every one of these in design.md instead:
+      class/file/method names, code identifiers, file paths, HTTP verbs and status
+      codes (400, 500, GET /api/...), JSON or field names, SQL, index definitions,
+      database or collation details, library/framework names (Spring, Hibernate,
+      JPA, Angular, Flyway, MapStruct), annotations (@BatchSize, JOIN FETCH),
+      query params, enums, DTOs, exception/handler names, and test class names.
+    - >-
+      Describe user-visible outcomes and business consequences: what someone using
+      the application can do afterwards that they cannot do now, what gets faster,
+      safer, or cheaper, and what visibly changes for them.
+    - >-
+      Justify choices with observable facts (real data counts, expected volumes,
+      user impact), never with implementation reasoning.
+    - >-
+      Say WHY the change is worth doing and WHAT changes for users. Never HOW it is
+      built. If a sentence would only make sense to an engineer, it belongs in design.md.
+    - >-
+      State breaking changes as business risk (e.g. "the app must be updated and
+      released together"), not as an API contract change.
+    - >-
+      The Impact section lists affected AREAS OF THE PRODUCT in business terms
+      (e.g. "the Owners screen", "the published interface other systems use"),
+      not files, modules or classes.
+    - Keep it under one page. No code blocks, no tables of identifiers.
+  specs:
+    - >-
+      Describe externally observable behaviour only. No class names, no frameworks,
+      no file paths. A scenario a PO can read and confirm.
+  design:
+    - >-
+      This is the home for ALL technical detail, including everything kept out of the
+      proposal: exact class and file names, endpoints, status codes, SQL, indexes,
+      annotations, and framework specifics.
+    - >-
+      Open with a one-paragraph restatement of the business goal in the PO's words,
+      then go as deep as the engineers need.
+    - Every non-obvious decision states the alternatives considered and why they lost.
+  tasks:
+    - Order tasks test-first, matching the TDD preference in CLAUDE.md.
 
 # Per-operation guidance (optional)
 # Add advisory guidance for how apply and archive work should be conducted.
@@ -27,6 +68,3 @@ schema: spec-driven
 #     apply:
 #       guidance:
 #         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
