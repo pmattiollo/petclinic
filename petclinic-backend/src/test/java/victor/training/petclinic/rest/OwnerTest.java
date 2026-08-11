@@ -118,6 +118,12 @@ public class OwnerTest {
     }
 
     @Test
+    void unparsableParam_isClientError_notServerError() throws Exception {
+        mockMvc.perform(get("/api/owners/not-a-number"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void count_returnsOwnerCount() throws Exception {
         long before = ownerRepository.count();
 
