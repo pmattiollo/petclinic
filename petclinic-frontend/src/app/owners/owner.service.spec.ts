@@ -142,4 +142,18 @@ describe('OwnerService', () => {
     expect(req.request.method).toEqual('GET');
     req.flush(expectedOwners);
   });
+
+  it('search owners by last name should URL-encode special characters', () => {
+    const lastNameWithSpecialChars = 'Smith & Jones';
+
+    ownerService.searchOwners(lastNameWithSpecialChars).subscribe((owners) => {
+      expect(owners).toEqual(expectedOwners);
+    });
+
+    const req = httpTestingController.expectOne(
+      ownerService.entityUrl + '?lastName=' + encodeURIComponent(lastNameWithSpecialChars)
+    );
+    expect(req.request.method).toEqual('GET');
+    req.flush(expectedOwners);
+  });
 });
