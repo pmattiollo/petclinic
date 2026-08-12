@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import victor.training.petclinic.mapper.PetTypeMapper;
 import victor.training.petclinic.domain.PetType;
@@ -16,6 +17,7 @@ import victor.training.petclinic.rest.dto.PetTypeFieldsDto;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
@@ -73,7 +75,8 @@ public class PetTypeRestController {
             petTypeRepository.delete(petType);
             return ResponseEntity.noContent().build();
         } catch (DataIntegrityViolationException ex) {
-            throw new RuntimeException("PetType is in use by existing pets and cannot be deleted", ex);
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "PetType is in use by existing pets and cannot be deleted", ex);
         }
     }
 
