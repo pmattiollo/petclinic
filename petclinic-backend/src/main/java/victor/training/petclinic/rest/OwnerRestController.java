@@ -96,6 +96,7 @@ public class OwnerRestController {
 
     @Operation(operationId = "updateOwner", summary = "Update an owner")
     @PutMapping("/{ownerId}")
+    @Transactional
     public void updateOwner(@PathVariable int ownerId, @RequestBody @Validated OwnerFieldsDto ownerFieldsDto) {
         Owner currentOwner = ownerRepository.findById(ownerId).orElseThrow();
         currentOwner.setAddress(ownerFieldsDto.getAddress());
@@ -108,6 +109,7 @@ public class OwnerRestController {
 
     @Operation(operationId = "deleteOwner", summary = "Delete an owner by ID")
     @DeleteMapping("/{ownerId}")
+    @Transactional
     public void deleteOwner(@PathVariable int ownerId) {
         Owner owner = ownerRepository.findById(ownerId).orElseThrow();
         ownerRepository.delete(owner);
