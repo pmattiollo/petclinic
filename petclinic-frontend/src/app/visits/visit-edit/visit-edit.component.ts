@@ -22,7 +22,6 @@ export class VisitEditComponent implements OnInit {
   currentPetType: PetType;
   updateSuccess = false;
   errorMessage: string;
-  maxVisitDate = moment().add(1, 'year');
 
   constructor(private visitService: VisitService,
               private petService: PetService,
@@ -37,6 +36,10 @@ export class VisitEditComponent implements OnInit {
 
   get minVisitDate() {
     return moment(this.currentPet.birthDate);
+  }
+
+  get maxVisitDate() {
+    return moment().add(1, 'year');
   }
 
   ngOnInit() {

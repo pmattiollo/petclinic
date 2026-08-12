@@ -12,6 +12,7 @@ import { RouterStub } from '../../testing/router-stubs';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Vet } from '../vet';
 import { Specialty } from '../../specialties/specialty';
+import { By } from '@angular/platform-browser';
 
 const specialties: Specialty[] = [{ id: 1, name: 'radiology' }];
 const existingVet: Vet = { id: 1, firstName: 'James', lastName: 'Carter', specialties: [] };
@@ -79,5 +80,14 @@ describe('VetEditComponent', () => {
     spyOn(router, 'navigate');
     component.gotoVetList();
     expect(router.navigate).toHaveBeenCalledWith(['/vets']);
+  });
+
+  it('should render errorMessage in the template when set', () => {
+    component.errorMessage = 'Something went wrong';
+    fixture.detectChanges();
+
+    const errorDiv = fixture.debugElement.query(By.css('.alert-danger'));
+    expect(errorDiv).not.toBeNull();
+    expect(errorDiv.nativeElement.textContent).toContain('Something went wrong');
   });
 });

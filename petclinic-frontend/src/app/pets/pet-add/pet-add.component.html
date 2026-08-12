@@ -3,6 +3,9 @@
       <h2>
         Add Pet
       </h2>
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+      </div>
       <form class="form-horizontal" (ngSubmit)="onSubmit(petForm.value)" #petForm="ngForm">
         <div class="form-group" hidden="true">
           <input type="text" hidden="true" class="form-control" id="id" [(ngModel)]="pet.id" name="id"/>

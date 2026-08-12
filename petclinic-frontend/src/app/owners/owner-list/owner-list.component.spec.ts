@@ -9,7 +9,7 @@ import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import { OwnerService } from '../owner.service';
 import {Owner} from '../owner';
-import {Observable, of} from 'rxjs';
+import {Observable, of, Subject} from 'rxjs';
 import {RouterTestingModule} from '@angular/router/testing';
 import {CommonModule} from '@angular/common';
 import {PartsModule} from '../../parts/parts.module';
@@ -124,6 +124,60 @@ describe('OwnerListComponent', () => {
 
     expect(searchOwnersSpy).toHaveBeenCalledWith('Fr');
     expect(getOwnersSpy).not.toHaveBeenCalled();
+  });
+
+  it('submitting the search form should call searchByLastName and not trigger a native page reload', () => {
+    fixture.detectChanges();
+    const searchSpy = spyOn(component, 'searchByLastName');
+    component.lastName = 'Franklin';
+    fixture.detectChanges();
+
+    const form: DebugElement = fixture.debugElement.query(By.css('#search-owner-form'));
+    const submitEvent = new Event('submit');
+    spyOn(submitEvent, 'preventDefault');
+    form.nativeElement.dispatchEvent(submitEvent);
+
+    expect(searchSpy).toHaveBeenCalledWith('Franklin');
+    // Angular's (ngSubmit) always calls preventDefault() on the native submit event
+    expect(submitEvent.preventDefault).toHaveBeenCalled();
+  });
+
+  it('should not show "No owners" message while owners data is still loading', () => {
+    getOwnersSpy.and.returnValue(new Observable<Owner[]>()); // never emits -> still pending
+    fixture.detectChanges();
+
+    const noOwnersMessage: DebugElement = fixture.debugElement.query(By.css('.no-owners-message'));
+    expect(noOwnersMessage).toBeNull('message should be hidden while loading');
+  });
+
+  it('should show "No owners" message only after data has loaded and result set is empty', () => {
+    getOwnersSpy.and.returnValue(of([]));
+    fixture.detectChanges();
+
+    const noOwnersMessage: DebugElement = fixture.debugElement.query(By.css('.no-owners-message'));
+    expect(noOwnersMessage).not.toBeNull('message should be shown once loaded and empty');
+  });
+
+  it('should apply only the latest result when two searches overlap (switchMap race guard)', () => {
+    const firstSearchResult = new Subject<Owner[]>();
+    const secondSearchResult = new Subject<Owner[]>();
+    const staleOwner: Owner = { ...testOwner, id: 99, lastName: 'Stale' };
+
+    searchOwnersSpy.and.callFake((term: string) =>
+      term === 'First' ? firstSearchResult.asObservable() : secondSearchResult.asObservable());
+
+    fixture.detectChanges(); // initial load via ngOnInit
+
+    component.searchByLastName('First');
+    component.searchByLastName('Second');
+
+    // second (latest) search resolves first...
+    secondSearchResult.next(testOwners);
+    // ...and the first (stale, now-cancelled) search resolves late; switchMap
+    // must have already unsubscribed it so this must NOT overwrite owners.
+    firstSearchResult.next([staleOwner]);
+
+    expect(component.owners).toEqual(testOwners);
   });
 
 });

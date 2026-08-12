@@ -1,6 +1,9 @@
 <div class="container-fluid">
     <div class="container xd-container">
       <h2>Edit Specialty</h2>
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+      </div>
       <form id="specialty" class="form-horizontal" (ngSubmit)="onSubmit(specialtyForm.value)" #specialtyForm="ngForm">
         <div class="form-group" hidden="true">
           <input type="text" hidden="true" class="form-control" id="id" [(ngModel)]="specialty.id" name="id"/>

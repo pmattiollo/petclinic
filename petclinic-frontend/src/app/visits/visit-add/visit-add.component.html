@@ -3,6 +3,10 @@
 
     <h2>New Visit</h2>
 
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+
     <b>Pet</b>
     <table class="table table-striped">
       <thead>

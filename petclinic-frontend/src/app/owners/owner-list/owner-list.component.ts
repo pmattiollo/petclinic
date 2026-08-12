@@ -2,7 +2,8 @@ import {Component, OnInit} from '@angular/core';
 import {OwnerService} from '../owner.service';
 import {Owner} from '../owner';
 import {Router} from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import {EMPTY, Subject} from 'rxjs';
+import {catchError, finalize, switchMap} from 'rxjs/operators';
 
 @Component({
   selector: 'app-owner-list',
@@ -16,18 +17,36 @@ export class OwnerListComponent implements OnInit {
   listOfOwnersWithLastName: Owner[];
   isOwnersDataReceived: boolean = false;
 
-  constructor(private router: Router, private ownerService: OwnerService) {
+  // Emits each search term (empty string == "list all"). switchMap cancels
+  // any still-pending previous request so an out-of-order response from an
+  // earlier search can never overwrite the result of a more recent one.
+  private searchTerms = new Subject<string>();
 
+  constructor(private router: Router, private ownerService: OwnerService) {
+    this.searchTerms.pipe(
+      switchMap((lastName: string) => {
+        if (lastName) {
+          return this.ownerService.searchOwners(lastName).pipe(
+            finalize(() => this.isOwnersDataReceived = true),
+            catchError(() => {
+              this.owners = null;
+              return EMPTY;
+            })
+          );
+        }
+        return this.ownerService.getOwners().pipe(
+          finalize(() => this.isOwnersDataReceived = true),
+          catchError((error) => {
+            this.errorMessage = error as any;
+            return EMPTY;
+          })
+        );
+      })
+    ).subscribe(owners => this.owners = owners);
   }
 
   ngOnInit() {
-    this.ownerService.getOwners().pipe(
-      finalize(() => {
-        this.isOwnersDataReceived = true;
-      })
-    ).subscribe(
-      owners => this.owners = owners,
-      error => this.errorMessage = error as any);
+    this.searchTerms.next('');
   }
 
   onSelect(owner: Owner) {
@@ -38,35 +57,8 @@ export class OwnerListComponent implements OnInit {
     this.router.navigate(['/owners/add']);
   }
 
-  searchByLastName(lastName: string)
-  {
-      console.log('inside search by last name starting with ' + (lastName));
-      if (lastName === '')
-      {
-        this.ownerService.getOwners()
-          .subscribe(
-            (owners) => {
-              this.owners = owners;
-            });
-      }
-      if (lastName !== '')
-      {
-        this.ownerService.searchOwners(lastName)
-          .subscribe(
-            (owners) => {
-
-              this.owners = owners;
-              console.log('this.owners ' + this.owners);
-
-            },
-            (error) =>
-            {
-              this.owners = null;
-            }
-          );
-
-      }
+  searchByLastName(lastName: string) {
+    this.searchTerms.next(lastName);
   }
-
 
 }

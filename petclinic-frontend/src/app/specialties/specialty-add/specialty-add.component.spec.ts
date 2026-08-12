@@ -8,6 +8,7 @@ import { waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ActivatedRouteStub, RouterStub } from '../../testing/router-stubs';
 import { Observable, of } from 'rxjs';
+import { By } from '@angular/platform-browser';
 import Spy = jasmine.Spy;
 
 class SpecialityServiceStub {
@@ -78,5 +79,14 @@ describe('SpecialtyAddComponent', () => {
     component.onSubmit(specialty);
     expect(component.addedSuccess).toBeTrue();
     expect(component.newSpeciality.emit).toHaveBeenCalled();
+  });
+
+  it('should render errorMessage in the template when set', () => {
+    component.errorMessage = 'Something went wrong';
+    fixture.detectChanges();
+
+    const errorDiv = fixture.debugElement.query(By.css('.alert-danger'));
+    expect(errorDiv).not.toBeNull();
+    expect(errorDiv.nativeElement.textContent).toContain('Something went wrong');
   });
 });

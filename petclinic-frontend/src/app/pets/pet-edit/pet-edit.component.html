@@ -4,6 +4,9 @@
     <h2>
       Pet
     </h2>
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
     <form class="form-horizontal" (ngSubmit)="onSubmit(petForm.value)" #petForm="ngForm">
       <div class="form-group" hidden="true">
         <input type="text" hidden="true" class="form-control" id="id" [(ngModel)]="pet.id" name="id"/>
@@ -35,29 +38,20 @@
         <mat-datepicker-toggle matSuffix [for]="birthDateDatepicker"></mat-datepicker-toggle>
         <mat-datepicker #birthDateDatepicker></mat-datepicker>
           <span class="glyphicon form-control-feedback" [class.glyphicon-ok]="birthDate.valid" [class.glyphicon-remove]="!birthDate.valid" aria-hidden="true"></span>
-          <span class="glyphicon form-control-feedback" [class.glyphicon-ok]="birthDate.valid" [class.glyphicon-remove]="!birthDate.valid" aria-hidden="true"></span>
           <span class="help-block" *ngIf="birthDate.dirty && birthDate.hasError('required')">BirthDate is required</span>
         </div>
       </div>
       <div class="control-group">
-        <div class="form-group has-feedback" [class.has-success]="pettype.dirty && pettype.valid" [class.has-error]="pettype.dirty && !pettype.valid">
+        <div class="form-group has-feedback" [class.has-success]="type.dirty && type.valid" [class.has-error]="type.dirty && !type.valid">
           <label for="type" class="col-sm-2 control-label">Type </label>
           <div class="col-sm-10">
-            <div class="col-sm-2">
-              <input id="type1" name="type1" class="form-control" type="text" value="{{ currentType.name }}" readonly/>
-            </div>
-            <div class="col-sm-8">
-              <select id="type" name="pettype" class="form-control" required [(ngModel)]="currentType"  #pettype="ngModel">
-                <option *ngFor="let type of petTypes"
-                        [selected]="type.id === currentType.id ? true : null"
-                        [ngValue]="type">{{ type.name }}
-                </option>
-              </select>
-              <span class="glyphicon form-control-feedback" [class.glyphicon-ok]="pettype.valid" [class.glyphicon-remove]="!pettype.valid" aria-hidden="true"></span>
-              <span class="help-block" *ngIf="pettype.dirty && pettype.hasError('required')">First name is required</span>
-              <span class="help-block" *ngIf="pettype.dirty && pettype.hasError('minlength')">First name must be at least 2 characters long</span>
-
-            </div>
+            <select id="type" name="type" class="form-control" required [(ngModel)]="pet.type" #type="ngModel">
+              <option *ngFor="let type of petTypes"
+                      [ngValue]="type">{{ type.name }}
+              </option>
+            </select>
+            <span class="glyphicon form-control-feedback" [class.glyphicon-ok]="type.valid" [class.glyphicon-remove]="!type.valid" aria-hidden="true"></span>
+            <span class="help-block" *ngIf="type.dirty && type.hasError('required')">pettype is required</span>
           </div>
         </div>
       </div>
