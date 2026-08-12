@@ -136,6 +136,22 @@ class OwnerCreateTest {
     }
 
     @Test
+    void addPetToOwner_ownerNotFound_isNotFound() throws Exception {
+        PetFieldsDto dto = new PetFieldsDto();
+        dto.setName("Ghost");
+        dto.setBirthDate(LocalDate.of(2022, 1, 1));
+        PetTypeDto typeDto = new PetTypeDto();
+        typeDto.setId(petType.getId());
+        typeDto.setName(petType.getName());
+        dto.setType(typeDto);
+
+        mockMvc.perform(post("/api/owners/99999/pets")
+                .content(mapper.writeValueAsString(dto))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void addVisitToOwner_created() throws Exception {
         VisitFieldsDto dto = new VisitFieldsDto();
         dto.setDate(LocalDate.of(2026, 6, 1));

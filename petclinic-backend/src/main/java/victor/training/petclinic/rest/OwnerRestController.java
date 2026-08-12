@@ -118,8 +118,9 @@ public class OwnerRestController {
     @Transactional
     public ResponseEntity<Void> addPetToOwner(@PathVariable int ownerId,
             @RequestBody @Validated PetFieldsDto petFieldsDto) {
+        Owner owner = ownerRepository.findById(ownerId).orElseThrow();
         Pet pet = petMapper.toPet(petFieldsDto);
-        pet.setOwner(new Owner().setId(ownerId));
+        pet.setOwner(owner);
         pet.setType(petTypeRepository.findById(pet.getType().getId()).orElseThrow());
         petRepository.save(pet);
         UriComponents createdUri = UriComponentsBuilder.newInstance().path("/api/pets/{id}")
