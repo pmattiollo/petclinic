@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import {PettypeListComponent} from './pettype-list.component';
 import {PetTypeService} from '../pettype.service';
 import {PetType} from '../pettype';
+import {By} from '@angular/platform-browser';
 import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ActivatedRouteStub, RouterStub} from '../../testing/router-stubs';
@@ -99,5 +100,19 @@ describe('PettypeListComponent', () => {
     spyOn(router, 'navigate');
     component.gotoHome();
     expect(router.navigate).toHaveBeenCalledWith(['/welcome']);
+  });
+
+  it('should give each row a unique name attribute instead of a duplicated static one', () => {
+    component.pettypes = [
+      {id: 1, name: 'dog'},
+      {id: 2, name: 'cat'}
+    ];
+    fixture.detectChanges();
+
+    const nameInputs = fixture.debugElement.queryAll(By.css('input'));
+    const names = nameInputs.map(el => el.nativeElement.getAttribute('name'));
+
+    expect(names.length).toBe(2);
+    expect(new Set(names).size).toBe(names.length, 'name attributes should be unique per row');
   });
 });
