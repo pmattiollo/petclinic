@@ -1,52 +1,81 @@
-import {Component, OnInit} from '@angular/core';
-import {OwnerService} from '../owner.service';
+import {Component, OnInit, ViewChild, AfterViewInit} from '@angular/core';
+import {OwnerService, PageRequest, PageResponse} from '../owner.service';
 import {Owner} from '../owner';
 import {Router} from '@angular/router';
-import {EMPTY, Subject} from 'rxjs';
-import {catchError, finalize, switchMap} from 'rxjs/operators';
+import {MatPaginator, PageEvent} from '@angular/material/paginator';
+import {MatSort, Sort} from '@angular/material/sort';
 
 @Component({
   selector: 'app-owner-list',
   templateUrl: './owner-list.component.html',
   styleUrls: ['./owner-list.component.css']
 })
-export class OwnerListComponent implements OnInit {
+export class OwnerListComponent implements OnInit, AfterViewInit {
   errorMessage: string;
-  lastName: string;
-  owners: Owner[];
-  listOfOwnersWithLastName: Owner[];
+  lastName: string = '';
+  owners: Owner[] = [];
+  totalElements: number = 0;
   isOwnersDataReceived: boolean = false;
 
-  // Emits each search term (empty string == "list all"). switchMap cancels
-  // any still-pending previous request so an out-of-order response from an
-  // earlier search can never overwrite the result of a more recent one.
-  private searchTerms = new Subject<string>();
+  displayedColumns: string[] = ['name', 'address', 'city', 'telephone', 'pets'];
+  pageSize: number = 10;
+  pageIndex: number = 0;
+  sortField: string = 'name';
+  sortDirection: string = 'asc';
 
-  constructor(private router: Router, private ownerService: OwnerService) {
-    this.searchTerms.pipe(
-      switchMap((lastName: string) => {
-        if (lastName) {
-          return this.ownerService.searchOwners(lastName).pipe(
-            finalize(() => this.isOwnersDataReceived = true),
-            catchError(() => {
-              this.owners = null;
-              return EMPTY;
-            })
-          );
-        }
-        return this.ownerService.getOwners().pipe(
-          finalize(() => this.isOwnersDataReceived = true),
-          catchError((error) => {
-            this.errorMessage = error as any;
-            return EMPTY;
-          })
-        );
-      })
-    ).subscribe(owners => this.owners = owners);
-  }
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatSort) sort: MatSort;
+
+  constructor(private router: Router, private ownerService: OwnerService) {}
 
   ngOnInit() {
-    this.searchTerms.next('');
+    this.loadOwners();
+  }
+
+  ngAfterViewInit() {}
+
+  loadOwners() {
+    const pageRequest: PageRequest = {
+      page: this.pageIndex,
+      size: this.pageSize,
+      sort: this.sortField,
+      sortDir: this.sortDirection
+    };
+
+    const request$ = this.lastName
+      ? this.ownerService.searchOwners(this.lastName, pageRequest)
+      : this.ownerService.getOwners(pageRequest);
+
+    request$.subscribe((page: PageResponse<Owner>) => {
+      this.owners = page.content;
+      this.totalElements = page.totalElements;
+      this.isOwnersDataReceived = true;
+    });
+  }
+
+  onPageChange(event: PageEvent) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadOwners();
+  }
+
+  onSortChange(sort: Sort) {
+    this.sortField = sort.active || 'name';
+    this.sortDirection = sort.direction || 'asc';
+    this.pageIndex = 0;
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+    this.loadOwners();
+  }
+
+  searchByLastName(lastName: string) {
+    this.lastName = lastName;
+    this.pageIndex = 0;
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+    this.loadOwners();
   }
 
   onSelect(owner: Owner) {
@@ -56,9 +85,4 @@ export class OwnerListComponent implements OnInit {
   addOwner() {
     this.router.navigate(['/owners/add']);
   }
-
-  searchByLastName(lastName: string) {
-    this.searchTerms.next(lastName);
-  }
-
 }

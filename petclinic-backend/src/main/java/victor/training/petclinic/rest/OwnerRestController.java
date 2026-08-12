@@ -3,6 +3,11 @@ package victor.training.petclinic.rest;
 import java.net.URI;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import victor.training.petclinic.mapper.OwnerMapper;
 import victor.training.petclinic.mapper.PetMapper;
@@ -34,9 +39,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.transaction.Transactional;
@@ -59,15 +62,39 @@ public class OwnerRestController {
 
     private final VisitMapper visitMapper;
 
-    @Operation(operationId = "listOwners", summary = "List owners")
+    @Operation(operationId = "listOwners", summary = "List owners (paginated)")
     @ApiResponse(responseCode = "200", description = "OK",
             content = @Content(mediaType = "application/json",
-                    array = @ArraySchema(schema = @Schema(implementation = OwnerDto.class)),
-                    examples = @ExampleObject(name = "sample", value = ApiExamples.OWNERS)))
+                    schema = @Schema(implementation = Page.class)))
     @GetMapping(produces = "application/json")
-    public List<OwnerDto> listOwners(@RequestParam(name = "lastName", defaultValue = "") String lastName) {
-        List<Owner> owners = ownerRepository.findByLastNameStartingWith(lastName);
-        return ownerMapper.toOwnerDtoCollection(owners);
+    public Page<OwnerDto> listOwners(
+            @RequestParam(name = "lastName", defaultValue = "") String lastName,
+            @PageableDefault(size = 10, sort = {"firstName", "lastName"}) Pageable pageable) {
+        Pageable resolvedPageable = resolveNameSort(pageable);
+        Page<Owner> owners = ownerRepository.findByLastNameStartingWith(lastName, resolvedPageable);
+        return owners.map(ownerMapper::toOwnerDto);
+    }
+
+    /**
+     * Translates the virtual "name" sort property to firstName + lastName.
+     */
+    private Pageable resolveNameSort(Pageable pageable) {
+        Sort sort = pageable.getSort();
+        boolean hasNameSort = sort.stream().anyMatch(o -> "name".equalsIgnoreCase(o.getProperty()));
+        if (!hasNameSort) {
+            return pageable;
+        }
+        List<Sort.Order> newOrders = sort.stream()
+                .flatMap(order -> {
+                    if ("name".equalsIgnoreCase(order.getProperty())) {
+                        return List.of(
+                                new Sort.Order(order.getDirection(), "firstName"),
+                                new Sort.Order(order.getDirection(), "lastName")).stream();
+                    }
+                    return List.of(order).stream();
+                })
+                .toList();
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(newOrders));
     }
 
     @Operation(operationId = "countOwners", summary = "Count owners")

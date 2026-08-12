@@ -156,8 +156,11 @@ public class OwnerTest {
                 .getResponse()
                 .getContentAsString();
 
-        return mapper.readValue(responseJson, new TypeReference<List<OwnerDto>>() {
-        });
+        var tree = mapper.readTree(responseJson);
+        return mapper.readValue(
+                tree.get("content").toString(),
+                new TypeReference<List<OwnerDto>>() {
+                });
     }
 
     @Test
@@ -329,6 +332,78 @@ public class OwnerTest {
                 .content(mapper.writeValueAsString(petDto))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void listOwners_paginationReturnsPageShape() throws Exception {
+        mockMvc.perform(get("/api/owners?page=0&size=5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").isNumber())
+                .andExpect(jsonPath("$.totalPages").isNumber())
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
+    void listOwners_pageSizeLimitsResults() throws Exception {
+        // Add more owners to exceed page size
+        for (int i = 0; i < 6; i++) {
+            Owner o = TestData.anOwner();
+            o.setFirstName("Test" + i);
+            o.setLastName("Paginated" + i);
+            ownerRepository.save(o);
+        }
+        // Now we have 7+ owners; page size 5 should return 5 items
+        mockMvc.perform(get("/api/owners?page=0&size=5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(5))
+                .andExpect(jsonPath("$.totalElements").value(org.hamcrest.Matchers.greaterThanOrEqualTo(7)));
+    }
+
+    @Test
+    void listOwners_sortByCity() throws Exception {
+        Owner a = TestData.anOwner();
+        a.setFirstName("Alice");
+        a.setLastName("Zurich");
+        a.setCity("Aachen");
+        ownerRepository.save(a);
+
+        Owner b = TestData.anOwner();
+        b.setFirstName("Bob");
+        b.setLastName("York");
+        b.setCity("Zurich");
+        ownerRepository.save(b);
+
+        mockMvc.perform(get("/api/owners?sort=city,asc&size=100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].city").value("Aachen"));
+    }
+
+    @Test
+    void listOwners_sortByNameUsesFirstNameThenLastName() throws Exception {
+        Owner a = TestData.anOwner();
+        a.setFirstName("Aaron");
+        a.setLastName("Zzz");
+        ownerRepository.save(a);
+
+        mockMvc.perform(get("/api/owners?sort=name,asc&size=100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].firstName").value("Aaron"));
+    }
+
+    @Test
+    void listOwners_searchWithPagination() throws Exception {
+        for (int i = 0; i < 6; i++) {
+            Owner o = TestData.anOwner();
+            o.setFirstName("Test" + i);
+            o.setLastName("SearchMe" + i);
+            ownerRepository.save(o);
+        }
+        mockMvc.perform(get("/api/owners?lastName=SearchMe&page=0&size=3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.totalElements").value(6));
     }
 
 }

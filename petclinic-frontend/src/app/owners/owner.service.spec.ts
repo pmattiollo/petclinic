@@ -6,7 +6,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpResponse } from '@angular/common/http';
 
 import { HttpErrorHandler } from '../error.service';
-import { OwnerService } from './owner.service';
+import { OwnerService, PageResponse } from './owner.service';
 import { Owner } from './owner';
 
 describe('OwnerService', () => {
@@ -34,6 +34,14 @@ describe('OwnerService', () => {
     }
   ];
 
+  const expectedPage: PageResponse<Owner> = {
+    content: expectedOwners,
+    totalElements: 2,
+    totalPages: 1,
+    size: 10,
+    number: 0
+  };
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
@@ -48,14 +56,16 @@ describe('OwnerService', () => {
     httpTestingController.verify();
   });
 
-  it('should return expected owners (called once)', () => {
+  it('should return expected owners page (called once)', () => {
     ownerService
       .getOwners()
-      .subscribe((owners) => expect(owners).toEqual(expectedOwners), fail);
+      .subscribe((page) => expect(page).toEqual(expectedPage), fail);
 
-    const req = httpTestingController.expectOne(ownerService.entityUrl);
+    const req = httpTestingController.expectOne(
+      r => r.url === ownerService.entityUrl && r.method === 'GET'
+    );
     expect(req.request.method).toEqual('GET');
-    req.flush(expectedOwners);
+    req.flush(expectedPage);
   });
 
   it('search the owner by id', () => {
@@ -132,28 +142,42 @@ describe('OwnerService', () => {
   });
 
   it('search owners by last name prefix', () => {
-    ownerService.searchOwners('Fr').subscribe((owners) => {
-      expect(owners).toEqual(expectedOwners);
+    ownerService.searchOwners('Fr').subscribe((page) => {
+      expect(page).toEqual(expectedPage);
     });
 
     const req = httpTestingController.expectOne(
-      ownerService.entityUrl + '?lastName=Fr'
+      r => r.url === ownerService.entityUrl && r.params.get('lastName') === encodeURIComponent('Fr')
     );
     expect(req.request.method).toEqual('GET');
-    req.flush(expectedOwners);
+    req.flush(expectedPage);
   });
 
   it('search owners by last name should URL-encode special characters', () => {
     const lastNameWithSpecialChars = 'Smith & Jones';
 
-    ownerService.searchOwners(lastNameWithSpecialChars).subscribe((owners) => {
-      expect(owners).toEqual(expectedOwners);
+    ownerService.searchOwners(lastNameWithSpecialChars).subscribe((page) => {
+      expect(page).toEqual(expectedPage);
     });
 
     const req = httpTestingController.expectOne(
-      ownerService.entityUrl + '?lastName=' + encodeURIComponent(lastNameWithSpecialChars)
+      r => r.url === ownerService.entityUrl && r.params.get('lastName') === encodeURIComponent(lastNameWithSpecialChars)
     );
     expect(req.request.method).toEqual('GET');
-    req.flush(expectedOwners);
+    req.flush(expectedPage);
+  });
+
+  it('getOwners with pageRequest should pass page/size/sort params', () => {
+    ownerService.getOwners({ page: 1, size: 5, sort: 'name', sortDir: 'desc' })
+      .subscribe((page) => expect(page).toEqual(expectedPage));
+
+    const req = httpTestingController.expectOne(
+      r => r.url === ownerService.entityUrl
+        && r.params.get('page') === '1'
+        && r.params.get('size') === '5'
+        && r.params.get('sort') === 'name,desc'
+    );
+    expect(req.request.method).toEqual('GET');
+    req.flush(expectedPage);
   });
 });

@@ -15,7 +15,7 @@ export interface paths {
     patch: operations["redirectToSwagger_4"];
   };
   "/api/owners": {
-    /** List owners */
+    /** List owners (paginated) */
     get: operations["listOwners"];
     /** Create an owner */
     post: operations["addOwner"];
@@ -170,6 +170,42 @@ export interface components {
        */
       telephone: string;
     };
+    Page: {
+      content?: unknown[];
+      empty?: boolean;
+      first?: boolean;
+      last?: boolean;
+      /** Format: int32 */
+      number?: number;
+      /** Format: int32 */
+      numberOfElements?: number;
+      pageable?: components["schemas"]["PageableObject"];
+      /** Format: int32 */
+      size?: number;
+      sort?: components["schemas"]["SortObject"];
+      /** Format: int64 */
+      totalElements?: number;
+      /** Format: int32 */
+      totalPages?: number;
+    };
+    Pageable: {
+      /** Format: int32 */
+      page?: number;
+      /** Format: int32 */
+      size?: number;
+      sort?: string[];
+    };
+    PageableObject: {
+      /** Format: int64 */
+      offset?: number;
+      /** Format: int32 */
+      pageNumber?: number;
+      /** Format: int32 */
+      pageSize?: number;
+      paged?: boolean;
+      sort?: components["schemas"]["SortObject"];
+      unpaged?: boolean;
+    };
     PetDto: {
       /**
        * Format: date
@@ -251,6 +287,11 @@ export interface components {
        */
       name: string;
     };
+    SortObject: {
+      empty?: boolean;
+      sorted?: boolean;
+      unsorted?: boolean;
+    };
     SpecialtyDto: {
       /**
        * @description The section that identifies this specialty (symptoms); vectorized into the chatbot RAG.
@@ -279,7 +320,7 @@ export interface components {
        * @description The password
        * @example 1234abc
        */
-      password?: string;
+      password?: components["schemas"]["UserDto"];
       /** @description The roles of an user */
       roles?: components["schemas"]["RoleDto"][];
       /**
@@ -386,7 +427,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -412,7 +453,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -438,7 +479,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -464,7 +505,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -490,7 +531,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -516,7 +557,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -542,7 +583,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -553,18 +594,19 @@ export interface operations {
       };
     };
   };
-  /** List owners */
+  /** List owners (paginated) */
   listOwners: {
     parameters: {
-      query?: {
+      query: {
         lastName?: string;
+        pageable: components["schemas"]["Pageable"];
       };
     };
     responses: {
       /** @description OK */
       200: {
         content: {
-          "application/json": components["schemas"]["OwnerDto"][];
+          "application/json": components["schemas"]["Page"];
         };
       };
       /** @description Bad Request */
@@ -576,7 +618,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -608,7 +650,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -637,7 +679,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -671,7 +713,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -708,7 +750,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -740,7 +782,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -777,7 +819,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -812,7 +854,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -850,7 +892,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -888,7 +930,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -916,7 +958,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -949,7 +991,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -985,7 +1027,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1016,7 +1058,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1044,7 +1086,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1075,7 +1117,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1108,7 +1150,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1144,7 +1186,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1175,7 +1217,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1203,7 +1245,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1234,7 +1276,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1267,7 +1309,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1300,7 +1342,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1336,7 +1378,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1367,7 +1409,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1400,7 +1442,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1428,7 +1470,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1459,7 +1501,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1492,7 +1534,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1528,7 +1570,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1559,7 +1601,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1587,7 +1629,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1618,7 +1660,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1651,7 +1693,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1687,7 +1729,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
@@ -1718,7 +1760,7 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["ProblemDetail"];
         };
       };
       /** @description Internal Server Error */
