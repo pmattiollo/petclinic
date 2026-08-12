@@ -49,9 +49,9 @@
                   [(ngModel)]="visit.description" #description="ngModel"/>
             <span class="glyphicon form-control-feedback" [class.glyphicon-ok]="description.valid" [class.glyphicon-remove]="!description.valid" aria-hidden="true"></span>
             <span class="help-block" *ngIf="description.dirty && description.hasError('required')">Description is required</span>
-            <span class="help-block" *ngIf="description.dirty && description.hasError('minlength')">Description must be at least 1 characters long</span>           <span class="help-block" *ngIf="description.dirty && description.hasError('maxlength')">Description may be at most 255 charaters long</span>
-            <span class="help-block" *ngIf="description.dirty && description.hasError('maxlength')">Description may be at most 255 characters long</span>           <span class="help-block" *ngIf="description.dirty && description.hasError('maxlength')">Description may be at most 255 charaters long</span>
-        </div>
+            <span class="help-block" *ngIf="description.dirty && description.hasError('minlength')">Description must be at least 1 characters long</span>
+            <span class="help-block" *ngIf="description.dirty && description.hasError('maxlength')">Description may be at most 255 characters long</span>
+          </div>
         </div>
 
       </div>
