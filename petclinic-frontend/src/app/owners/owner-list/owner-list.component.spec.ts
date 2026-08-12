@@ -126,4 +126,36 @@ describe('OwnerListComponent', () => {
     expect(getOwnersSpy).not.toHaveBeenCalled();
   });
 
+  it('submitting the search form should call searchByLastName and not trigger a native page reload', () => {
+    fixture.detectChanges();
+    const searchSpy = spyOn(component, 'searchByLastName');
+    component.lastName = 'Franklin';
+    fixture.detectChanges();
+
+    const form: DebugElement = fixture.debugElement.query(By.css('#search-owner-form'));
+    const submitEvent = new Event('submit');
+    spyOn(submitEvent, 'preventDefault');
+    form.nativeElement.dispatchEvent(submitEvent);
+
+    expect(searchSpy).toHaveBeenCalledWith('Franklin');
+    // Angular's (ngSubmit) always calls preventDefault() on the native submit event
+    expect(submitEvent.preventDefault).toHaveBeenCalled();
+  });
+
+  it('should not show "No owners" message while owners data is still loading', () => {
+    getOwnersSpy.and.returnValue(new Observable<Owner[]>()); // never emits -> still pending
+    fixture.detectChanges();
+
+    const noOwnersMessage: DebugElement = fixture.debugElement.query(By.css('.no-owners-message'));
+    expect(noOwnersMessage).toBeNull('message should be hidden while loading');
+  });
+
+  it('should show "No owners" message only after data has loaded and result set is empty', () => {
+    getOwnersSpy.and.returnValue(of([]));
+    fixture.detectChanges();
+
+    const noOwnersMessage: DebugElement = fixture.debugElement.query(By.css('.no-owners-message'));
+    expect(noOwnersMessage).not.toBeNull('message should be shown once loaded and empty');
+  });
+
 });
