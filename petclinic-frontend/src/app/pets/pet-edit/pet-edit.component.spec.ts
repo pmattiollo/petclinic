@@ -96,13 +96,14 @@ describe('PetEditComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should submit pet and navigate to owner detail', () => {
+  it('should submit pet and navigate to owner detail, saving the selected pet type', () => {
     const router = fixture.debugElement.injector.get(Router) as unknown as RouterStub;
     spyOn(router, 'navigate');
     component.currentOwner = testOwner2;
-    component.currentType = { id: 1, name: 'cat' };
-    const pet: Pet = { id: 1, name: 'Leo', birthDate: '2020-01-15', type: { id: 1, name: 'cat' }, ownerId: 1, owner: testOwner2, visits: [] };
+    const selectedType: PetType = { id: 2, name: 'dog' };
+    const pet: Pet = { id: 1, name: 'Leo', birthDate: '2020-01-15', type: selectedType, ownerId: 1, owner: testOwner2, visits: [] };
     component.onSubmit(pet);
+    expect(spy).toHaveBeenCalledWith('1', jasmine.objectContaining({ type: selectedType }));
     expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
   });
 

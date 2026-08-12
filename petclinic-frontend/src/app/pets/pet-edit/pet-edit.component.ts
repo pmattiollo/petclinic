@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {Pet} from '../pet';
 import {PetService} from '../pet.service';
 import {ActivatedRoute, Router} from '@angular/router';
@@ -16,7 +16,6 @@ import {OwnerService} from '../../owners/owner.service';
 })
 export class PetEditComponent implements OnInit {
   pet: Pet;
-  @Input() currentType: PetType;
   currentOwner: Owner;
   petTypes: PetType[];
   errorMessage: string;
@@ -28,7 +27,6 @@ export class PetEditComponent implements OnInit {
               private route: ActivatedRoute) {
     this.pet = {} as Pet;
     this.currentOwner = {} as Owner;
-    this.currentType = {} as PetType;
     this.petTypes = [];
   }
 
@@ -46,14 +44,12 @@ export class PetEditComponent implements OnInit {
           response => {
             this.currentOwner = response;
           });
-        this.currentType = this.pet.type;
       },
       error => this.errorMessage = error as any);
 
   }
 
   onSubmit(pet: Pet) {
-    pet.type = this.currentType;
     const that = this;
     // format output from datepicker to short string yyyy-mm-dd format (rfc3339)
     pet.birthDate = moment(pet.birthDate).format('YYYY-MM-DD');
