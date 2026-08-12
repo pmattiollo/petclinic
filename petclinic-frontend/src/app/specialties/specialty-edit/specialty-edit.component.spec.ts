@@ -9,6 +9,7 @@ import {FormsModule} from '@angular/forms';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ActivatedRouteStub, RouterStub} from '../../testing/router-stubs';
 import {Observable, of} from 'rxjs';
+import {By} from '@angular/platform-browser';
 import Spy = jasmine.Spy;
 
 class SpecialityServiceStub {
@@ -73,5 +74,14 @@ describe('SpecialtyEditComponent', () => {
     spyOn(router, 'navigate');
     component.onBack();
     expect(router.navigate).toHaveBeenCalledWith(['/specialties']);
+  });
+
+  it('should render errorMessage in the template when set', () => {
+    component.errorMessage = 'Something went wrong';
+    fixture.detectChanges();
+
+    const errorDiv = fixture.debugElement.query(By.css('.alert-danger'));
+    expect(errorDiv).not.toBeNull();
+    expect(errorDiv.nativeElement.textContent).toContain('Something went wrong');
   });
 });

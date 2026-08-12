@@ -1,6 +1,9 @@
 <div class="container-fluid">
     <div class="container xd-container">
       <h2>New Veterinarian</h2>
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+      </div>
       <form id="vet" class="form-horizontal" (ngSubmit)="onSubmit(vetForm.value)" #vetForm="ngForm">
         <div class="form-group" hidden="true">
           <input type="text" hidden="true" class="form-control" id="id" [(ngModel)]="vet.id" name="id"/>

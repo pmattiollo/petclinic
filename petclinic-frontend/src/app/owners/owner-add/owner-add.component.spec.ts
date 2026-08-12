@@ -89,4 +89,13 @@ describe('OwnerAddComponent', () => {
     expect(owner.id).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/owners']);
   });
+
+  it('should render errorMessage in the template when set', () => {
+    component.errorMessage = 'Something went wrong';
+    fixture.detectChanges();
+
+    const errorDiv = fixture.debugElement.query(By.css('.alert-danger'));
+    expect(errorDiv).not.toBeNull();
+    expect(errorDiv.nativeElement.textContent).toContain('Something went wrong');
+  });
 });

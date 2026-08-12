@@ -16,6 +16,7 @@ import {Observable, of} from 'rxjs';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import {MatMomentDateModule} from '@angular/material-moment-adapter';
 import {PetType} from '../../pettypes/pettype';
+import {By} from '@angular/platform-browser';
 import Spy = jasmine.Spy;
 
 const testOwner2: Owner = { id: 1, firstName: 'George', lastName: 'Franklin', address: '110 W. Liberty St.', city: 'Madison', telephone: '6085551023', pets: [] };
@@ -111,5 +112,14 @@ describe('PetEditComponent', () => {
     component.currentOwner = testOwner2;
     component.gotoOwnerDetail();
     expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
+  });
+
+  it('should render errorMessage in the template when set', () => {
+    component.errorMessage = 'Something went wrong';
+    fixture.detectChanges();
+
+    const errorDiv = fixture.debugElement.query(By.css('.alert-danger'));
+    expect(errorDiv).not.toBeNull();
+    expect(errorDiv.nativeElement.textContent).toContain('Something went wrong');
   });
 });

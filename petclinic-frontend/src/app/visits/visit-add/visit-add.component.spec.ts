@@ -13,6 +13,7 @@ import {Pet} from '../../pets/pet';
 import {Observable, of} from 'rxjs';
 import {MatMomentDateModule} from '@angular/material-moment-adapter';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import {By} from '@angular/platform-browser';
 import Spy = jasmine.Spy;
 import {OwnerService} from '../../owners/owner.service';
 import {Owner} from '../../owners/owner';
@@ -114,5 +115,14 @@ describe('VisitAddComponent', () => {
     component.currentOwner = visitOwner;
     component.gotoOwnerDetail();
     expect(router.navigate).toHaveBeenCalledWith(['/owners', 1]);
+  });
+
+  it('should render errorMessage in the template when set', () => {
+    component.errorMessage = 'Something went wrong';
+    fixture.detectChanges();
+
+    const errorDiv = fixture.debugElement.query(By.css('.alert-danger'));
+    expect(errorDiv).not.toBeNull();
+    expect(errorDiv.nativeElement.textContent).toContain('Something went wrong');
   });
 });

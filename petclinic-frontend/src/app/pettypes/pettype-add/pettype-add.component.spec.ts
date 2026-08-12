@@ -8,6 +8,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {ActivatedRouteStub, RouterStub} from '../../testing/router-stubs';
 import {FormsModule} from '@angular/forms';
 import {Observable, of} from 'rxjs';
+import {By} from '@angular/platform-browser';
 import Spy = jasmine.Spy;
 
 class PetTypeServiceStub {
@@ -62,5 +63,14 @@ describe('PettypeAddComponent', () => {
     component.onSubmit(pettype);
     expect(component.pettype.name).toBe('test');
     expect(component.newPetType.emit).toHaveBeenCalled();
+  });
+
+  it('should render errorMessage in the template when set', () => {
+    component.errorMessage = 'Something went wrong';
+    fixture.detectChanges();
+
+    const errorDiv = fixture.debugElement.query(By.css('.alert-danger'));
+    expect(errorDiv).not.toBeNull();
+    expect(errorDiv.nativeElement.textContent).toContain('Something went wrong');
   });
 });
