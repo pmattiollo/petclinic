@@ -25,7 +25,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -50,7 +50,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -75,7 +75,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -100,7 +100,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -125,7 +125,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -150,7 +150,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -175,7 +175,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -240,7 +240,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -272,7 +272,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -304,7 +304,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -338,7 +338,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -375,7 +375,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -414,7 +414,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -454,7 +454,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -498,7 +498,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -543,7 +543,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -589,7 +589,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -646,7 +646,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -679,7 +679,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -715,7 +715,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -753,7 +753,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -795,7 +795,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -826,7 +826,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -859,7 +859,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -895,7 +895,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -933,7 +933,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -978,7 +978,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1009,7 +1009,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1047,7 +1047,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1080,7 +1080,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1116,7 +1116,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1154,7 +1154,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1190,7 +1190,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1247,7 +1247,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1278,7 +1278,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1311,7 +1311,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1347,7 +1347,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1385,7 +1385,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1429,7 +1429,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1460,7 +1460,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1493,7 +1493,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1529,7 +1529,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1567,7 +1567,7 @@ paths:
           content:
             '*/*':
               schema:
-                type: string
+                $ref: "#/components/schemas/ProblemDetail"
           description: Not Found
         "500":
           content:
@@ -1838,11 +1838,10 @@ components:
           description: Indicates if the user is enabled
           example: true
         password:
-          type: string
+          $ref: "#/components/schemas/UserDto"
           description: The password
           example: 1234abc
-          maxLength: 80
-          minLength: 1
+          writeOnly: true
         roles:
           type: array
           description: The roles of an user
