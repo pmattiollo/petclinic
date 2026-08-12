@@ -132,7 +132,8 @@ public class OwnerRestController {
     @Transactional
     public void updateOwnersPet(@PathVariable int ownerId, @PathVariable int petId,
             @RequestBody @Validated PetFieldsDto petFieldsDto) {
-        Pet currentPet = petRepository.findById(petId).orElseThrow();
+        Owner owner = ownerRepository.findById(ownerId).orElseThrow();
+        Pet currentPet = owner.getPetById(petId).orElseThrow();
         currentPet.setBirthDate(petFieldsDto.getBirthDate());
         currentPet.setName(petFieldsDto.getName());
         currentPet.setType(petTypeRepository.findById(petFieldsDto.getType().getId()).orElseThrow());
@@ -143,8 +144,10 @@ public class OwnerRestController {
     @PostMapping("{ownerId}/pets/{petId}/visits")
     public ResponseEntity<Void> addVisitToOwner(@PathVariable int ownerId, @PathVariable int petId,
             @RequestBody VisitFieldsDto visitFieldsDto) {
+        Owner owner = ownerRepository.findById(ownerId).orElseThrow();
+        Pet pet = owner.getPetById(petId).orElseThrow();
         Visit visit = visitMapper.toVisit(visitFieldsDto);
-        visit.setPet(new Pet().setId(petId));
+        visit.setPet(pet);
         visitRepository.save(visit);
 
         URI createdUri = UriComponentsBuilder.fromPath("/api/pets/{petId}/visits/{id}")

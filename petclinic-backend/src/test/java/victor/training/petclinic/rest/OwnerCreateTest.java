@@ -79,9 +79,9 @@ class OwnerCreateTest {
         Pet pet = new Pet();
         pet.setName("Nibbles");
         pet.setBirthDate(LocalDate.of(2021, 3, 3));
-        pet.setOwner(owner);
         pet.setType(petType);
         pet = petRepository.save(pet);
+        owner.addPet(pet);
         petId = pet.getId();
     }
 
@@ -150,5 +150,22 @@ class OwnerCreateTest {
         assertThat(visitRepository.findByPetId(petId))
                 .extracting(v -> v.getDescription())
                 .contains("Routine checkup");
+    }
+
+    @Test
+    void addVisitToOwner_wrongOwner_isRejected() throws Exception {
+        // real petId, but owned by a DIFFERENT owner - must be rejected, not silently succeed (IDOR)
+        Owner otherOwner = TestData.anOwner();
+        otherOwner.setLastName("Other");
+        otherOwner = ownerRepository.save(otherOwner);
+
+        VisitFieldsDto dto = new VisitFieldsDto();
+        dto.setDate(LocalDate.of(2026, 6, 1));
+        dto.setDescription("Should not be created");
+
+        mockMvc.perform(post("/api/owners/" + otherOwner.getId() + "/pets/" + petId + "/visits")
+                .content(mapper.writeValueAsString(dto))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isNotFound());
     }
 }

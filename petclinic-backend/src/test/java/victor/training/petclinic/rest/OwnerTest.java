@@ -291,7 +291,28 @@ public class OwnerTest {
         mockMvc.perform(put("/api/owners/99999/pets/" + petId)
                 .content(mapper.writeValueAsString(petDto))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().is2xxSuccessful());
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateOwnerPet_wrongOwner_isRejected() throws Exception {
+        // real petId, but owned by a DIFFERENT owner - must be rejected, not silently updated (IDOR)
+        Owner otherOwner = TestData.anOwner();
+        otherOwner.setLastName("Other");
+        otherOwner = ownerRepository.save(otherOwner);
+
+        PetDto petDto = new PetDto();
+        petDto.setName("Hijacked");
+        petDto.setBirthDate(LocalDate.now());
+        PetTypeDto typeDto = new PetTypeDto();
+        typeDto.setId(petType.getId());
+        typeDto.setName(petType.getName());
+        petDto.setType(typeDto);
+
+        mockMvc.perform(put("/api/owners/" + otherOwner.getId() + "/pets/" + petId)
+                .content(mapper.writeValueAsString(petDto))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isNotFound());
     }
 
     @Test
