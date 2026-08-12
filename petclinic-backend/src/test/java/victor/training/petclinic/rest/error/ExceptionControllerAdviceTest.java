@@ -10,6 +10,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,5 +48,17 @@ class ExceptionControllerAdviceTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost" + uri));
         return request;
+    }
+
+    @Test
+    void handleNoSuchElementException_rendersProblemDetail() {
+        ResponseEntity<ProblemDetail> response = advice.handleNoSuchElementException(
+                new NoSuchElementException("not found"), requestTo("/api/owners/99999"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        ProblemDetail pd = response.getBody();
+        assertThat(pd).isNotNull();
+        assertThat(pd.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        assertThat(pd.getDetail()).isNotBlank();
     }
 }

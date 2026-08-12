@@ -9,6 +9,7 @@ import victor.training.petclinic.repository.UserRepository;
 import victor.training.petclinic.rest.dto.UserDto;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -21,11 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserRestController {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping
     @Transactional
     public ResponseEntity<UserDto> addUser(@RequestBody @Validated UserDto userDto) {
         User user = userMapper.toUser(userDto);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             throw new IllegalArgumentException("User must have at least a role set!");

@@ -1,5 +1,6 @@
 package victor.training.petclinic.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -18,6 +19,7 @@ public class UserDto {
     @Schema(example = "john.doe", description = "The username")
     private String username;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Size(min = 1, max = 80)
     @Schema(example = "1234abc", description = "The password")
     private @Nullable String password;

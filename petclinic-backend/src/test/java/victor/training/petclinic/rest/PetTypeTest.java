@@ -190,7 +190,7 @@ public class PetTypeTest {
         petRepository.save(pet);
 
         mockMvc.perform(delete("/api/pettypes/" + petTypeId))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isConflict())
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString()
                         .contains("PetType is in use by existing pets and cannot be deleted")).isTrue());
     }

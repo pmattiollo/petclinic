@@ -96,6 +96,7 @@ public class OwnerRestController {
 
     @Operation(operationId = "updateOwner", summary = "Update an owner")
     @PutMapping("/{ownerId}")
+    @Transactional
     public void updateOwner(@PathVariable int ownerId, @RequestBody @Validated OwnerFieldsDto ownerFieldsDto) {
         Owner currentOwner = ownerRepository.findById(ownerId).orElseThrow();
         currentOwner.setAddress(ownerFieldsDto.getAddress());
@@ -108,6 +109,7 @@ public class OwnerRestController {
 
     @Operation(operationId = "deleteOwner", summary = "Delete an owner by ID")
     @DeleteMapping("/{ownerId}")
+    @Transactional
     public void deleteOwner(@PathVariable int ownerId) {
         Owner owner = ownerRepository.findById(ownerId).orElseThrow();
         ownerRepository.delete(owner);
@@ -118,8 +120,9 @@ public class OwnerRestController {
     @Transactional
     public ResponseEntity<Void> addPetToOwner(@PathVariable int ownerId,
             @RequestBody @Validated PetFieldsDto petFieldsDto) {
+        Owner owner = ownerRepository.findById(ownerId).orElseThrow();
         Pet pet = petMapper.toPet(petFieldsDto);
-        pet.setOwner(new Owner().setId(ownerId));
+        pet.setOwner(owner);
         pet.setType(petTypeRepository.findById(pet.getType().getId()).orElseThrow());
         petRepository.save(pet);
         UriComponents createdUri = UriComponentsBuilder.newInstance().path("/api/pets/{id}")
@@ -132,7 +135,8 @@ public class OwnerRestController {
     @Transactional
     public void updateOwnersPet(@PathVariable int ownerId, @PathVariable int petId,
             @RequestBody @Validated PetFieldsDto petFieldsDto) {
-        Pet currentPet = petRepository.findById(petId).orElseThrow();
+        Owner owner = ownerRepository.findById(ownerId).orElseThrow();
+        Pet currentPet = owner.getPetById(petId).orElseThrow();
         currentPet.setBirthDate(petFieldsDto.getBirthDate());
         currentPet.setName(petFieldsDto.getName());
         currentPet.setType(petTypeRepository.findById(petFieldsDto.getType().getId()).orElseThrow());
@@ -143,8 +147,10 @@ public class OwnerRestController {
     @PostMapping("{ownerId}/pets/{petId}/visits")
     public ResponseEntity<Void> addVisitToOwner(@PathVariable int ownerId, @PathVariable int petId,
             @RequestBody VisitFieldsDto visitFieldsDto) {
+        Owner owner = ownerRepository.findById(ownerId).orElseThrow();
+        Pet pet = owner.getPetById(petId).orElseThrow();
         Visit visit = visitMapper.toVisit(visitFieldsDto);
-        visit.setPet(new Pet().setId(petId));
+        visit.setPet(pet);
         visitRepository.save(visit);
 
         URI createdUri = UriComponentsBuilder.fromPath("/api/pets/{petId}/visits/{id}")

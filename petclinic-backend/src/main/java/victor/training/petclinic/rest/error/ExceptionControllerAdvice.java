@@ -91,9 +91,12 @@ public class ExceptionControllerAdvice {
     // map NoSuchElementException to a 404 Not Found response
     @ExceptionHandler(NoSuchElementException.class)
     @ResponseStatus(NOT_FOUND)
-    public String handleNoSuchElementException() {
+    public ResponseEntity<ProblemDetail> handleNoSuchElementException(NoSuchElementException ex,
+            HttpServletRequest request) {
         log.error("Not found!");
-        return "Not found!";
+        ProblemDetail pd = buildProblemDetail("Not Found", "The requested resource was not found.", NOT_FOUND,
+                request);
+        return ResponseEntity.status(NOT_FOUND).body(pd);
     }
 
 }
