@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import victor.training.petclinic.mapper.VisitMapper;
 import victor.training.petclinic.domain.Visit;
@@ -18,7 +19,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.server.ResponseStatusException;
+import victor.training.petclinic.domain.Pet;
+import victor.training.petclinic.repository.PetRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -27,6 +32,7 @@ import java.util.List;
 @PreAuthorize("hasRole(@roles.OWNER_ADMIN)")
 public class VisitRestController {
     private final VisitRepository visitRepository;
+    private final PetRepository petRepository;
     private final VisitMapper visitMapper;
 
     @GetMapping
@@ -60,6 +66,8 @@ public class VisitRestController {
     // repository-only, no-service-layer house style.
     @WithSpan("book-visit")
     private int bookVisit(VisitDto visitDto) {
+        Pet pet = petRepository.findById(visitDto.getPetId()).orElseThrow();
+        validateVisitDate(visitDto.getDate(), pet);
         Visit visit = visitMapper.toVisit(visitDto);
         visitRepository.save(visit);
         return visit.getId();
@@ -68,9 +76,17 @@ public class VisitRestController {
     @PutMapping("{visitId}")
     public void updateVisit(@PathVariable int visitId, @RequestBody @Validated VisitFieldsDto visitDto) {
         Visit currentVisit = visitRepository.findById(visitId).orElseThrow();
+        validateVisitDate(visitDto.getDate(), currentVisit.getPet());
         currentVisit.setDate(visitDto.getDate());
         currentVisit.setDescription(visitDto.getDescription());
         visitRepository.save(currentVisit);
+    }
+
+    private void validateVisitDate(LocalDate date, Pet pet) {
+        if (date != null && (date.isBefore(pet.getBirthDate()) || date.isAfter(LocalDate.now().plusYears(1)))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Visit date must be between the pet birth date and one year from today");
+        }
     }
 
     @Transactional
