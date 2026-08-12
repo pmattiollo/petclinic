@@ -10,9 +10,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import victor.training.petclinic.rest.dto.RoleDto;
 import victor.training.petclinic.rest.dto.UserDto;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import victor.training.petclinic.domain.User;
+import victor.training.petclinic.repository.UserRepository;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -25,6 +29,12 @@ public class UserTest {
 
     @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -43,6 +53,27 @@ public class UserTest {
                 .content(mapper.writeValueAsString(newUser))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void create_encodesPasswordWithBCrypt() throws Exception {
+        RoleDto roleDto = new RoleDto();
+        roleDto.setName("OWNER_ADMIN");
+
+        UserDto newUser = new UserDto();
+        newUser.setUsername("bcryptuser");
+        newUser.setPassword("password123");
+        newUser.setEnabled(true);
+        newUser.getRoles().add(roleDto);
+
+        mockMvc.perform(post("/api/users")
+                .content(mapper.writeValueAsString(newUser))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isCreated());
+
+        User persisted = userRepository.findByUsername("bcryptuser").orElseThrow();
+        assertThat(persisted.getPassword()).isNotEqualTo("password123");
+        assertThat(passwordEncoder.matches("password123", persisted.getPassword())).isTrue();
     }
 
     @Test
