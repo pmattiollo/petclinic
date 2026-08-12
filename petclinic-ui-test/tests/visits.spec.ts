@@ -55,4 +55,12 @@ test.describe('Visits Page', () => {
     await visitsPage.clickFirstOwnerLink();
     await expect(page).toHaveURL(/\/owners\/\d+/);
   });
+
+  test('does not allow a visit before the pet birth date', async ({page}) => {
+    await page.goto('/petclinic/pets/2/visits/add');
+    await page.locator('input[name="date"]').fill('0009-07-20');
+    await page.locator('#description').fill('invalid historical visit');
+
+    await expect(page.getByRole('button', {name: 'Add Visit'})).toBeDisabled();
+  });
 });

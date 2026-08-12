@@ -66,6 +66,7 @@ public class VisitTest {
         Owner owner = ownerRepository.save(TestData.anOwner());
         Pet pet = TestData.aPet()
                 .setOwner(owner)
+                .setBirthDate(LocalDate.of(2018, 8, 6))
                 .setType(petTypeRepository.save(new PetType().setName("dog")));
         petRepository.save(pet);
         petId = pet.getId();
@@ -157,6 +158,32 @@ public class VisitTest {
     }
 
     @Test
+    void create_beforePetBirthDate_invalid() throws Exception {
+        VisitDto newVisit = new VisitDto();
+        newVisit.setPetId(petId);
+        newVisit.setDate(LocalDate.of(2018, 8, 5));
+        newVisit.setDescription("invalid historical visit");
+
+        mockMvc.perform(post("/api/visits")
+                .content(mapper.writeValueAsString(newVisit))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createMoreThanOneYearInFuture_invalid() throws Exception {
+        VisitDto newVisit = new VisitDto();
+        newVisit.setPetId(petId);
+        newVisit.setDate(LocalDate.now().plusYears(1).plusDays(1));
+        newVisit.setDescription("invalid future visit");
+
+        mockMvc.perform(post("/api/visits")
+                .content(mapper.writeValueAsString(newVisit))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void update_invalid() throws Exception {
         VisitDto existing = callGet(visitId);
         existing.setDescription(null); // invalid description
@@ -165,6 +192,30 @@ public class VisitTest {
                 .content(mapper.writeValueAsString(existing))
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void update_beforePetBirthDate_invalid() throws Exception {
+        VisitFieldsDto update = new VisitFieldsDto();
+        update.setDate(LocalDate.of(2018, 8, 5));
+        update.setDescription("invalid historical update");
+
+        mockMvc.perform(put("/api/visits/" + visitId)
+                .content(mapper.writeValueAsString(update))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateMoreThanOneYearInFuture_invalid() throws Exception {
+        VisitFieldsDto update = new VisitFieldsDto();
+        update.setDate(LocalDate.now().plusYears(1).plusDays(1));
+        update.setDescription("invalid future update");
+
+        mockMvc.perform(put("/api/visits/" + visitId)
+                .content(mapper.writeValueAsString(update))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
